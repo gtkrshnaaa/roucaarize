@@ -13,14 +13,23 @@ const Token& Parser::advance() { if (!isAtEnd()) current++; return previous(); }
 bool Parser::check(TokenType type) const { return !isAtEnd() && peek().type == type; }
 bool Parser::match(TokenType type) { if (check(type)) { advance(); return true; } return false; }
 
+bool Parser::tooManyErrors() const {
+    return errorMessages.size() >= MAX_PARSE_ERRORS;
+}
+
 Token Parser::consume(TokenType type, const std::string& msg) {
     if (check(type)) return advance();
-    error(peek(), msg);
+    if (!panicMode_) {
+        error(peek(), msg);
+        panicMode_ = true;
+    }
+    // Advance past the unexpected token to prevent stalls
+    if (!isAtEnd()) advance();
     return Token(TokenType::ERROR, "", 0, 0);
 }
 
 void Parser::synchronize() {
-    advance();
+    panicMode_ = false;
     while (!isAtEnd()) {
         if (previous().type == TokenType::NEWLINE || previous().type == TokenType::SEMICOLON) return;
         switch (peek().type) {
@@ -40,6 +49,8 @@ void Parser::synchronize() {
 }
 
 void Parser::error(const Token& token, const std::string& msg) {
+    if (panicMode_) return;
+    if (tooManyErrors()) return;
     errorMessages.push_back("Error at [Line " + std::to_string(token.line) + "]: " + msg + " (got '" + std::string(token.lexeme) + "')");
 }
 
@@ -51,14 +62,20 @@ NodeIndex Parser::parse() {
 
 NodeIndex Parser::program() {
     ASTNode node(NodeType::PROGRAM, 1, 1);
-    while (!isAtEnd()) {
+    while (!isAtEnd() && !tooManyErrors()) {
         if (match(TokenType::NEWLINE)) continue;
+        size_t before = current;
         node.children.push_back(declaration());
+        // Stall detection: if no token was consumed, force advance
+        if (current == before && !isAtEnd()) {
+            advance();
+        }
     }
     return ast.addNode(std::move(node));
 }
 
 NodeIndex Parser::declaration() {
+    if (tooManyErrors()) { synchronize(); return INVALID_NODE; }
     if (match(TokenType::FUNCTION)) return funcDeclaration();
     if (match(TokenType::STRUCT)) return structDeclaration();
     if (match(TokenType::IMPORT)) return importStatement();
@@ -70,8 +87,9 @@ NodeIndex Parser::funcDeclaration() {
     consume(TokenType::LPAREN, "Expected '(' after function name");
     ASTNode node(NodeType::FUNC_DECL, name.line, name.column);
     node.name = std::string(name.lexeme);
-    if (!check(TokenType::RPAREN)) {
+    if (!check(TokenType::RPAREN) && !isAtEnd()) {
         do {
+            if (tooManyErrors()) break;
             Token p = consume(TokenType::IDENTIFIER, "Expected parameter name");
             node.paramNames.push_back(std::string(p.lexeme));
         } while (match(TokenType::COMMA));
@@ -87,7 +105,7 @@ NodeIndex Parser::structDeclaration() {
     ASTNode node(NodeType::STRUCT_DECL, name.line, name.column);
     node.name = std::string(name.lexeme);
     consume(TokenType::LBRACE, "Expected '{' before struct fields");
-    while (!check(TokenType::RBRACE) && !isAtEnd()) {
+    while (!check(TokenType::RBRACE) && !isAtEnd() && !tooManyErrors()) {
         while (match(TokenType::NEWLINE)) {}
         if (check(TokenType::RBRACE)) break;
         Token f = consume(TokenType::IDENTIFIER, "Expected field name");
@@ -97,7 +115,6 @@ NodeIndex Parser::structDeclaration() {
     consume(TokenType::RBRACE, "Expected '}' after struct fields");
     return ast.addNode(std::move(node));
 }
-
 
 NodeIndex Parser::importStatement() {
     Token first = previous();
@@ -119,6 +136,7 @@ NodeIndex Parser::importStatement() {
         return ast.addNode(std::move(node));
     }
     error(first, "Expected 'stdlib' or file path after 'import'");
+    synchronize();
     return INVALID_NODE;
 }
 
@@ -138,6 +156,7 @@ NodeIndex Parser::ifStatement() {
     consume(TokenType::LPAREN, "Expected '(' after 'if'");
     NodeIndex cond = expression();
     consume(TokenType::RPAREN, "Expected ')' after condition");
+    consume(TokenType::LBRACE, "Expected '{' before if body");
     NodeIndex thenBranch = block();
     ASTNode node(NodeType::IF_STMT, first.line, first.column);
     node.left = cond;
@@ -159,6 +178,7 @@ NodeIndex Parser::forStatement() {
     consume(TokenType::IN, "Expected 'in' after iterator variable");
     NodeIndex iterable = expression();
     consume(TokenType::RPAREN, "Expected ')' after for clause");
+    consume(TokenType::LBRACE, "Expected '{' before for body");
     NodeIndex body = block();
     ASTNode node(NodeType::FOR_STMT, first.line, first.column);
     node.name = std::string(iter.lexeme);
@@ -172,6 +192,7 @@ NodeIndex Parser::whileStatement() {
     consume(TokenType::LPAREN, "Expected '(' after 'while'");
     NodeIndex cond = expression();
     consume(TokenType::RPAREN, "Expected ')' after condition");
+    consume(TokenType::LBRACE, "Expected '{' before while body");
     NodeIndex body = block();
     ASTNode node(NodeType::WHILE_STMT, first.line, first.column);
     node.left = cond;
@@ -190,6 +211,7 @@ NodeIndex Parser::returnStatement() {
 
 NodeIndex Parser::tryStatement() {
     Token first = previous();
+    consume(TokenType::LBRACE, "Expected '{' before try body");
     NodeIndex tryBody = block();
     consume(TokenType::CATCH, "Expected 'catch' after 'try' block");
     std::string errVar = "";
@@ -198,12 +220,16 @@ NodeIndex Parser::tryStatement() {
         errVar = std::string(e.lexeme);
         consume(TokenType::RPAREN, "Expected ')' after catch variable");
     }
+    consume(TokenType::LBRACE, "Expected '{' before catch body");
     NodeIndex catchBody = block();
     ASTNode node(NodeType::TRY_STMT, first.line, first.column);
     node.left = tryBody;
     node.right = catchBody;
     node.name = errVar;
-    if (match(TokenType::FINALLY)) node.extra = block();
+    if (match(TokenType::FINALLY)) {
+        consume(TokenType::LBRACE, "Expected '{' before finally body");
+        node.extra = block();
+    }
     return ast.addNode(std::move(node));
 }
 
@@ -218,9 +244,14 @@ NodeIndex Parser::block() {
     Token first = previous();
     ASTNode node(NodeType::BLOCK, first.line, first.column);
     if (first.type == TokenType::LBRACE) {
-        while (!check(TokenType::RBRACE) && !isAtEnd()) {
+        while (!check(TokenType::RBRACE) && !isAtEnd() && !tooManyErrors()) {
             if (match(TokenType::NEWLINE)) continue;
+            size_t before = current;
             node.children.push_back(declaration());
+            // Stall detection: break if no token was consumed
+            if (current == before && !isAtEnd()) {
+                advance();
+            }
         }
         consume(TokenType::RBRACE, "Expected '}' after block");
     } else {
@@ -247,6 +278,7 @@ NodeIndex Parser::assignment() {
     NodeIndex expr = orExpr();
     if (match(TokenType::EQUAL)) {
         NodeIndex val = assignment();
+        if (expr == INVALID_NODE) return val;
         const ASTNode& target = ast.get(expr);
         if (target.type == NodeType::IDENTIFIER) {
             ASTNode node(NodeType::VAR_ASSIGN, target.line, target.column);
@@ -448,6 +480,7 @@ NodeIndex Parser::primary() {
         if (!check(TokenType::RBRACKET)) {
             do {
                 while (match(TokenType::NEWLINE)) {}
+                if (check(TokenType::RBRACKET)) break;
                 node.children.push_back(expression());
                 while (match(TokenType::NEWLINE)) {}
             } while (match(TokenType::COMMA));
@@ -463,6 +496,7 @@ NodeIndex Parser::primary() {
         if (!check(TokenType::RBRACE)) {
             do {
                 while (match(TokenType::NEWLINE)) {}
+                if (check(TokenType::RBRACE)) break;
                 node.children.push_back(expression());
                 consume(TokenType::COLON, "Expected ':' after key");
                 node.children.push_back(expression());
@@ -482,7 +516,10 @@ NodeIndex Parser::primary() {
 std::vector<NodeIndex> Parser::argumentList() {
     std::vector<NodeIndex> args;
     if (!check(TokenType::RPAREN)) {
-        do { args.push_back(expression()); } while (match(TokenType::COMMA));
+        do {
+            if (tooManyErrors()) break;
+            args.push_back(expression());
+        } while (match(TokenType::COMMA));
     }
     return args;
 }
