@@ -24,7 +24,5 @@ Thumbs.db
 docs/*.html
 !docs/index.html
 
-# Generated files
-
 # Script & Temp Dirs
 zListing/
