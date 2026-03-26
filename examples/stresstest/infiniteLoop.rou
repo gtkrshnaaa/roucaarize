@@ -1,0 +1,12 @@
+function run() {
+    print("Testing infinite loop (Target: Watchdog Timeout Guard, no freeze)...")
+    while (true) {
+        // Do nothing. This loop will run forever unless the runtimeGuard kills it.
+    }
+}
+
+try {
+    run()
+} catch (err) {
+    print("Intercepted: " + toString(err))
+}

@@ -1,0 +1,36 @@
+// Heavy allocations to trigger GC or Memory Limits
+function run() {
+    print("Testing heavy memory pressure & allocations...")
+    
+    // Heavy Array allocation
+    arr = []
+    i = 0
+    while (i < 300000) { 
+        push(arr, i)
+        i = i + 1
+    }
+    
+    // Heavy String concatenation pressure (creating thousands of string copies)
+    s = ""
+    i = 0
+    while (i < 10000) {
+        s = s + "stress_leak_" + toString(i)
+        i = i + 1
+    }
+    
+    // Heavy Map allocations
+    m = {}
+    i = 0
+    while (i < 50000) {
+        m["key" + toString(i)] = i
+        i = i + 1
+    }
+    
+    print("Memory pressure survived! Array: " + toString(len(arr)) + ", Map: " + toString(len(m)))
+}
+
+try {
+    run()
+} catch (err) {
+    print("Intercepted: " + toString(err))
+}

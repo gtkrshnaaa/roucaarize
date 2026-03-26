@@ -1,0 +1,10 @@
+function deepCall(n) {
+    return deepCall(n + 1)
+}
+
+function run() {
+    print("Testing infinite recursion (Target: Stack Overflow Guard, no segfault)...")
+    deepCall(1)
+}
+
+run()

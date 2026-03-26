@@ -1,0 +1,43 @@
+import "recursion.rou" as rec
+import "memoryPressure.rou" as mem
+import "orchestrationChaos.rou" as orch
+import "infiniteLoop.rou" as inf
+
+print("===================================================")
+print(">>> ROUCAARIZE LINUX ORCHESTRATION STRESS TESTS <<<")
+print("===================================================")
+print("")
+
+try {
+    rec.run()
+} catch (e) {
+    print("[SAFE CATCH] Recursion handled cleanly: " + toString(e))
+}
+
+print("---------------------------------------------------")
+
+try {
+    mem.run()
+} catch (e) {
+    print("[SAFE CATCH] Memory handled cleanly: " + toString(e))
+}
+
+print("---------------------------------------------------")
+
+try {
+    orch.run()
+} catch (e) {
+    print("[SAFE CATCH] Orchestration handled cleanly: " + toString(e))
+}
+
+print("---------------------------------------------------")
+
+try {
+    inf.run()
+} catch (e) {
+    print("[SAFE CATCH] Infinite loop handled cleanly: " + toString(e))
+}
+
+print("===================================================")
+print(">>> STRESS TEST SUITE COMPLETED WITHOUT SEGFAULT <<<")
+print("===================================================")
