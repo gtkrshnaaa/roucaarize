@@ -231,6 +231,11 @@ NodeIndex Parser::block() {
 
 NodeIndex Parser::expressionStatement() {
     NodeIndex expr = assignment();
+    if (expr == INVALID_NODE) {
+        synchronize();
+        ASTNode node(NodeType::EXPR_STMT, 0, 0);
+        return ast.addNode(std::move(node));
+    }
     ASTNode node(NodeType::EXPR_STMT, ast.get(expr).line, ast.get(expr).column);
     node.left = expr;
     return ast.addNode(std::move(node));
@@ -459,6 +464,7 @@ NodeIndex Parser::primary() {
         return ast.addNode(std::move(node));
     }
     error(peek(), "Expected expression");
+    synchronize();
     return INVALID_NODE;
 }
 
