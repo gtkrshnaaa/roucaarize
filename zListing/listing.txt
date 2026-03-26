@@ -1,0 +1,4966 @@
+================================================================================
+ROUCAARIZE PROJECT CODEBASE LISTING
+Generated on: Thu Mar 26 10:58:45 PM WIB 2026
+================================================================================
+
+This document contains a comprehensive listing of all source code files within
+the Roucaarize project, including core, stdlib, and examples.
+Roucaarize is a minimalist, tree-walking interpreter for Linux orchestration.
+
+Directory Structure Overview:
+1. core/include: Header files for the Lexer, Parser, and Evaluator.
+2. core/src: Implementation of the tree-walking interpreter logic.
+3. core/stdlib: Standard library modules (sys, fs, net, proc, string, time).
+4. examples: Collection of example scripts demonstrating language features.
+
+================================================================================
+
+FILE: core/include/ast.hpp
+--------------------------------------------------------------------------------
+#ifndef ROUCAARIZE_AST_HPP
+#define ROUCAARIZE_AST_HPP
+
+#include <cstdint>
+#include <string>
+#include <vector>
+#include <variant>
+
+namespace roucaarize {
+
+using NodeIndex = uint32_t;
+constexpr NodeIndex INVALID_NODE = UINT32_MAX;
+
+enum class NodeType : uint8_t {
+    PROGRAM,
+    LITERAL_INT,
+    LITERAL_FLOAT,
+    LITERAL_STRING,
+    LITERAL_BOOL,
+    LITERAL_NIL,
+    IDENTIFIER,
+    BINARY_OP,
+    UNARY_OP,
+    CALL,
+    MEMBER_ACCESS,
+    INDEX_ACCESS,
+    ARRAY_LITERAL,
+    MAP_LITERAL,
+    EXPR_STMT,
+    VAR_ASSIGN,
+    MEMBER_ASSIGN,
+    INDEX_ASSIGN,
+    BLOCK,
+    IF_STMT,
+    FOR_STMT,
+    WHILE_STMT,
+    RETURN_STMT,
+    TRY_STMT,
+    CATCH_STMT,
+    THROW_STMT,
+    FUNC_DECL,
+    STRUCT_DECL,
+    IMPORT_STDLIB,
+    IMPORT_FILE
+};
+
+enum class BinaryOp : uint8_t {
+    ADD, SUB, MUL, DIV, MOD,
+    EQ, NEQ, LT, LTE, GT, GTE,
+    AND, OR
+};
+
+enum class UnaryOp : uint8_t {
+    NEG,
+    NOT
+};
+
+struct LiteralValue {
+    std::variant<std::monostate, bool, int64_t, double, std::string> data;
+    LiteralValue() : data(std::monostate{}) {}
+    explicit LiteralValue(bool b) : data(b) {}
+    explicit LiteralValue(int64_t i) : data(i) {}
+    explicit LiteralValue(double d) : data(d) {}
+    explicit LiteralValue(std::string s) : data(std::move(s)) {}
+};
+
+struct ASTNode {
+    NodeType type;
+    int32_t line;
+    int32_t column;
+    std::string name;
+    NodeIndex left = INVALID_NODE;
+    NodeIndex right = INVALID_NODE;
+    NodeIndex extra = INVALID_NODE;
+    std::vector<NodeIndex> children;
+    std::vector<std::string> paramNames;
+    LiteralValue literal;
+    BinaryOp binaryOp = BinaryOp::ADD;
+    UnaryOp unaryOp = UnaryOp::NEG;
+
+    ASTNode(NodeType t, int32_t ln, int32_t col)
+        : type(t), line(ln), column(col) {}
+};
+
+class AST {
+public:
+    NodeIndex addNode(ASTNode node) {
+        NodeIndex idx = static_cast<NodeIndex>(nodes.size());
+        nodes.push_back(std::move(node));
+        return idx;
+    }
+
+    ASTNode& get(NodeIndex idx) { return nodes[idx]; }
+    const ASTNode& get(NodeIndex idx) const { return nodes[idx]; }
+    NodeIndex root() const { return rootIndex; }
+    void setRoot(NodeIndex idx) { rootIndex = idx; }
+
+private:
+    std::vector<ASTNode> nodes;
+    NodeIndex rootIndex = INVALID_NODE;
+};
+
+} // namespace roucaarize
+
+#endif // ROUCAARIZE_AST_HPP
+-e 
+
+
+FILE: core/include/environment.hpp
+--------------------------------------------------------------------------------
+#ifndef ROUCAARIZE_ENVIRONMENT_HPP
+#define ROUCAARIZE_ENVIRONMENT_HPP
+
+#include "value.hpp"
+#include <unordered_map>
+#include <string>
+#include <memory>
+
+namespace roucaarize {
+
+class Environment : public std::enable_shared_from_this<Environment> {
+public:
+    explicit Environment(std::shared_ptr<Environment> outer = nullptr)
+        : outer(std::move(outer)) {}
+
+    void define(const std::string& name, Value value) {
+        values[name] = std::move(value);
+    }
+
+    bool assign(const std::string& name, Value value) {
+        if (values.find(name) != values.end()) {
+            values[name] = std::move(value);
+            return true;
+        }
+        if (outer) return outer->assign(name, std::move(value));
+        return false;
+    }
+
+    bool get(const std::string& name, Value& outValue) {
+        auto it = values.find(name);
+        if (it != values.end()) {
+            outValue = it->second;
+            return true;
+        }
+        if (outer) return outer->get(name, outValue);
+        return false;
+    }
+
+private:
+    std::shared_ptr<Environment> outer;
+    std::unordered_map<std::string, Value> values;
+};
+
+} // namespace roucaarize
+
+#endif // ROUCAARIZE_ENVIRONMENT_HPP
+-e 
+
+
+FILE: core/include/evaluator.hpp
+--------------------------------------------------------------------------------
+#ifndef ROUCAARIZE_EVALUATOR_HPP
+#define ROUCAARIZE_EVALUATOR_HPP
+
+#include "ast.hpp"
+#include "value.hpp"
+#include "environment.hpp"
+#include <unordered_map>
+#include <vector>
+#include <string>
+
+namespace roucaarize {
+
+/**
+ * Roucaarize Tree-Walking Interpreter.
+ *
+ * Traverses the flattened AST and evaluates each node directly.
+ * Stdlib modules are registered as maps of NativeFunctions, resolved
+ * at IMPORT_STDLIB time.
+ */
+class Evaluator {
+public:
+    Evaluator();
+    Value evaluate(const AST& ast, NodeIndex root);
+
+    void defineNative(const std::string& name, NativeFunction fn);
+    void registerStdlib(const std::string& moduleName,
+                        std::unordered_map<std::string, NativeFunction> funcs);
+    std::shared_ptr<Environment> getGlobals() { return globals; }
+
+private:
+    std::shared_ptr<Environment> globals;
+    std::shared_ptr<Environment> environment;
+    const AST* currentAST = nullptr;
+
+    // Stdlib registry: moduleName -> { funcName -> NativeFunction }
+    std::unordered_map<std::string,
+        std::unordered_map<std::string, NativeFunction>> stdlibRegistry;
+
+    Value evalNode(NodeIndex idx);
+    Value evalBlock(NodeIndex idx, std::shared_ptr<Environment> env);
+
+    // Expressions
+    Value evalBinary(const ASTNode& node);
+    Value evalUnary(const ASTNode& node);
+    Value evalCall(const ASTNode& node);
+    Value evalIdentifier(const ASTNode& node);
+    Value evalMemberAccess(const ASTNode& node);
+    Value evalIndexAccess(const ASTNode& node);
+    Value evalArrayLiteral(const ASTNode& node);
+    Value evalMapLiteral(const ASTNode& node);
+
+    // Statements
+    Value executeStatement(NodeIndex idx);
+    Value executeVarAssign(const ASTNode& node);
+    Value executeIf(const ASTNode& node);
+    Value executeFor(const ASTNode& node);
+    Value executeWhile(const ASTNode& node);
+    Value executeTryCatch(const ASTNode& node);
+    Value executeStructDecl(const ASTNode& node);
+    Value executeThrow(const ASTNode& node);
+    Value executeMemberAssign(const ASTNode& node);
+    Value executeIndexAssign(const ASTNode& node);
+    Value executeImportStdlib(const ASTNode& node);
+};
+
+// Flow control exceptions for return and throw
+struct RuntimeException {
+    Value value;
+    bool isReturn;
+    RuntimeException(Value v, bool ret) : value(std::move(v)), isReturn(ret) {}
+};
+
+} // namespace roucaarize
+
+#endif // ROUCAARIZE_EVALUATOR_HPP
+-e 
+
+
+FILE: core/include/grammar.hpp
+--------------------------------------------------------------------------------
+#ifndef ROUCAARIZE_GRAMMAR_HPP
+#define ROUCAARIZE_GRAMMAR_HPP
+
+#include "ast.hpp"
+#include <vector>
+#include <string>
+#include <set>
+#include <map>
+
+namespace roucaarize {
+
+// ============================================================================
+// Analysis Resource Limits
+// ============================================================================
+
+static constexpr uint32_t MAX_ANALYSIS_DEPTH = 256;
+static constexpr uint32_t MAX_NODE_BUDGET    = 50000;
+static constexpr uint32_t MAX_AST_NODES      = 100000;
+static constexpr uint32_t MAX_DIAGNOSTICS    = 200;
+
+enum class DiagLevel {
+    ERROR,
+    WARNING,
+    PERF
+};
+
+struct Diagnostic {
+    DiagLevel level;
+    int32_t line;
+    int32_t column;
+    std::string message;
+    std::string ruleId;
+};
+
+struct AnalysisResult {
+    std::string filePath;
+    std::vector<Diagnostic> diagnostics;
+    size_t errorCount = 0;
+    size_t warningCount = 0;
+    size_t perfCount = 0;
+    bool budgetExceeded = false;
+};
+
+class GrammarChecker {
+public:
+    GrammarChecker();
+
+    AnalysisResult analyzeFile(const std::string& filePath);
+    AnalysisResult analyzeSource(const std::string& source, const std::string& filePath);
+
+    static int printResult(const AnalysisResult& result);
+    static void printSummary(size_t totalFiles, size_t totalErrors,
+                             size_t totalWarnings, size_t totalPerf);
+
+private:
+    struct Scope {
+        std::set<std::string> variables;
+        std::set<std::string> functions;
+        std::set<std::string> readVariables;
+        bool isFunction = false;
+    };
+
+    std::vector<Diagnostic> diagnostics;
+    std::vector<Scope> scopeStack;
+    std::map<std::string, std::vector<std::string>> structFields;
+    std::set<std::string> importAliases;
+
+    std::set<std::string> builtinFunctions;
+    std::set<std::string> knownStdlibModules;
+    std::map<std::string, std::set<std::string>> stdlibMethods;
+
+    // Resource tracking
+    uint32_t nodeVisitCount_;
+    uint32_t currentDepth_;
+
+    void initBuiltins();
+    bool addDiag(DiagLevel level, int32_t line, int32_t col,
+                 const std::string& message, const std::string& ruleId);
+
+    // Single-pass analysis with depth tracking
+    void analyze(const AST& ast, NodeIndex idx, uint32_t depth);
+
+    // Pre-scan: register top-level declarations before deep analysis
+    void registerTopLevel(const AST& ast, NodeIndex idx);
+
+    // Budget check
+    bool withinBudget() const;
+
+    // Scope helpers
+    void pushScope(bool isFunction);
+    void popScope();
+    void declareVariable(const std::string& name);
+    void declareFunction(const std::string& name);
+    bool isVariableDeclared(const std::string& name) const;
+    bool isFunctionDeclared(const std::string& name) const;
+    void markVariableRead(const std::string& name);
+
+    // Naming helpers
+    bool isLowerCamelCase(const std::string& name) const;
+    bool isUpperCamelCase(const std::string& name) const;
+};
+
+} // namespace roucaarize
+
+#endif // ROUCAARIZE_GRAMMAR_HPP
+-e 
+
+
+FILE: core/include/lexer.hpp
+--------------------------------------------------------------------------------
+#ifndef ROUCAARIZE_LEXER_HPP
+#define ROUCAARIZE_LEXER_HPP
+
+#include "token.hpp"
+#include <vector>
+#include <string>
+#include <string_view>
+
+namespace roucaarize {
+
+class Lexer {
+public:
+    explicit Lexer(std::string_view source);
+    std::vector<Token> tokenize();
+    const std::vector<std::string>& errors() const { return errorMessages; }
+
+private:
+    std::string_view source;
+    size_t start = 0;
+    size_t current = 0;
+    int32_t line = 1;
+    int32_t column = 1;
+    int32_t startColumn = 1;
+    std::vector<std::string> errorMessages;
+
+    bool isAtEnd() const;
+    char advance();
+    char peek() const;
+    char peekNext() const;
+    bool match(char expected);
+    
+    void skipWhitespace();
+    Token scanToken();
+    Token identifier();
+    Token number();
+    Token string();
+    
+    void addError(const std::string& message);
+    Token makeToken(TokenType type);
+};
+
+} // namespace roucaarize
+
+#endif // ROUCAARIZE_LEXER_HPP
+-e 
+
+
+FILE: core/include/parser.hpp
+--------------------------------------------------------------------------------
+#ifndef ROUCAARIZE_PARSER_HPP
+#define ROUCAARIZE_PARSER_HPP
+
+#include "token.hpp"
+#include "ast.hpp"
+#include <vector>
+#include <string>
+
+namespace roucaarize {
+
+static constexpr size_t MAX_PARSE_ERRORS = 50;
+
+class Parser {
+public:
+    explicit Parser(const std::vector<Token>& tokens, std::string_view source);
+    NodeIndex parse();
+    AST& getAST() { return ast; }
+    bool hasErrors() const { return !errorMessages.empty(); }
+    const std::vector<std::string>& errors() const { return errorMessages; }
+
+private:
+    const std::vector<Token>& tokens;
+    std::string_view source;
+    size_t current = 0;
+    AST ast;
+    std::vector<std::string> errorMessages;
+    bool panicMode_ = false;
+
+    bool isAtEnd() const;
+    const Token& peek() const;
+    const Token& previous() const;
+    const Token& advance();
+    bool check(TokenType type) const;
+    bool match(TokenType type);
+    Token consume(TokenType type, const std::string& message);
+    void synchronize();
+    bool tooManyErrors() const;
+
+    // Grammar rules
+    NodeIndex program();
+    NodeIndex declaration();
+    NodeIndex funcDeclaration();
+    NodeIndex structDeclaration();
+    NodeIndex importStatement();
+    NodeIndex statement();
+    NodeIndex ifStatement();
+    NodeIndex forStatement();
+    NodeIndex whileStatement();
+    NodeIndex returnStatement();
+    NodeIndex tryStatement();
+    NodeIndex throwStatement();
+    NodeIndex block();
+    NodeIndex expressionStatement();
+
+    NodeIndex expression();
+    NodeIndex assignment();
+    NodeIndex orExpr();
+    NodeIndex andExpr();
+    NodeIndex equality();
+    NodeIndex comparison();
+    NodeIndex term();
+    NodeIndex factor();
+    NodeIndex unary();
+    NodeIndex postfix();
+    NodeIndex primary();
+
+    std::vector<NodeIndex> argumentList();
+    void error(const Token& token, const std::string& message);
+};
+
+} // namespace roucaarize
+
+#endif // ROUCAARIZE_PARSER_HPP
+-e 
+
+
+FILE: core/include/runtimeGuard.hpp
+--------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * RuntimeGuard.hpp - Roucaarize Runtime Protection System
+ *
+ * Lightweight, header-only guard providing four protection layers:
+ *   1. Signal trap (SIGSEGV, SIGFPE, SIGBUS, SIGILL) with recovery
+ *   2. Execution timeout via POSIX timer (kernel-managed, zero threads)
+ *   3. Virtual memory cap via setrlimit (kernel-enforced, zero overhead)
+ *   4. Recursion depth limiter (RAII counter, ~4 bytes per thread)
+ *
+ * Total memory footprint: ~32KB (alternate signal stack) + 52 bytes.
+ * Runtime cost: negligible for well-behaved programs.
+ */
+
+#ifndef RUNTIME_GUARD_HPP
+#define RUNTIME_GUARD_HPP
+
+#include <csignal>
+#include <csetjmp>
+#include <cstdio>
+#include <cstdlib>
+#include <cstdint>
+#include <ctime>
+#include <sys/resource.h>
+#include <stdexcept>
+
+// ============================================================================
+// Configuration Defaults
+// ============================================================================
+
+#ifndef GUARD_TIMEOUT_SECONDS
+#define GUARD_TIMEOUT_SECONDS 2
+#endif
+
+#ifndef GUARD_MEMORY_LIMIT_MB
+#define GUARD_MEMORY_LIMIT_MB 0
+#endif
+
+#ifndef GUARD_MAX_RECURSION_DEPTH
+#define GUARD_MAX_RECURSION_DEPTH 10000
+#endif
+
+#ifndef GUARD_LOOP_CHECK_INTERVAL
+#define GUARD_LOOP_CHECK_INTERVAL 100000
+#endif
+
+// ============================================================================
+// Signal Recovery State (thread-local for async safety)
+// ============================================================================
+
+namespace runtime_guard {
+
+/**
+ * Thread-local jump buffer for signal-based crash recovery.
+ * Used by the signal handler to longjmp back to a safe recovery point.
+ */
+inline thread_local sigjmp_buf recovery_env;
+
+/**
+ * Indicates whether the current thread is inside a guarded execution region.
+ * When true, signal handler will attempt recovery via siglongjmp.
+ * When false, signal handler performs a clean abort with diagnostics.
+ */
+inline thread_local bool in_guarded_execution = false;
+
+/**
+ * Stores the signal number that triggered recovery, for diagnostic output.
+ */
+inline thread_local int last_trapped_signal = 0;
+
+/**
+ * Recursion depth counter per thread.
+ */
+inline thread_local uint32_t recursion_depth = 0;
+
+/**
+ * Execution deadline timestamp (seconds since epoch via CLOCK_MONOTONIC).
+ * Set to 0 when no timeout is active.
+ */
+inline thread_local uint64_t execution_deadline = 0;
+
+/**
+ * Flag set by SIGALRM handler to indicate timeout expiry.
+ */
+inline thread_local volatile sig_atomic_t timeout_fired = 0;
+
+// ============================================================================
+// Signal Names (diagnostic output)
+// ============================================================================
+
+inline const char* signalName(int sig) {
+    switch (sig) {
+        case SIGSEGV: return "SIGSEGV (Segmentation Fault)";
+        case SIGFPE:  return "SIGFPE (Floating Point Exception)";
+        case SIGBUS:  return "SIGBUS (Bus Error)";
+        case SIGILL:  return "SIGILL (Illegal Instruction)";
+        case SIGALRM: return "SIGALRM (Timeout)";
+        default:      return "Unknown Signal";
+    }
+}
+
+// ============================================================================
+// Signal Handlers
+// ============================================================================
+
+/**
+ * Hardware fault handler for SIGSEGV, SIGFPE, SIGBUS, SIGILL.
+ * Recovers via siglongjmp when inside a guarded region.
+ * Performs clean abort with diagnostics when outside guarded region.
+ */
+inline void crashHandler(int sig, siginfo_t* si, void* /* unused */) {
+    last_trapped_signal = sig;
+    if (in_guarded_execution) {
+        siglongjmp(recovery_env, sig);
+    }
+    fprintf(stderr,
+            "\n[RuntimeGuard] Fatal %s at address %p\n",
+            signalName(sig), si ? si->si_addr : nullptr);
+    _exit(128 + sig);
+}
+
+/**
+ * Timeout handler for SIGALRM.
+ * Sets the timeout flag and forces recovery via longjmp
+ * if inside a guarded execution region.
+ */
+inline void timeoutHandler(int /* sig */, siginfo_t* /* si */, void* /* unused */) {
+    timeout_fired = 1;
+    if (in_guarded_execution) {
+        last_trapped_signal = SIGALRM;
+        siglongjmp(recovery_env, SIGALRM);
+    }
+}
+
+// ============================================================================
+// Core Guard API
+// ============================================================================
+
+/**
+ * Initialize all four protection layers.
+ * Call once at the start of main().
+ *
+ * @param timeoutSec  Execution timeout in seconds (0 = no timeout)
+ * @param memLimitMB  Virtual memory cap in megabytes (0 = no limit)
+ */
+inline void initialize(
+    uint32_t timeoutSec = GUARD_TIMEOUT_SECONDS,
+    uint32_t memLimitMB = GUARD_MEMORY_LIMIT_MB
+) {
+    // ---- Layer 1: Alternate Signal Stack ----
+    stack_t ss;
+    ss.ss_sp = malloc(SIGSTKSZ * 4);
+    if (ss.ss_sp) {
+        ss.ss_size = SIGSTKSZ * 4;
+        ss.ss_flags = 0;
+        sigaltstack(&ss, nullptr);
+    }
+
+    // ---- Layer 2: Hardware Fault Handlers ----
+    struct sigaction sa;
+    sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_sigaction = crashHandler;
+    sigaction(SIGSEGV, &sa, nullptr);
+    sigaction(SIGFPE,  &sa, nullptr);
+    sigaction(SIGBUS,  &sa, nullptr);
+    sigaction(SIGILL,  &sa, nullptr);
+
+    // ---- Layer 3: Execution Timeout (POSIX timer -> SIGALRM) ----
+    if (timeoutSec > 0) {
+        struct sigaction ta;
+        ta.sa_flags = SA_SIGINFO | SA_ONSTACK;
+        sigemptyset(&ta.sa_mask);
+        ta.sa_sigaction = timeoutHandler;
+        sigaction(SIGALRM, &ta, nullptr);
+
+        struct timespec now;
+        clock_gettime(CLOCK_MONOTONIC, &now);
+        execution_deadline = now.tv_sec + timeoutSec;
+
+        timer_t timerId;
+        struct sigevent sev;
+        sev.sigev_notify = SIGEV_SIGNAL;
+        sev.sigev_signo = SIGALRM;
+        sev.sigev_value.sival_ptr = nullptr;
+        if (timer_create(CLOCK_MONOTONIC, &sev, &timerId) == 0) {
+            struct itimerspec its;
+            its.it_value.tv_sec = timeoutSec;
+            its.it_value.tv_nsec = 0;
+            its.it_interval.tv_sec = 0;
+            its.it_interval.tv_nsec = 0;
+            timer_settime(timerId, 0, &its, nullptr);
+        }
+    }
+
+    // ---- Layer 4: Virtual Memory Cap ----
+    if (memLimitMB > 0) {
+        struct rlimit rl;
+        rl.rlim_cur = static_cast<rlim_t>(memLimitMB) * 1024 * 1024;
+        rl.rlim_max = rl.rlim_cur;
+        setrlimit(RLIMIT_AS, &rl);
+    }
+}
+
+/**
+ * Cooperative timeout check for interpreter loops.
+ * Call periodically from hot loops (while, for) to detect timeout.
+ */
+inline bool checkTimeout() {
+    if (timeout_fired) return true;
+    if (execution_deadline == 0) return false;
+
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    if (static_cast<uint64_t>(now.tv_sec) >= execution_deadline) {
+        timeout_fired = 1;
+        return true;
+    }
+    return false;
+}
+
+// ============================================================================
+// RAII Guards
+// ============================================================================
+
+/**
+ * RAII guard for entering/exiting a guarded execution region.
+ * When active, hardware faults trigger recovery instead of abort.
+ */
+struct ExecutionRegionGuard {
+    bool was_guarded;
+    ExecutionRegionGuard() : was_guarded(in_guarded_execution) {
+        in_guarded_execution = true;
+    }
+    ~ExecutionRegionGuard() {
+        in_guarded_execution = was_guarded;
+    }
+};
+
+/**
+ * RAII recursion depth guard.
+ * Increments depth on construction, decrements on destruction.
+ * Throws std::runtime_error if depth exceeds the configured maximum.
+ */
+struct RecursionGuard {
+    RecursionGuard() {
+        if (++recursion_depth > GUARD_MAX_RECURSION_DEPTH) {
+            --recursion_depth;
+            throw std::runtime_error(
+                "Maximum recursion depth exceeded (" +
+                std::to_string(GUARD_MAX_RECURSION_DEPTH) + ")");
+        }
+    }
+    ~RecursionGuard() {
+        --recursion_depth;
+    }
+};
+
+} // namespace runtime_guard
+
+#endif // RUNTIME_GUARD_HPP
+-e 
+
+
+FILE: core/include/token.hpp
+--------------------------------------------------------------------------------
+#ifndef ROUCAARIZE_TOKEN_HPP
+#define ROUCAARIZE_TOKEN_HPP
+
+#include <string_view>
+#include <string>
+
+namespace roucaarize {
+
+enum class TokenType {
+    // Single-character tokens
+    LPAREN, RPAREN, LBRACE, RBRACE, LBRACKET, RBRACKET,
+    COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR, PERCENT, COLON,
+
+    // One or two character tokens
+    BANG, BANGEQUAL,
+    EQUAL, EQUALEQUAL,
+    GREATER, GREATEREQUAL,
+    LESS, LESSEQUAL,
+
+    // Literals
+    IDENTIFIER, STRING, INTEGER, FLOAT,
+
+    // Keywords
+    AND, OR, NOT,
+    IF, ELSE, FOR, WHILE, IN,
+    FUNCTION, RETURN, STRUCT,
+    TRY, CATCH, THROW, FINALLY,
+    IMPORT, AS, STDLIB,
+    TRUE, FALSE, NIL,
+
+    // Special
+    NEWLINE, ERROR, ENDOFFILE
+};
+
+struct Token {
+    TokenType type;
+    std::string_view lexeme;
+    int32_t line;
+    int32_t column;
+    
+    // For literal values
+    int64_t intValue = 0;
+    double floatValue = 0.0;
+
+    Token(TokenType t, std::string_view l, int32_t ln, int32_t col)
+        : type(t), lexeme(l), line(ln), column(col) {}
+
+    static Token makeError(std::string_view message, int32_t ln, int32_t col) {
+        return Token(TokenType::ERROR, message, ln, col);
+    }
+};
+
+} // namespace roucaarize
+
+#endif // ROUCAARIZE_TOKEN_HPP
+-e 
+
+
+FILE: core/include/value.hpp
+--------------------------------------------------------------------------------
+#ifndef ROUCAARIZE_VALUE_HPP
+#define ROUCAARIZE_VALUE_HPP
+
+#include <cstdint>
+#include <string>
+#include <vector>
+#include <unordered_map>
+#include <memory>
+#include <functional>
+
+namespace roucaarize {
+
+class Evaluator;
+struct Value;
+
+enum class ValueType : uint8_t {
+    NIL,
+    BOOL,
+    INT,
+    FLOAT,
+    STRING,
+    ARRAY,
+    MAP,
+    STRUCT_INSTANCE,
+    FUNCTION,
+    NATIVE_FUNCTION
+};
+
+using NativeFunction = std::function<Value(Evaluator&, const std::vector<Value>&)>;
+
+struct FunctionDef {
+    std::string name;
+    std::vector<std::string> params;
+    uint32_t bodyIndex;
+    std::shared_ptr<class Environment> closure;
+};
+
+struct StructInstance {
+    std::string typeName;
+    std::unordered_map<std::string, Value> fields;
+};
+
+struct Value {
+    ValueType type;
+    union {
+        bool boolVal;
+        int64_t intVal;
+        double floatVal;
+    };
+    std::shared_ptr<std::string> stringVal;
+    std::shared_ptr<std::vector<Value>> arrayVal;
+    std::shared_ptr<struct MapInstance> mapVal;
+    std::shared_ptr<StructInstance> structVal;
+    std::shared_ptr<FunctionDef> funcVal;
+    std::shared_ptr<NativeFunction> nativeVal;
+
+    Value() : type(ValueType::NIL), intVal(0) {}
+
+    static Value nil() { return Value(); }
+    static Value fromBool(bool b) { Value v; v.type = ValueType::BOOL; v.boolVal = b; return v; }
+    static Value fromInt(int64_t i) { Value v; v.type = ValueType::INT; v.intVal = i; return v; }
+    static Value fromFloat(double d) { Value v; v.type = ValueType::FLOAT; v.floatVal = d; return v; }
+    static Value fromString(std::string s) { Value v; v.type = ValueType::STRING; v.stringVal = std::make_shared<std::string>(std::move(s)); return v; }
+    static Value fromArray(std::vector<Value> a) { Value v; v.type = ValueType::ARRAY; v.arrayVal = std::make_shared<std::vector<Value>>(std::move(a)); return v; }
+    static Value fromMap(std::shared_ptr<MapInstance> m) { Value v; v.type = ValueType::MAP; v.mapVal = std::move(m); return v; }
+    static Value fromStruct(std::shared_ptr<StructInstance> s) { Value v; v.type = ValueType::STRUCT_INSTANCE; v.structVal = std::move(s); return v; }
+    static Value fromNative(NativeFunction fn) { Value v; v.type = ValueType::NATIVE_FUNCTION; v.nativeVal = std::make_shared<NativeFunction>(std::move(fn)); return v; }
+    static Value fromFunction(FunctionDef fd) { Value v; v.type = ValueType::FUNCTION; v.funcVal = std::make_shared<FunctionDef>(std::move(fd)); return v; }
+    
+    bool isNumber() const { return type == ValueType::INT || type == ValueType::FLOAT; }
+    bool isString() const { return type == ValueType::STRING && stringVal; }
+    bool isInt() const { return type == ValueType::INT; }
+    bool isArray() const { return type == ValueType::ARRAY && arrayVal; }
+    
+    double asDouble() const {
+        if (type == ValueType::INT) return static_cast<double>(intVal);
+        if (type == ValueType::FLOAT) return floatVal;
+        return 0.0;
+    }
+
+    bool operator==(const Value& other) const {
+        if (type != other.type) return false;
+        switch (type) {
+            case ValueType::NIL: return true;
+            case ValueType::BOOL: return boolVal == other.boolVal;
+            case ValueType::INT: return intVal == other.intVal;
+            case ValueType::FLOAT: return floatVal == other.floatVal;
+            case ValueType::STRING: return *stringVal == *other.stringVal;
+            default: return false;
+        }
+    }
+
+    bool isTruthy() const {
+        switch (type) {
+            case ValueType::NIL: return false;
+            case ValueType::BOOL: return boolVal;
+            case ValueType::INT: return intVal != 0;
+            case ValueType::FLOAT: return floatVal != 0.0;
+            case ValueType::STRING: return !stringVal->empty();
+            default: return true;
+        }
+    }
+
+    std::string toString() const;
+};
+
+struct ValueHasher {
+    size_t operator()(const Value& v) const;
+};
+
+struct MapInstance {
+    std::unordered_map<Value, Value, ValueHasher> entries;
+};
+
+} // namespace roucaarize
+
+#endif // ROUCAARIZE_VALUE_HPP
+-e 
+
+
+FILE: core/src/evaluator.cpp
+--------------------------------------------------------------------------------
+#include "evaluator.hpp"
+#include "runtimeGuard.hpp"
+#include <iostream>
+#include <stdexcept>
+#include <sstream>
+
+namespace roucaarize {
+
+Evaluator::Evaluator() {
+    globals = std::make_shared<Environment>();
+    environment = globals;
+
+    defineNative("print", [](Evaluator&, const std::vector<Value>& args) -> Value {
+        for (size_t i = 0; i < args.size(); ++i) {
+            if (i > 0) std::cout << " ";
+            std::cout << args[i].toString();
+        }
+        std::cout << std::endl;
+        return Value::nil();
+    });
+
+    defineNative("log", [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.size() < 2) return Value::nil();
+        std::cerr << "[" << args[0].toString() << "] " << args[1].toString() << std::endl;
+        return Value::nil();
+    });
+
+    defineNative("panic", [](Evaluator&, const std::vector<Value>& args) -> Value {
+        std::string msg = args.empty() ? "Panic!" : args[0].toString();
+        throw std::runtime_error("Panic: " + msg);
+        return Value::nil();
+    });
+
+    defineNative("len", [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty()) return Value::fromInt(0);
+        if (args[0].isString()) return Value::fromInt(static_cast<int64_t>(args[0].stringVal->size()));
+        if (args[0].isArray()) return Value::fromInt(static_cast<int64_t>(args[0].arrayVal->size()));
+        return Value::fromInt(0);
+    });
+
+    defineNative("toString", [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty()) return Value::fromString("");
+        return Value::fromString(args[0].toString());
+    });
+
+    defineNative("toInt", [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty()) return Value::fromInt(0);
+        if (args[0].isInt()) return args[0];
+        if (args[0].isNumber()) return Value::fromInt(static_cast<int64_t>(args[0].floatVal));
+        if (args[0].isString()) {
+            try { return Value::fromInt(std::stoll(*args[0].stringVal)); }
+            catch (...) { return Value::fromInt(0); }
+        }
+        return Value::fromInt(0);
+    });
+
+    defineNative("typeof", [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty()) return Value::fromString("nil");
+        switch (args[0].type) {
+            case ValueType::NIL: return Value::fromString("nil");
+            case ValueType::BOOL: return Value::fromString("bool");
+            case ValueType::INT: return Value::fromString("int");
+            case ValueType::FLOAT: return Value::fromString("float");
+            case ValueType::STRING: return Value::fromString("string");
+            case ValueType::ARRAY: return Value::fromString("array");
+            case ValueType::MAP: return Value::fromString("map");
+            case ValueType::STRUCT_INSTANCE: return Value::fromString("struct");
+            case ValueType::FUNCTION: return Value::fromString("function");
+            case ValueType::NATIVE_FUNCTION: return Value::fromString("function");
+        }
+        return Value::fromString("unknown");
+    });
+
+    defineNative("push", [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.size() < 2 || !args[0].isArray()) return Value::nil();
+        args[0].arrayVal->push_back(args[1]);
+        return Value::nil();
+    });
+
+    defineNative("pop", [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty() || !args[0].isArray() || args[0].arrayVal->empty()) return Value::nil();
+        Value val = args[0].arrayVal->back();
+        args[0].arrayVal->pop_back();
+        return val;
+    });
+}
+
+void Evaluator::defineNative(const std::string& name, NativeFunction fn) {
+    globals->define(name, Value::fromNative(std::move(fn)));
+}
+
+void Evaluator::registerStdlib(const std::string& moduleName,
+                                std::unordered_map<std::string, NativeFunction> funcs) {
+    stdlibRegistry[moduleName] = std::move(funcs);
+}
+
+Value Evaluator::evaluate(const AST& ast, NodeIndex root) {
+    currentAST = &ast;
+    try {
+        return evalNode(root);
+    } catch (const RuntimeException& e) {
+        if (e.isReturn) return e.value;
+        throw std::runtime_error("Unhandled exception: " + e.value.toString());
+    }
+}
+
+// ============================================================================
+// Core Node Dispatch
+// ============================================================================
+
+Value Evaluator::evalNode(NodeIndex idx) {
+    runtime_guard::RecursionGuard depthGuard;
+    if (idx == INVALID_NODE) return Value::nil();
+    const ASTNode& node = currentAST->get(idx);
+
+    switch (node.type) {
+        case NodeType::PROGRAM:
+        case NodeType::BLOCK: {
+            Value last;
+            for (NodeIndex child : node.children) last = executeStatement(child);
+            return last;
+        }
+        case NodeType::LITERAL_INT:    return Value::fromInt(std::get<int64_t>(node.literal.data));
+        case NodeType::LITERAL_FLOAT:  return Value::fromFloat(std::get<double>(node.literal.data));
+        case NodeType::LITERAL_STRING: return Value::fromString(node.name);
+        case NodeType::LITERAL_BOOL:   return Value::fromBool(std::get<bool>(node.literal.data));
+        case NodeType::LITERAL_NIL:    return Value::nil();
+        case NodeType::IDENTIFIER:     return evalIdentifier(node);
+        case NodeType::BINARY_OP:      return evalBinary(node);
+        case NodeType::UNARY_OP:       return evalUnary(node);
+        case NodeType::CALL:           return evalCall(node);
+        case NodeType::MEMBER_ACCESS:  return evalMemberAccess(node);
+        case NodeType::INDEX_ACCESS:   return evalIndexAccess(node);
+        case NodeType::ARRAY_LITERAL:  return evalArrayLiteral(node);
+        case NodeType::MAP_LITERAL:    return evalMapLiteral(node);
+        case NodeType::VAR_ASSIGN:     return executeVarAssign(node);
+        case NodeType::MEMBER_ASSIGN:  return executeMemberAssign(node);
+        case NodeType::INDEX_ASSIGN:   return executeIndexAssign(node);
+        case NodeType::IF_STMT:        return executeIf(node);
+        case NodeType::FOR_STMT:       return executeFor(node);
+        case NodeType::WHILE_STMT:     return executeWhile(node);
+        case NodeType::TRY_STMT:       return executeTryCatch(node);
+        case NodeType::FUNC_DECL: {
+            FunctionDef fd;
+            fd.name = node.name;
+            fd.params = node.paramNames;
+            fd.bodyIndex = node.left;
+            fd.closure = environment;
+            environment->define(node.name, Value::fromFunction(std::move(fd)));
+            return Value::nil();
+        }
+        case NodeType::STRUCT_DECL:    return executeStructDecl(node);
+        case NodeType::IMPORT_STDLIB:  return executeImportStdlib(node);
+        case NodeType::IMPORT_FILE:    return Value::nil();
+        case NodeType::EXPR_STMT:      return evalNode(node.left);
+        case NodeType::RETURN_STMT: {
+            Value val = node.left != INVALID_NODE ? evalNode(node.left) : Value::nil();
+            throw RuntimeException(std::move(val), true);
+        }
+        case NodeType::THROW_STMT:     return executeThrow(node);
+        case NodeType::CATCH_STMT:     return Value::nil();
+        default:
+            throw std::runtime_error("Unknown node type: " + std::to_string(static_cast<int>(node.type)));
+    }
+}
+
+// ============================================================================
+// Expression Evaluators
+// ============================================================================
+
+Value Evaluator::evalIdentifier(const ASTNode& node) {
+    Value val;
+    if (environment->get(node.name, val)) return val;
+    throw std::runtime_error("Undefined variable: " + node.name);
+}
+
+Value Evaluator::evalBinary(const ASTNode& node) {
+    Value left = evalNode(node.left);
+    Value right = evalNode(node.right);
+
+    switch (node.binaryOp) {
+        case BinaryOp::ADD:
+            if (left.type == ValueType::INT && right.type == ValueType::INT)
+                return Value::fromInt(left.intVal + right.intVal);
+            if (left.isNumber() && right.isNumber())
+                return Value::fromFloat(left.asDouble() + right.asDouble());
+            if (left.type == ValueType::STRING || right.type == ValueType::STRING)
+                return Value::fromString(left.toString() + right.toString());
+            break;
+        case BinaryOp::SUB:
+            if (left.type == ValueType::INT && right.type == ValueType::INT)
+                return Value::fromInt(left.intVal - right.intVal);
+            return Value::fromFloat(left.asDouble() - right.asDouble());
+        case BinaryOp::MUL:
+            if (left.type == ValueType::INT && right.type == ValueType::INT)
+                return Value::fromInt(left.intVal * right.intVal);
+            return Value::fromFloat(left.asDouble() * right.asDouble());
+        case BinaryOp::DIV:
+            if (right.asDouble() == 0) throw std::runtime_error("Division by zero");
+            if (left.type == ValueType::INT && right.type == ValueType::INT)
+                return Value::fromInt(left.intVal / right.intVal);
+            return Value::fromFloat(left.asDouble() / right.asDouble());
+        case BinaryOp::MOD:
+            if (left.type == ValueType::INT && right.type == ValueType::INT) {
+                if (right.intVal == 0) throw std::runtime_error("Modulo by zero");
+                return Value::fromInt(left.intVal % right.intVal);
+            }
+            break;
+        case BinaryOp::EQ:  return Value::fromBool(left == right);
+        case BinaryOp::NEQ: return Value::fromBool(!(left == right));
+        case BinaryOp::LT:  return Value::fromBool(left.asDouble() < right.asDouble());
+        case BinaryOp::LTE: return Value::fromBool(left.asDouble() <= right.asDouble());
+        case BinaryOp::GT:  return Value::fromBool(left.asDouble() > right.asDouble());
+        case BinaryOp::GTE: return Value::fromBool(left.asDouble() >= right.asDouble());
+        case BinaryOp::AND: return Value::fromBool(left.isTruthy() && right.isTruthy());
+        case BinaryOp::OR:  return Value::fromBool(left.isTruthy() || right.isTruthy());
+    }
+    throw std::runtime_error("Invalid binary operation");
+}
+
+Value Evaluator::evalUnary(const ASTNode& node) {
+    Value operand = evalNode(node.left);
+    if (node.unaryOp == UnaryOp::NEG) {
+        if (operand.type == ValueType::INT) return Value::fromInt(-operand.intVal);
+        return Value::fromFloat(-operand.asDouble());
+    }
+    return Value::fromBool(!operand.isTruthy());
+}
+
+Value Evaluator::evalCall(const ASTNode& node) {
+    Value callee = evalNode(node.left);
+    std::vector<Value> args;
+    for (NodeIndex argIdx : node.children) args.push_back(evalNode(argIdx));
+
+    if (callee.type == ValueType::NATIVE_FUNCTION)
+        return (*callee.nativeVal)(*this, args);
+
+    if (callee.type == ValueType::FUNCTION) {
+        const auto& fd = *callee.funcVal;
+        if (args.size() != fd.params.size())
+            throw std::runtime_error("Expected " + std::to_string(fd.params.size()) +
+                                     " arguments but got " + std::to_string(args.size()));
+        auto callEnv = std::make_shared<Environment>(fd.closure);
+        for (size_t i = 0; i < args.size(); ++i) callEnv->define(fd.params[i], args[i]);
+        try {
+            return evalBlock(fd.bodyIndex, callEnv);
+        } catch (const RuntimeException& e) {
+            if (e.isReturn) return e.value;
+            throw;
+        }
+    }
+    throw std::runtime_error("Object is not callable");
+}
+
+Value Evaluator::evalMemberAccess(const ASTNode& node) {
+    Value left = evalNode(node.left);
+
+    // Struct instance field access
+    if (left.type == ValueType::STRUCT_INSTANCE) {
+        auto it = left.structVal->fields.find(node.name);
+        if (it != left.structVal->fields.end()) return it->second;
+        throw std::runtime_error("Undefined field '" + node.name + "' on struct '" + left.structVal->typeName + "'");
+    }
+
+    // Stdlib module member access (module stored as MAP with native functions)
+    if (left.type == ValueType::MAP && left.mapVal) {
+        // Module methods stored as entries in the map
+        Value key = Value::fromString(node.name);
+        auto it = left.mapVal->entries.find(key);
+        if (it != left.mapVal->entries.end()) return it->second;
+        throw std::runtime_error("Undefined method '" + node.name + "' on module");
+    }
+
+    // Array built-in methods
+    if (left.type == ValueType::ARRAY) {
+        if (node.name == "length") return Value::fromInt(static_cast<int64_t>(left.arrayVal->size()));
+        if (node.name == "push") {
+            auto captured = left.arrayVal;
+            return Value::fromNative([captured](Evaluator&, const std::vector<Value>& args) -> Value {
+                if (!args.empty()) captured->push_back(args[0]);
+                return Value::nil();
+            });
+        }
+        if (node.name == "pop") {
+            auto captured = left.arrayVal;
+            return Value::fromNative([captured](Evaluator&, const std::vector<Value>&) -> Value {
+                if (captured->empty()) return Value::nil();
+                Value v = captured->back();
+                captured->pop_back();
+                return v;
+            });
+        }
+    }
+
+    // String built-in methods
+    if (left.type == ValueType::STRING) {
+        if (node.name == "length") return Value::fromInt(static_cast<int64_t>(left.stringVal->size()));
+    }
+
+    throw std::runtime_error("Cannot access member '" + node.name + "' on " + left.toString());
+}
+
+Value Evaluator::evalIndexAccess(const ASTNode& node) {
+    Value left = evalNode(node.left);
+    Value index = evalNode(node.right);
+
+    if (left.type == ValueType::ARRAY && index.type == ValueType::INT) {
+        int64_t i = index.intVal;
+        auto& arr = *left.arrayVal;
+        if (i < 0) i += static_cast<int64_t>(arr.size());
+        if (i < 0 || i >= static_cast<int64_t>(arr.size()))
+            throw std::runtime_error("Array index out of bounds: " + std::to_string(index.intVal));
+        return arr[static_cast<size_t>(i)];
+    }
+
+    if (left.type == ValueType::MAP) {
+        auto it = left.mapVal->entries.find(index);
+        if (it != left.mapVal->entries.end()) return it->second;
+        return Value::nil();
+    }
+
+    if (left.type == ValueType::STRING && index.type == ValueType::INT) {
+        int64_t i = index.intVal;
+        auto& str = *left.stringVal;
+        if (i < 0) i += static_cast<int64_t>(str.size());
+        if (i < 0 || i >= static_cast<int64_t>(str.size()))
+            throw std::runtime_error("String index out of bounds");
+        return Value::fromString(std::string(1, str[static_cast<size_t>(i)]));
+    }
+
+    throw std::runtime_error("Cannot index into " + left.toString());
+}
+
+Value Evaluator::evalArrayLiteral(const ASTNode& node) {
+    std::vector<Value> arr;
+    arr.reserve(node.children.size());
+    for (NodeIndex child : node.children) arr.push_back(evalNode(child));
+    return Value::fromArray(std::move(arr));
+}
+
+Value Evaluator::evalMapLiteral(const ASTNode& node) {
+    auto map = std::make_shared<MapInstance>();
+    for (size_t i = 0; i + 1 < node.children.size(); i += 2) {
+        Value key = evalNode(node.children[i]);
+        Value val = evalNode(node.children[i + 1]);
+        map->entries[key] = val;
+    }
+    return Value::fromMap(std::move(map));
+}
+
+// ============================================================================
+// Statement Executors
+// ============================================================================
+
+Value Evaluator::evalBlock(NodeIndex idx, std::shared_ptr<Environment> env) {
+    auto previous = environment;
+    environment = std::move(env);
+    try {
+        Value result = evalNode(idx);
+        environment = previous;
+        return result;
+    } catch (...) {
+        environment = previous;
+        throw;
+    }
+}
+
+Value Evaluator::executeStatement(NodeIndex idx) { return evalNode(idx); }
+
+Value Evaluator::executeVarAssign(const ASTNode& node) {
+    Value val = evalNode(node.left);
+    if (!environment->assign(node.name, val)) environment->define(node.name, val);
+    return val;
+}
+
+Value Evaluator::executeMemberAssign(const ASTNode& node) {
+    Value obj = evalNode(node.left);
+    Value val = evalNode(node.right);
+    if (obj.type == ValueType::STRUCT_INSTANCE) {
+        obj.structVal->fields[node.name] = val;
+        return val;
+    }
+    if (obj.type == ValueType::MAP) {
+        obj.mapVal->entries[Value::fromString(node.name)] = val;
+        return val;
+    }
+    throw std::runtime_error("Cannot assign member on non-struct/map value");
+}
+
+Value Evaluator::executeIndexAssign(const ASTNode& node) {
+    Value obj = evalNode(node.left);
+    Value index = evalNode(node.right);
+    Value val = evalNode(node.extra);
+
+    if (obj.type == ValueType::ARRAY && index.type == ValueType::INT) {
+        auto& arr = *obj.arrayVal;
+        int64_t i = index.intVal;
+        if (i < 0) i += static_cast<int64_t>(arr.size());
+        if (i < 0 || i >= static_cast<int64_t>(arr.size()))
+            throw std::runtime_error("Array index out of bounds during assignment");
+        arr[static_cast<size_t>(i)] = val;
+        return val;
+    }
+    if (obj.type == ValueType::MAP) {
+        obj.mapVal->entries[index] = val;
+        return val;
+    }
+    throw std::runtime_error("Cannot index-assign on this type");
+}
+
+Value Evaluator::executeIf(const ASTNode& node) {
+    if (evalNode(node.left).isTruthy()) return evalNode(node.right);
+    if (node.extra != INVALID_NODE) return evalNode(node.extra);
+    return Value::nil();
+}
+
+Value Evaluator::executeWhile(const ASTNode& node) {
+    uint32_t iterCount = 0;
+    while (evalNode(node.left).isTruthy()) {
+        evalNode(node.right);
+        if (++iterCount % GUARD_LOOP_CHECK_INTERVAL == 0) {
+            if (runtime_guard::checkTimeout()) {
+                throw std::runtime_error(
+                    "Execution timeout: while loop exceeded "
+                    + std::to_string(GUARD_TIMEOUT_SECONDS) + "s limit");
+            }
+        }
+    }
+    return Value::nil();
+}
+
+Value Evaluator::executeFor(const ASTNode& node) {
+    Value iterable = evalNode(node.left);
+    if (iterable.type != ValueType::ARRAY)
+        throw std::runtime_error("Can only iterate over arrays");
+    uint32_t iterCount = 0;
+    for (const auto& item : *iterable.arrayVal) {
+        auto loopEnv = std::make_shared<Environment>(environment);
+        loopEnv->define(node.name, item);
+        evalBlock(node.right, loopEnv);
+        if (++iterCount % GUARD_LOOP_CHECK_INTERVAL == 0) {
+            if (runtime_guard::checkTimeout()) {
+                throw std::runtime_error(
+                    "Execution timeout: for loop exceeded "
+                    + std::to_string(GUARD_TIMEOUT_SECONDS) + "s limit");
+            }
+        }
+    }
+    return Value::nil();
+}
+
+Value Evaluator::executeTryCatch(const ASTNode& node) {
+    try {
+        evalNode(node.left);
+    } catch (const RuntimeException& e) {
+        if (e.isReturn) throw;
+        auto catchEnv = std::make_shared<Environment>(environment);
+        if (!node.name.empty()) catchEnv->define(node.name, e.value);
+        evalBlock(node.right, catchEnv);
+    } catch (const std::exception& e) {
+        auto catchEnv = std::make_shared<Environment>(environment);
+        if (!node.name.empty()) catchEnv->define(node.name, Value::fromString(e.what()));
+        evalBlock(node.right, catchEnv);
+    }
+    // Execute finally block if present
+    if (node.extra != INVALID_NODE) evalNode(node.extra);
+    return Value::nil();
+}
+
+Value Evaluator::executeThrow(const ASTNode& node) {
+    Value val = evalNode(node.left);
+    throw RuntimeException(std::move(val), false);
+}
+
+Value Evaluator::executeStructDecl(const ASTNode& node) {
+    // Register a struct constructor as a native function
+    std::string structName = node.name;
+    std::vector<std::string> fieldNames = node.paramNames;
+
+    auto constructor = Value::fromNative(
+        [structName, fieldNames](Evaluator&, const std::vector<Value>& args) -> Value {
+            if (args.size() != fieldNames.size())
+                throw std::runtime_error("Struct '" + structName + "' expects " +
+                    std::to_string(fieldNames.size()) + " fields");
+            auto inst = std::make_shared<StructInstance>();
+            inst->typeName = structName;
+            for (size_t i = 0; i < fieldNames.size(); ++i)
+                inst->fields[fieldNames[i]] = args[i];
+            return Value::fromStruct(std::move(inst));
+        });
+    environment->define(structName, constructor);
+    return Value::nil();
+}
+
+Value Evaluator::executeImportStdlib(const ASTNode& node) {
+    std::string moduleName = node.name;
+    std::string alias = node.paramNames.empty() ? moduleName : node.paramNames[0];
+
+    auto it = stdlibRegistry.find(moduleName);
+    if (it == stdlibRegistry.end())
+        throw std::runtime_error("Unknown stdlib module: " + moduleName);
+
+    // Create a MAP value containing all module functions
+    auto moduleMap = std::make_shared<MapInstance>();
+    for (auto& [funcName, fn] : it->second) {
+        moduleMap->entries[Value::fromString(funcName)] = Value::fromNative(fn);
+    }
+    environment->define(alias, Value::fromMap(std::move(moduleMap)));
+    return Value::nil();
+}
+
+} // namespace roucaarize
+-e 
+
+
+FILE: core/src/grammar.cpp
+--------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * Grammar.cpp - Roucaarize Static Analyzer Implementation
+ *
+ * ============================================================================
+ * ROUCAARIZE LANGUAGE GRAMMAR REFERENCE & STATIC ANALYZER
+ * ============================================================================
+ *
+ * Single-pass static analyzer with resource limits.
+ * Performs naming, semantic, and performance checks in one AST traversal
+ * with bounded depth and node visit budget.
+ *
+ * Resource Limits:
+ * - MAX_ANALYSIS_DEPTH (256): Maximum recursion depth per traversal
+ * - MAX_NODE_BUDGET (50000): Maximum nodes visited per analysis
+ * - MAX_AST_NODES (100000): AST size threshold; skip deep analysis if exceeded
+ * - MAX_DIAGNOSTICS (200): Cap on reported diagnostics per file
+ *
+ * LANGUAGE OVERVIEW:
+ * Roucaarize is a minimalist, high-performance language compiled to Linux
+ * x86-64 machine code. It is designed specifically for Linux orchestration,
+ * system administration, and daemon management, serving as a safer,
+ * strongly-typed alternative to Bash.
+ *
+ * SYNTAX RULES:
+ * - Variables:       x = "/etc/config" (dynamic typing, no 'let'/'var')
+ * - Functions:       function name(a, b) { return a + b }
+ * - Structs:         struct Config { path, port }; c = Config("/etc", 80)
+ * - Arrays:          arr = ["/bin", "/usr/bin"]; arr.push("/sbin")
+ * - Maps:            env = {"USER": "root", "HOME": "/root"}
+ * - Control flow:    if (cond) { } else if (cond) { } else { }
+ * - Loops:           while (cond) { }; for (x in iterable) { }
+ * - Exceptions:      try { } catch(e) { } finally { }
+ * - Imports:         import stdlib fs as f; import "utils.rou" as util
+ * - Comments:        // single-line only
+ *
+ * NAMING CONVENTIONS (Enforced):
+ * - No underscores allowed in any identifier (forces clean, readable code)
+ * - Variables & functions: camelCase (start lowercase)
+ * - Structs: PascalCase (start uppercase)
+ * - Stdlib aliases: short lowercase identifiers
+ *
+ * ORCHESTRATION BEST PRACTICES:
+ * - Never swallow errors: Empty catch blocks are flagged as warnings.
+ * - Always check exit codes or use try-catch when calling system utilities.
+ * - Prefer built-in 'fs' and 'sys' modules over spawning external commands.
+ *
+ * BUILT-IN FUNCTIONS:
+ * print(args...)     — Print values to stdout
+ * log(level, msg)    — Write to system journal / syslog
+ * panic(msg)         — Immediately halt execution with exit code 1
+ *
+ * STANDARD LIBRARY MODULES:
+ * sys      — exec, spawn, kill, getEnv, setEnv, getUid, exit, systemctl
+ * fs       — read, write, exists, chmod, chown, mkdir, remove, mount
+ * net      — ping, fetch, listen, connect
+ * proc     — list, isRunning, pkill, usage
+ * string   — toUpperCase, toLowerCase, trim, split, replace, contains
+ *
+ * OPERATORS (by precedence, lowest to highest):
+ * or                 — Logical OR
+ * and                — Logical AND
+ * == !=              — Equality
+ * < <= > >=          — Comparison
+ * + -                — Addition, Subtraction
+ * * / %              — Multiplication, Division, Modulo
+ * - !                — Unary negation, logical NOT
+ * . () []            — Member access, call, index
+ *
+ * TYPE SYSTEM:
+ * int      — 64-bit signed integer (useful for PIDs, UIDs, bytes)
+ * string   — Immutable UTF-8 string (paths, commands)
+ * bool     — true / false
+ * nil      — Null value
+ * array    — Dynamic array
+ * map      — Hash map
+ * struct   — User-defined composite type
+ * function — First-class function value
+ *
+ * ============================================================================
+ */
+
+#include "grammar.hpp"
+#include "lexer.hpp"
+#include "parser.hpp"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <algorithm>
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
+namespace roucaarize {
+
+// ============================================================================
+// Initialization
+// ============================================================================
+
+GrammarChecker::GrammarChecker()
+    : nodeVisitCount_(0), currentDepth_(0) {
+    initBuiltins();
+}
+
+void GrammarChecker::initBuiltins() {
+    builtinFunctions = {
+        "print", "log", "panic"
+    };
+
+    knownStdlibModules = {
+        "sys", "fs", "net", "proc", "string"
+    };
+
+    stdlibMethods["sys"] = {
+        "exec", "spawn", "kill", "getEnv", "setEnv", "getUid", "exit",
+        "hostname", "uptime", "systemctl"
+    };
+
+    stdlibMethods["fs"] = {
+        "read", "write", "append", "exists", "chmod", "chown",
+        "mkdir", "remove", "mount", "unmount", "copy", "move", "isDir"
+    };
+
+    stdlibMethods["net"] = {
+        "ping", "fetch", "listen", "connect", "getIp"
+    };
+
+    stdlibMethods["proc"] = {
+        "list", "isRunning", "pkill", "cpuUsage", "memUsage"
+    };
+
+    stdlibMethods["string"] = {
+        "toUpperCase", "toLowerCase", "trim", "split", "replace",
+        "substring", "contains", "indexOf", "startsWith", "endsWith", "length"
+    };
+}
+
+// ============================================================================
+// Public API
+// ============================================================================
+
+AnalysisResult GrammarChecker::analyzeFile(const std::string& filePath) {
+    std::ifstream file(filePath);
+    if (!file) {
+        AnalysisResult result;
+        result.filePath = filePath;
+        result.diagnostics.push_back({
+            DiagLevel::ERROR, 0, 0,
+            "Cannot open file: " + filePath,
+            "io.fileNotFound"
+        });
+        result.errorCount = 1;
+        return result;
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return analyzeSource(buffer.str(), filePath);
+}
+
+AnalysisResult GrammarChecker::analyzeSource(const std::string& source, const std::string& filePath) {
+    diagnostics.clear();
+    scopeStack.clear();
+    structFields.clear();
+    importAliases.clear();
+    nodeVisitCount_ = 0;
+    currentDepth_ = 0;
+
+    AnalysisResult result;
+    result.filePath = filePath;
+
+    // Phase 1: Lexer validation
+    Lexer lexer(source);
+    auto tokens = lexer.tokenize();
+
+    if (!lexer.errors().empty()) {
+        for (const auto& err : lexer.errors()) {
+            addDiag(DiagLevel::ERROR, 0, 0, err, "syntax.lexer");
+        }
+    }
+
+    // Phase 2: Parser validation
+    Parser parser(tokens, source);
+    parser.parse();
+
+    if (parser.hasErrors()) {
+        for (const auto& err : parser.errors()) {
+            addDiag(DiagLevel::ERROR, 0, 0, err, "syntax.parser");
+        }
+    }
+
+    if (parser.hasErrors() || !lexer.errors().empty()) {
+        result.diagnostics = std::move(diagnostics);
+        for (const auto& d : result.diagnostics) {
+            switch (d.level) {
+                case DiagLevel::ERROR: result.errorCount++; break;
+                case DiagLevel::WARNING: result.warningCount++; break;
+                case DiagLevel::PERF: result.perfCount++; break;
+            }
+        }
+        return result;
+    }
+
+    const AST& ast = parser.getAST();
+    NodeIndex root = ast.root();
+
+    if (root == INVALID_NODE) {
+        result.diagnostics = std::move(diagnostics);
+        return result;
+    }
+
+    // Phase 3: AST size pre-check
+    const ASTNode& rootNode = ast.get(root);
+    if (rootNode.type == NodeType::PROGRAM && rootNode.children.size() > MAX_AST_NODES) {
+        addDiag(DiagLevel::WARNING, 0, 0,
+                "File exceeds analysis node limit (" + std::to_string(MAX_AST_NODES) +
+                " top-level statements). Analysis truncated for resource safety.",
+                "analysis.budget");
+        result.budgetExceeded = true;
+        result.diagnostics = std::move(diagnostics);
+        for (const auto& d : result.diagnostics) {
+            switch (d.level) {
+                case DiagLevel::ERROR: result.errorCount++; break;
+                case DiagLevel::WARNING: result.warningCount++; break;
+                case DiagLevel::PERF: result.perfCount++; break;
+            }
+        }
+        return result;
+    }
+
+    // Phase 4: Pre-scan top-level declarations (functions, structs, imports)
+    pushScope(false);
+    registerTopLevel(ast, root);
+
+    // Phase 5: Single-pass analysis (naming + semantics + performance)
+    analyze(ast, root, 0);
+
+    // Phase 6: Check unused global variables
+    if (!scopeStack.empty()) {
+        const auto& globalScope = scopeStack.back();
+        for (const auto& varName : globalScope.variables) {
+            if (globalScope.readVariables.find(varName) == globalScope.readVariables.end()) {
+                if (varName.length() > 1) {
+                    addDiag(DiagLevel::WARNING, 0, 0,
+                            "Variable '" + varName + "' is assigned but never read",
+                            "semantic.unusedVariable");
+                }
+            }
+        }
+    }
+    popScope();
+
+    if (!withinBudget()) {
+        result.budgetExceeded = true;
+    }
+
+    result.diagnostics = std::move(diagnostics);
+    for (const auto& d : result.diagnostics) {
+        switch (d.level) {
+            case DiagLevel::ERROR: result.errorCount++; break;
+            case DiagLevel::WARNING: result.warningCount++; break;
+            case DiagLevel::PERF: result.perfCount++; break;
+        }
+    }
+
+    return result;
+}
+
+// ============================================================================
+// Output formatting
+// ============================================================================
+
+int GrammarChecker::printResult(const AnalysisResult& result) {
+    std::cout << "\n\033[1mgrammar: " << result.filePath << "\033[0m" << std::endl;
+
+    if (result.diagnostics.empty()) {
+        std::cout << "  \033[32m✓\033[0m 0 errors, 0 warnings" << std::endl;
+        return 0;
+    }
+
+    for (const auto& d : result.diagnostics) {
+        const char* prefix = "error";
+        const char* color = "\033[31m";
+
+        switch (d.level) {
+            case DiagLevel::ERROR:
+                prefix = "error";
+                color = "\033[31m";
+                break;
+            case DiagLevel::WARNING:
+                prefix = "warn ";
+                color = "\033[33m";
+                break;
+            case DiagLevel::PERF:
+                prefix = "perf ";
+                color = "\033[36m";
+                break;
+        }
+
+        if (d.line > 0) {
+            std::cout << "  " << color << prefix << "\033[0m"
+                      << " [L" << d.line << ":C" << d.column << "] "
+                      << d.message << std::endl;
+        } else {
+            std::cout << "  " << color << prefix << "\033[0m " << d.message;
+        }
+    }
+
+    std::cout << "\n  ";
+    if (result.errorCount > 0) {
+        std::cout << "\033[31m✗\033[0m ";
+    } else {
+        std::cout << "\033[32m✓\033[0m ";
+    }
+    std::cout << result.errorCount << " error"
+              << (result.errorCount != 1 ? "s" : "") << ", "
+              << result.warningCount << " warning"
+              << (result.warningCount != 1 ? "s" : "") << ", "
+              << result.perfCount << " system hint"
+              << (result.perfCount != 1 ? "s" : "")
+              << std::endl;
+
+    if (result.budgetExceeded) {
+        std::cout << "  \033[33m⚠ Analysis was truncated due to resource limits.\033[0m" << std::endl;
+    }
+
+    return static_cast<int>(result.errorCount);
+}
+
+void GrammarChecker::printSummary(size_t totalFiles, size_t totalErrors,
+                                   size_t totalWarnings, size_t totalPerf) {
+    std::cout << "\n\033[1m════════════════════════════════════════\033[0m" << std::endl;
+    std::cout << "\033[1m  Roucaarize Analysis Summary\033[0m" << std::endl;
+    std::cout << "\033[1m════════════════════════════════════════\033[0m" << std::endl;
+    std::cout << "  Files analyzed:     " << totalFiles << std::endl;
+    std::cout << "  Errors:             " << totalErrors << std::endl;
+    std::cout << "  Warnings:           " << totalWarnings << std::endl;
+    std::cout << "  System hints:       " << totalPerf << std::endl;
+
+    if (totalErrors == 0 && totalWarnings == 0 && totalPerf == 0) {
+        std::cout << "\n  \033[32m✓ All files pass grammar analysis.\033[0m" << std::endl;
+    } else if (totalErrors == 0) {
+        std::cout << "\n  \033[33m⚠ No errors, but review warnings/hints above.\033[0m" << std::endl;
+    } else {
+        std::cout << "\n  \033[31m✗ Fix " << totalErrors
+                  << " error" << (totalErrors != 1 ? "s" : "")
+                  << " before running.\033[0m" << std::endl;
+    }
+}
+
+// ============================================================================
+// Budget Check
+// ============================================================================
+
+bool GrammarChecker::withinBudget() const {
+    return nodeVisitCount_ < MAX_NODE_BUDGET &&
+           diagnostics.size() < MAX_DIAGNOSTICS;
+}
+
+// ============================================================================
+// Scope & Symbol Management
+// ============================================================================
+
+void GrammarChecker::pushScope(bool isFunction) {
+    scopeStack.push_back({});
+    scopeStack.back().isFunction = isFunction;
+}
+
+void GrammarChecker::popScope() {
+    if (!scopeStack.empty()) scopeStack.pop_back();
+}
+
+void GrammarChecker::declareVariable(const std::string& name) {
+    if (!scopeStack.empty()) scopeStack.back().variables.insert(name);
+}
+
+void GrammarChecker::declareFunction(const std::string& name) {
+    if (!scopeStack.empty()) scopeStack.back().functions.insert(name);
+    for (auto& scope : scopeStack) scope.functions.insert(name);
+}
+
+bool GrammarChecker::isVariableDeclared(const std::string& name) const {
+    for (auto it = scopeStack.rbegin(); it != scopeStack.rend(); ++it) {
+        if (it->variables.count(name)) return true;
+    }
+    return false;
+}
+
+bool GrammarChecker::isFunctionDeclared(const std::string& name) const {
+    for (auto it = scopeStack.rbegin(); it != scopeStack.rend(); ++it) {
+        if (it->functions.count(name)) return true;
+    }
+    return builtinFunctions.count(name) > 0;
+}
+
+void GrammarChecker::markVariableRead(const std::string& name) {
+    for (auto it = scopeStack.rbegin(); it != scopeStack.rend(); ++it) {
+        if (it->variables.count(name)) {
+            it->readVariables.insert(name);
+            return;
+        }
+    }
+}
+
+bool GrammarChecker::isLowerCamelCase(const std::string& name) const {
+    if (name.empty()) return true;
+    if (name[0] < 'a' || name[0] > 'z') return false;
+    for (char c : name) if (c == '_') return false;
+    return true;
+}
+
+bool GrammarChecker::isUpperCamelCase(const std::string& name) const {
+    if (name.empty()) return true;
+    if (name[0] < 'A' || name[0] > 'Z') return false;
+    for (char c : name) if (c == '_') return false;
+    return true;
+}
+
+bool GrammarChecker::addDiag(DiagLevel level, int32_t line, int32_t col,
+                              const std::string& message, const std::string& ruleId) {
+    if (diagnostics.size() >= MAX_DIAGNOSTICS) return false;
+    diagnostics.push_back({level, line, col, message, ruleId});
+    return true;
+}
+
+// ============================================================================
+// Pre-scan: Register Top-Level Declarations
+// ============================================================================
+
+void GrammarChecker::registerTopLevel(const AST& ast, NodeIndex idx) {
+    if (idx == INVALID_NODE) return;
+    const ASTNode& node = ast.get(idx);
+    if (node.type != NodeType::PROGRAM) return;
+
+    for (NodeIndex child : node.children) {
+        const ASTNode& childNode = ast.get(child);
+        if (childNode.type == NodeType::FUNC_DECL) {
+            if (isFunctionDeclared(childNode.name)) {
+                addDiag(DiagLevel::WARNING, childNode.line, childNode.column,
+                        "Function '" + childNode.name + "' is declared multiple times",
+                        "semantic.duplicateFunc");
+            }
+            declareFunction(childNode.name);
+        } else if (childNode.type == NodeType::STRUCT_DECL) {
+            if (structFields.count(childNode.name)) {
+                addDiag(DiagLevel::ERROR, childNode.line, childNode.column,
+                        "Struct '" + childNode.name + "' is defined multiple times",
+                        "semantic.duplicateStruct");
+            }
+            structFields[childNode.name] = childNode.paramNames;
+            declareFunction(childNode.name);
+        } else if (childNode.type == NodeType::IMPORT_STDLIB) {
+            if (!childNode.paramNames.empty()) {
+                importAliases.insert(childNode.paramNames[0]);
+                declareVariable(childNode.paramNames[0]);
+            }
+            if (knownStdlibModules.find(childNode.name) == knownStdlibModules.end()) {
+                addDiag(DiagLevel::ERROR, childNode.line, childNode.column,
+                        "Unknown stdlib module '" + childNode.name +
+                        "' — known modules for orchestration: sys, fs, net, proc, string",
+                        "semantic.unknownStdlib");
+            }
+        }
+    }
+}
+
+// ============================================================================
+// Single-Pass Analysis (Naming + Semantics + Performance)
+// ============================================================================
+
+void GrammarChecker::analyze(const AST& ast, NodeIndex idx, uint32_t depth) {
+    if (idx == INVALID_NODE) return;
+    if (depth >= MAX_ANALYSIS_DEPTH) return;
+    if (!withinBudget()) return;
+
+    ++nodeVisitCount_;
+    const ASTNode& node = ast.get(idx);
+
+    switch (node.type) {
+        case NodeType::PROGRAM: {
+            for (NodeIndex child : node.children) {
+                if (!withinBudget()) break;
+                analyze(ast, child, depth + 1);
+            }
+            break;
+        }
+
+        case NodeType::VAR_ASSIGN: {
+            // Naming: check camelCase
+            if (!node.name.empty() && !isLowerCamelCase(node.name)) {
+                if (node.name.length() > 1) {
+                    addDiag(DiagLevel::WARNING, node.line, node.column,
+                            "Variable '" + node.name + "' should use camelCase (no underscores allowed)",
+                            "naming.camelCase");
+                }
+            }
+            // Semantics: analyze value, then declare
+            analyze(ast, node.left, depth + 1);
+            declareVariable(node.name);
+            break;
+        }
+
+        case NodeType::FUNC_DECL: {
+            // Naming: function name
+            if (!node.name.empty() && !isLowerCamelCase(node.name)) {
+                addDiag(DiagLevel::WARNING, node.line, node.column,
+                        "Function '" + node.name + "' should use camelCase",
+                        "naming.funcCamelCase");
+            }
+            // Naming: parameter names
+            for (const auto& param : node.paramNames) {
+                if (!isLowerCamelCase(param)) {
+                    addDiag(DiagLevel::WARNING, node.line, node.column,
+                            "Parameter '" + param + "' should use camelCase",
+                            "naming.paramCamelCase");
+                }
+            }
+            // Performance: empty function body
+            if (node.left != INVALID_NODE) {
+                const ASTNode& body = ast.get(node.left);
+                if (body.type == NodeType::BLOCK && body.children.empty()) {
+                    addDiag(DiagLevel::WARNING, node.line, node.column,
+                            "Function '" + node.name + "' has an empty body",
+                            "perf.emptyFunction");
+                }
+            }
+            // Semantics: scope and parameter analysis
+            pushScope(true);
+            for (const auto& param : node.paramNames) declareVariable(param);
+            analyze(ast, node.left, depth + 1);
+
+            if (!scopeStack.empty()) {
+                const auto& funcScope = scopeStack.back();
+                for (const auto& param : node.paramNames) {
+                    if (funcScope.readVariables.find(param) == funcScope.readVariables.end()) {
+                        addDiag(DiagLevel::WARNING, node.line, node.column,
+                                "Parameter '" + param + "' of function '" + node.name + "' is never used",
+                                "semantic.unusedParam");
+                    }
+                }
+            }
+            popScope();
+            break;
+        }
+
+        case NodeType::STRUCT_DECL: {
+            // Naming: struct name must be PascalCase
+            if (!node.name.empty() && !isUpperCamelCase(node.name)) {
+                addDiag(DiagLevel::ERROR, node.line, node.column,
+                        "Struct '" + node.name + "' must use PascalCase (no underscores)",
+                        "naming.structPascalCase");
+            }
+            // Naming: field names
+            for (const auto& field : node.paramNames) {
+                if (!isLowerCamelCase(field)) {
+                    addDiag(DiagLevel::WARNING, node.line, node.column,
+                            "Struct field '" + field + "' should use camelCase",
+                            "naming.fieldCamelCase");
+                }
+            }
+            break;
+        }
+
+        case NodeType::IMPORT_STDLIB: {
+            // Naming: import alias
+            if (!node.paramNames.empty()) {
+                const auto& alias = node.paramNames[0];
+                if (!isLowerCamelCase(alias)) {
+                    addDiag(DiagLevel::WARNING, node.line, node.column,
+                            "Import alias '" + alias + "' should be lowercase",
+                            "naming.importAlias");
+                }
+            }
+            break;
+        }
+
+        case NodeType::IDENTIFIER: {
+            // Semantics: check variable usage before assignment
+            if (!node.name.empty() &&
+                !isVariableDeclared(node.name) &&
+                !isFunctionDeclared(node.name) &&
+                !importAliases.count(node.name) &&
+                structFields.find(node.name) == structFields.end()) {
+                addDiag(DiagLevel::WARNING, node.line, node.column,
+                        "Variable '" + node.name + "' used before assignment",
+                        "semantic.undefinedVar");
+            } else {
+                markVariableRead(node.name);
+            }
+            break;
+        }
+
+        case NodeType::CALL: {
+            // Semantics: check callee exists
+            if (node.left != INVALID_NODE) {
+                const ASTNode& callee = ast.get(node.left);
+                if (callee.type == NodeType::IDENTIFIER) {
+                    if (!isFunctionDeclared(callee.name) &&
+                        structFields.find(callee.name) == structFields.end()) {
+                        addDiag(DiagLevel::ERROR, callee.line, callee.column,
+                                "Undefined function '" + callee.name + "'",
+                                "semantic.undefinedFunc");
+                    }
+                    markVariableRead(callee.name);
+                } else if (callee.type == NodeType::MEMBER_ACCESS) {
+                    analyze(ast, callee.left, depth + 1);
+                }
+            }
+            for (NodeIndex arg : node.children) {
+                if (!withinBudget()) break;
+                analyze(ast, arg, depth + 1);
+            }
+            break;
+        }
+
+        case NodeType::BLOCK: {
+            bool foundReturn = false;
+            for (size_t i = 0; i < node.children.size(); ++i) {
+                if (!withinBudget()) break;
+                NodeIndex child = node.children[i];
+                if (foundReturn) {
+                    const ASTNode& deadNode = ast.get(child);
+                    addDiag(DiagLevel::WARNING, deadNode.line, deadNode.column,
+                            "Unreachable code after return/throw statement",
+                            "semantic.unreachableCode");
+                    break;
+                }
+                analyze(ast, child, depth + 1);
+                const ASTNode& childNode = ast.get(child);
+                if (childNode.type == NodeType::RETURN_STMT || childNode.type == NodeType::THROW_STMT) {
+                    foundReturn = true;
+                }
+            }
+            break;
+        }
+
+        case NodeType::IF_STMT: {
+            analyze(ast, node.left, depth + 1);
+            analyze(ast, node.right, depth + 1);
+            analyze(ast, node.extra, depth + 1);
+            break;
+        }
+
+        case NodeType::FOR_STMT: {
+            // Naming: iterator variable
+            if (!node.name.empty() && !isLowerCamelCase(node.name)) {
+                addDiag(DiagLevel::WARNING, node.line, node.column,
+                        "Iterator variable '" + node.name + "' should use camelCase",
+                        "naming.iteratorCamelCase");
+            }
+            // Semantics: scoped iteration
+            pushScope(false);
+            declareVariable(node.name);
+            analyze(ast, node.left, depth + 1);
+            // Performance: empty loop body
+            if (node.right != INVALID_NODE) {
+                const ASTNode& body = ast.get(node.right);
+                if (body.type == NodeType::BLOCK && body.children.empty()) {
+                    addDiag(DiagLevel::PERF, node.line, node.column,
+                            "Empty loop detected. This burns CPU cycles unnecessarily in daemon scripts.",
+                            "perf.emptyLoop");
+                }
+            }
+            analyze(ast, node.right, depth + 1);
+            popScope();
+            break;
+        }
+
+        case NodeType::WHILE_STMT: {
+            // Performance: empty loop body
+            if (node.right != INVALID_NODE) {
+                const ASTNode& body = ast.get(node.right);
+                if (body.type == NodeType::BLOCK && body.children.empty()) {
+                    addDiag(DiagLevel::PERF, node.line, node.column,
+                            "Empty loop detected. This burns CPU cycles unnecessarily in daemon scripts.",
+                            "perf.emptyLoop");
+                }
+            }
+            analyze(ast, node.left, depth + 1);
+            pushScope(false);
+            analyze(ast, node.right, depth + 1);
+            popScope();
+            break;
+        }
+
+        case NodeType::TRY_STMT: {
+            analyze(ast, node.left, depth + 1);
+            pushScope(false);
+            if (!node.name.empty()) declareVariable(node.name);
+            analyze(ast, node.right, depth + 1);
+            popScope();
+            // Finally block
+            for (NodeIndex child : node.children) {
+                if (!withinBudget()) break;
+                analyze(ast, child, depth + 1);
+            }
+            break;
+        }
+
+        case NodeType::CATCH_STMT: {
+            // Performance: empty catch
+            if (node.left != INVALID_NODE) {
+                const ASTNode& body = ast.get(node.left);
+                if (body.type == NodeType::BLOCK && body.children.empty()) {
+                    addDiag(DiagLevel::PERF, node.line, node.column,
+                            "Empty catch block detected. Swallowing system errors silently can lead to catastrophic failures during orchestration.",
+                            "perf.emptyCatch");
+                }
+            }
+            analyze(ast, node.left, depth + 1);
+            break;
+        }
+
+        default: {
+            // Generic traversal for expression nodes, member access, etc.
+            if (node.left != INVALID_NODE) analyze(ast, node.left, depth + 1);
+            if (node.right != INVALID_NODE) analyze(ast, node.right, depth + 1);
+            if (node.extra != INVALID_NODE) analyze(ast, node.extra, depth + 1);
+            for (NodeIndex child : node.children) {
+                if (!withinBudget()) break;
+                analyze(ast, child, depth + 1);
+            }
+            break;
+        }
+    }
+}
+
+} // namespace roucaarize-e 
+
+
+FILE: core/src/lexer.cpp
+--------------------------------------------------------------------------------
+#include "lexer.hpp"
+#include <charconv>
+#include <array>
+
+namespace roucaarize {
+
+namespace {
+struct KeywordEntry {
+    std::string_view keyword;
+    TokenType type;
+};
+
+constexpr std::array<KeywordEntry, 21> keywords = {{
+    {"function", TokenType::FUNCTION},
+    {"return", TokenType::RETURN},
+    {"if", TokenType::IF},
+    {"else", TokenType::ELSE},
+    {"for", TokenType::FOR},
+    {"while", TokenType::WHILE},
+    {"in", TokenType::IN},
+    {"struct", TokenType::STRUCT},
+    {"import", TokenType::IMPORT},
+    {"as", TokenType::AS},
+    {"stdlib", TokenType::STDLIB},
+    {"true", TokenType::TRUE},
+    {"false", TokenType::FALSE},
+    {"nil", TokenType::NIL},
+    {"and", TokenType::AND},
+    {"or", TokenType::OR},
+    {"not", TokenType::NOT},
+    {"try", TokenType::TRY},
+    {"catch", TokenType::CATCH},
+    {"throw", TokenType::THROW},
+    {"finally", TokenType::FINALLY}
+}};
+}
+
+Lexer::Lexer(std::string_view src) : source(src) {}
+
+bool Lexer::isAtEnd() const { return current >= source.size(); }
+char Lexer::advance() {
+    char c = source[current++];
+    if (c == '\n') { line++; column = 1; }
+    else column++;
+    return c;
+}
+char Lexer::peek() const { return isAtEnd() ? '\0' : source[current]; }
+char Lexer::peekNext() const { return current + 1 >= source.size() ? '\0' : source[current + 1]; }
+
+bool Lexer::match(char expected) {
+    if (isAtEnd() || source[current] != expected) return false;
+    advance();
+    return true;
+}
+
+void Lexer::skipWhitespace() {
+    while (!isAtEnd()) {
+        char c = peek();
+        if (c == ' ' || c == '\r' || c == '\t') advance();
+        else if (c == '/' && peekNext() == '/') {
+            while (peek() != '\n' && !isAtEnd()) advance();
+        } else return;
+    }
+}
+
+Token Lexer::makeToken(TokenType type) {
+    return Token(type, source.substr(start, current - start), line, startColumn);
+}
+
+Token Lexer::identifier() {
+    while (isalnum(peek()) || peek() == '_') {
+        if (peek() == '_') {
+            addError("Underscores are not allowed in identifiers (No-Underscore Policy)");
+        }
+        advance();
+    }
+    std::string_view text = source.substr(start, current - start);
+    TokenType type = TokenType::IDENTIFIER;
+    for (const auto& k : keywords) {
+        if (k.keyword == text) { type = k.type; break; }
+    }
+    return makeToken(type);
+}
+
+Token Lexer::number() {
+    double val = 0.0;
+    while (isdigit(peek())) advance();
+    bool isFloat = false;
+    if (peek() == '.' && isdigit(peekNext())) {
+        isFloat = true;
+        advance();
+        while (isdigit(peek())) advance();
+    }
+    std::string_view text = source.substr(start, current - start);
+    if (isFloat) {
+        std::from_chars(text.data(), text.data() + text.size(), val);
+        Token t = makeToken(TokenType::FLOAT);
+        t.floatValue = val;
+        return t;
+    } else {
+        int64_t iVal = 0;
+        std::from_chars(text.data(), text.data() + text.size(), iVal);
+        Token t = makeToken(TokenType::INTEGER);
+        t.intValue = iVal;
+        return t;
+    }
+}
+
+Token Lexer::string() {
+    while (peek() != '"' && !isAtEnd()) {
+        if (peek() == '\n') line++;
+        advance();
+    }
+    if (isAtEnd()) { addError("Unterminated string"); return makeToken(TokenType::ERROR); }
+    advance();
+    return makeToken(TokenType::STRING);
+}
+
+void Lexer::addError(const std::string& msg) {
+    errorMessages.push_back("Error at [Line " + std::to_string(line) + "]: " + msg);
+}
+
+Token Lexer::scanToken() {
+    skipWhitespace();
+    start = current;
+    startColumn = column;
+    if (isAtEnd()) return makeToken(TokenType::ENDOFFILE);
+    char c = advance();
+    if (c == '\n') return makeToken(TokenType::NEWLINE);
+    if (isalpha(c)) return identifier();
+    if (isdigit(c)) return number();
+    if (c == '"') return string();
+    switch (c) {
+        case '(': return makeToken(TokenType::LPAREN);
+        case ')': return makeToken(TokenType::RPAREN);
+        case '{': return makeToken(TokenType::LBRACE);
+        case '}': return makeToken(TokenType::RBRACE);
+        case '[': return makeToken(TokenType::LBRACKET);
+        case ']': return makeToken(TokenType::RBRACKET);
+        case ',': return makeToken(TokenType::COMMA);
+        case '.': return makeToken(TokenType::DOT);
+        case '-': return makeToken(TokenType::MINUS);
+        case '+': return makeToken(TokenType::PLUS);
+        case ';': return makeToken(TokenType::SEMICOLON);
+        case '*': return makeToken(TokenType::STAR);
+        case '/': return makeToken(TokenType::SLASH);
+        case '%': return makeToken(TokenType::PERCENT);
+        case ':': return makeToken(TokenType::COLON);
+        case '!': return makeToken(match('=') ? TokenType::BANGEQUAL : TokenType::BANG);
+        case '=': return makeToken(match('=') ? TokenType::EQUALEQUAL : TokenType::EQUAL);
+        case '<': return makeToken(match('=') ? TokenType::LESSEQUAL : TokenType::LESS);
+        case '>': return makeToken(match('=') ? TokenType::GREATEREQUAL : TokenType::GREATER);
+    }
+    addError("Unexpected character");
+    return makeToken(TokenType::ERROR);
+}
+
+std::vector<Token> Lexer::tokenize() {
+    std::vector<Token> tokens;
+    while (true) {
+        Token t = scanToken();
+        tokens.push_back(t);
+        if (t.type == TokenType::ENDOFFILE) break;
+    }
+    return tokens;
+}
+
+} // namespace roucaarize
+-e 
+
+
+FILE: core/src/main.cpp
+--------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * main.cpp - Roucaarize CLI Entry Point
+ *
+ * Command-line interface for the Roucaarize tree-walking interpreter
+ * and static grammar analyzer.
+ *
+ * Usage:
+ *   roucaarize <script.rou>           Run a script
+ *   roucaarize -grammar <script.rou>  Static analysis only
+ *   roucaarize -g <script.rou>        Short form for grammar check
+ */
+
+#include "lexer.hpp"
+#include "parser.hpp"
+#include "evaluator.hpp"
+#include "grammar.hpp"
+#include "sys.hpp"
+#include "fs.hpp"
+#include "net.hpp"
+#include "proc.hpp"
+#include "string.hpp"
+#include "time.hpp"
+#include "runtimeGuard.hpp"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <filesystem>
+
+namespace fs = std::filesystem;
+using namespace roucaarize;
+
+std::string readFile(const std::string& path) {
+    std::ifstream file(path);
+    if (!file) throw std::runtime_error("Cannot open file: " + path);
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
+}
+
+void printUsage(const char* prog) {
+    std::cout << "Usage: " << prog << " [options] <filename>\n"
+              << "Options:\n"
+              << "  -grammar, -g    Run static analysis only\n"
+              << "  -help, -h       Show this help message\n";
+}
+
+int main(int argc, char* argv[]) {
+    if (argc < 2) { printUsage(argv[0]); return 1; }
+
+    std::string arg1 = argv[1];
+    if (arg1 == "-help" || arg1 == "-h") { printUsage(argv[0]); return 0; }
+
+    bool grammarOnly = (arg1 == "-grammar" || arg1 == "-g");
+    std::string filename = grammarOnly ? (argc > 2 ? argv[2] : "") : arg1;
+
+    if (filename.empty()) {
+        if (grammarOnly) std::cerr << "Error: No file specified for grammar check\n";
+        else printUsage(argv[0]);
+        return 1;
+    }
+
+    try {
+        std::string source = readFile(filename);
+        
+        if (grammarOnly) {
+            GrammarChecker checker;
+            auto result = checker.analyzeSource(source, filename);
+            return GrammarChecker::printResult(result);
+        }
+
+        // Runtime guard only needed for interpreter execution, not static analysis
+        runtime_guard::initialize();
+
+        Lexer lexer(source);
+        auto tokens = lexer.tokenize();
+        if (!lexer.errors().empty()) {
+            for (const auto& err : lexer.errors()) std::cerr << err << "\n";
+            return 1;
+        }
+
+        Parser parser(tokens, source);
+        parser.parse();
+        if (parser.hasErrors()) {
+            for (const auto& err : parser.errors()) std::cerr << err << "\n";
+            return 1;
+        }
+
+        Evaluator evaluator;
+        // Register all stdlib modules
+        evaluator.registerStdlib("sys", stdlib::getSysLibrary());
+        evaluator.registerStdlib("fs", stdlib::getFsLibrary());
+        evaluator.registerStdlib("net", stdlib::getNetLibrary());
+        evaluator.registerStdlib("proc", stdlib::getProcLibrary());
+        evaluator.registerStdlib("string", stdlib::getStringLibrary());
+        evaluator.registerStdlib("time", stdlib::getTimeLibrary());
+
+        evaluator.evaluate(parser.getAST(), parser.getAST().root());
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
+        return 1;
+    }
+
+    return 0;
+}
+-e 
+
+
+FILE: core/src/parser.cpp
+--------------------------------------------------------------------------------
+#include "parser.hpp"
+#include <iostream>
+
+namespace roucaarize {
+
+Parser::Parser(const std::vector<Token>& toks, std::string_view src)
+    : tokens(toks), source(src) {}
+
+bool Parser::isAtEnd() const { return peek().type == TokenType::ENDOFFILE; }
+const Token& Parser::peek() const { return tokens[current]; }
+const Token& Parser::previous() const { return tokens[current - 1]; }
+const Token& Parser::advance() { if (!isAtEnd()) current++; return previous(); }
+bool Parser::check(TokenType type) const { return !isAtEnd() && peek().type == type; }
+bool Parser::match(TokenType type) { if (check(type)) { advance(); return true; } return false; }
+
+bool Parser::tooManyErrors() const {
+    return errorMessages.size() >= MAX_PARSE_ERRORS;
+}
+
+Token Parser::consume(TokenType type, const std::string& msg) {
+    if (check(type)) return advance();
+    if (!panicMode_) {
+        error(peek(), msg);
+        panicMode_ = true;
+    }
+    // Advance past the unexpected token to prevent stalls
+    if (!isAtEnd()) advance();
+    return Token(TokenType::ERROR, "", 0, 0);
+}
+
+void Parser::synchronize() {
+    panicMode_ = false;
+    while (!isAtEnd()) {
+        if (previous().type == TokenType::NEWLINE || previous().type == TokenType::SEMICOLON) return;
+        switch (peek().type) {
+            case TokenType::FUNCTION:
+            case TokenType::IF:
+            case TokenType::FOR:
+            case TokenType::WHILE:
+            case TokenType::RETURN:
+            case TokenType::STRUCT:
+            case TokenType::IMPORT:
+            case TokenType::TRY:
+                return;
+            default: break;
+        }
+        advance();
+    }
+}
+
+void Parser::error(const Token& token, const std::string& msg) {
+    if (panicMode_) return;
+    if (tooManyErrors()) return;
+    errorMessages.push_back("Error at [Line " + std::to_string(token.line) + "]: " + msg + " (got '" + std::string(token.lexeme) + "')");
+}
+
+NodeIndex Parser::parse() {
+    NodeIndex root = program();
+    ast.setRoot(root);
+    return root;
+}
+
+NodeIndex Parser::program() {
+    ASTNode node(NodeType::PROGRAM, 1, 1);
+    while (!isAtEnd() && !tooManyErrors()) {
+        if (match(TokenType::NEWLINE)) continue;
+        size_t before = current;
+        node.children.push_back(declaration());
+        // Stall detection: if no token was consumed, force advance
+        if (current == before && !isAtEnd()) {
+            advance();
+        }
+    }
+    return ast.addNode(std::move(node));
+}
+
+NodeIndex Parser::declaration() {
+    if (tooManyErrors()) { synchronize(); return INVALID_NODE; }
+    if (match(TokenType::FUNCTION)) return funcDeclaration();
+    if (match(TokenType::STRUCT)) return structDeclaration();
+    if (match(TokenType::IMPORT)) return importStatement();
+    return statement();
+}
+
+NodeIndex Parser::funcDeclaration() {
+    Token name = consume(TokenType::IDENTIFIER, "Expected function name");
+    consume(TokenType::LPAREN, "Expected '(' after function name");
+    ASTNode node(NodeType::FUNC_DECL, name.line, name.column);
+    node.name = std::string(name.lexeme);
+    if (!check(TokenType::RPAREN) && !isAtEnd()) {
+        do {
+            if (tooManyErrors()) break;
+            Token p = consume(TokenType::IDENTIFIER, "Expected parameter name");
+            node.paramNames.push_back(std::string(p.lexeme));
+        } while (match(TokenType::COMMA));
+    }
+    consume(TokenType::RPAREN, "Expected ')' after parameters");
+    consume(TokenType::LBRACE, "Expected '{' before function body");
+    node.left = block();
+    return ast.addNode(std::move(node));
+}
+
+NodeIndex Parser::structDeclaration() {
+    Token name = consume(TokenType::IDENTIFIER, "Expected struct name");
+    ASTNode node(NodeType::STRUCT_DECL, name.line, name.column);
+    node.name = std::string(name.lexeme);
+    consume(TokenType::LBRACE, "Expected '{' before struct fields");
+    while (!check(TokenType::RBRACE) && !isAtEnd() && !tooManyErrors()) {
+        while (match(TokenType::NEWLINE)) {}
+        if (check(TokenType::RBRACE)) break;
+        Token f = consume(TokenType::IDENTIFIER, "Expected field name");
+        node.paramNames.push_back(std::string(f.lexeme));
+        if (!check(TokenType::RBRACE)) match(TokenType::COMMA);
+    }
+    consume(TokenType::RBRACE, "Expected '}' after struct fields");
+    return ast.addNode(std::move(node));
+}
+
+NodeIndex Parser::importStatement() {
+    Token first = previous();
+    if (match(TokenType::STDLIB)) {
+        Token lib = consume(TokenType::IDENTIFIER, "Expected library name");
+        consume(TokenType::AS, "Expected 'as' after library name");
+        Token alias = consume(TokenType::IDENTIFIER, "Expected alias name");
+        ASTNode node(NodeType::IMPORT_STDLIB, first.line, first.column);
+        node.name = std::string(lib.lexeme);
+        node.paramNames.push_back(std::string(alias.lexeme));
+        return ast.addNode(std::move(node));
+    } else if (match(TokenType::STRING)) {
+        Token path = previous();
+        consume(TokenType::AS, "Expected 'as' after import path");
+        Token alias = consume(TokenType::IDENTIFIER, "Expected alias name");
+        ASTNode node(NodeType::IMPORT_FILE, first.line, first.column);
+        node.name = std::string(path.lexeme.substr(1, path.lexeme.size() - 2));
+        node.paramNames.push_back(std::string(alias.lexeme));
+        return ast.addNode(std::move(node));
+    }
+    error(first, "Expected 'stdlib' or file path after 'import'");
+    synchronize();
+    return INVALID_NODE;
+}
+
+NodeIndex Parser::statement() {
+    if (match(TokenType::IF)) return ifStatement();
+    if (match(TokenType::FOR)) return forStatement();
+    if (match(TokenType::WHILE)) return whileStatement();
+    if (match(TokenType::RETURN)) return returnStatement();
+    if (match(TokenType::TRY)) return tryStatement();
+    if (match(TokenType::THROW)) return throwStatement();
+    if (match(TokenType::LBRACE)) return block();
+    return expressionStatement();
+}
+
+NodeIndex Parser::ifStatement() {
+    Token first = previous();
+    consume(TokenType::LPAREN, "Expected '(' after 'if'");
+    NodeIndex cond = expression();
+    consume(TokenType::RPAREN, "Expected ')' after condition");
+    NodeIndex thenBranch = block();
+    ASTNode node(NodeType::IF_STMT, first.line, first.column);
+    node.left = cond;
+    node.right = thenBranch;
+    if (match(TokenType::ELSE)) {
+        if (match(TokenType::IF)) node.extra = ifStatement();
+        else {
+            consume(TokenType::LBRACE, "Expected '{' after 'else'");
+            node.extra = block();
+        }
+    }
+    return ast.addNode(std::move(node));
+}
+
+NodeIndex Parser::forStatement() {
+    Token first = previous();
+    consume(TokenType::LPAREN, "Expected '(' after 'for'");
+    Token iter = consume(TokenType::IDENTIFIER, "Expected iterator variable");
+    consume(TokenType::IN, "Expected 'in' after iterator variable");
+    NodeIndex iterable = expression();
+    consume(TokenType::RPAREN, "Expected ')' after for clause");
+    NodeIndex body = block();
+    ASTNode node(NodeType::FOR_STMT, first.line, first.column);
+    node.name = std::string(iter.lexeme);
+    node.left = iterable;
+    node.right = body;
+    return ast.addNode(std::move(node));
+}
+
+NodeIndex Parser::whileStatement() {
+    Token first = previous();
+    consume(TokenType::LPAREN, "Expected '(' after 'while'");
+    NodeIndex cond = expression();
+    consume(TokenType::RPAREN, "Expected ')' after condition");
+    NodeIndex body = block();
+    ASTNode node(NodeType::WHILE_STMT, first.line, first.column);
+    node.left = cond;
+    node.right = body;
+    return ast.addNode(std::move(node));
+}
+
+NodeIndex Parser::returnStatement() {
+    Token first = previous();
+    ASTNode node(NodeType::RETURN_STMT, first.line, first.column);
+    if (!check(TokenType::NEWLINE) && !check(TokenType::RBRACE) && !isAtEnd()) {
+        node.left = expression();
+    }
+    return ast.addNode(std::move(node));
+}
+
+NodeIndex Parser::tryStatement() {
+    Token first = previous();
+    NodeIndex tryBody = block();
+    consume(TokenType::CATCH, "Expected 'catch' after 'try' block");
+    std::string errVar = "";
+    if (match(TokenType::LPAREN)) {
+        Token e = consume(TokenType::IDENTIFIER, "Expected error variable");
+        errVar = std::string(e.lexeme);
+        consume(TokenType::RPAREN, "Expected ')' after catch variable");
+    }
+    NodeIndex catchBody = block();
+    ASTNode node(NodeType::TRY_STMT, first.line, first.column);
+    node.left = tryBody;
+    node.right = catchBody;
+    node.name = errVar;
+    if (match(TokenType::FINALLY)) {
+        node.extra = block();
+    }
+    return ast.addNode(std::move(node));
+}
+
+NodeIndex Parser::throwStatement() {
+    Token first = previous();
+    ASTNode node(NodeType::THROW_STMT, first.line, first.column);
+    node.left = expression();
+    return ast.addNode(std::move(node));
+}
+
+NodeIndex Parser::block() {
+    Token first = previous();
+    ASTNode node(NodeType::BLOCK, first.line, first.column);
+    if (first.type == TokenType::LBRACE) {
+        while (!check(TokenType::RBRACE) && !isAtEnd() && !tooManyErrors()) {
+            if (match(TokenType::NEWLINE)) continue;
+            size_t before = current;
+            node.children.push_back(declaration());
+            // Stall detection: break if no token was consumed
+            if (current == before && !isAtEnd()) {
+                advance();
+            }
+        }
+        consume(TokenType::RBRACE, "Expected '}' after block");
+    } else {
+        node.children.push_back(declaration());
+    }
+    return ast.addNode(std::move(node));
+}
+
+NodeIndex Parser::expressionStatement() {
+    NodeIndex expr = assignment();
+    if (expr == INVALID_NODE) {
+        synchronize();
+        ASTNode node(NodeType::EXPR_STMT, 0, 0);
+        return ast.addNode(std::move(node));
+    }
+    ASTNode node(NodeType::EXPR_STMT, ast.get(expr).line, ast.get(expr).column);
+    node.left = expr;
+    return ast.addNode(std::move(node));
+}
+
+NodeIndex Parser::expression() { return assignment(); }
+
+NodeIndex Parser::assignment() {
+    NodeIndex expr = orExpr();
+    if (match(TokenType::EQUAL)) {
+        NodeIndex val = assignment();
+        if (expr == INVALID_NODE) return val;
+        const ASTNode& target = ast.get(expr);
+        if (target.type == NodeType::IDENTIFIER) {
+            ASTNode node(NodeType::VAR_ASSIGN, target.line, target.column);
+            node.name = target.name;
+            node.left = val;
+            return ast.addNode(std::move(node));
+        } else if (target.type == NodeType::MEMBER_ACCESS) {
+            ASTNode node(NodeType::MEMBER_ASSIGN, target.line, target.column);
+            node.left = target.left;
+            node.name = target.name;
+            node.right = val;
+            return ast.addNode(std::move(node));
+        } else if (target.type == NodeType::INDEX_ACCESS) {
+            ASTNode node(NodeType::INDEX_ASSIGN, target.line, target.column);
+            node.left = target.left;
+            node.right = target.right;
+            node.extra = val;
+            return ast.addNode(std::move(node));
+        }
+        error(previous(), "Invalid assignment target");
+    }
+    return expr;
+}
+
+NodeIndex Parser::orExpr() {
+    NodeIndex left = andExpr();
+    while (match(TokenType::OR)) {
+        Token op = previous();
+        NodeIndex right = andExpr();
+        ASTNode node(NodeType::BINARY_OP, op.line, op.column);
+        node.binaryOp = BinaryOp::OR;
+        node.left = left;
+        node.right = right;
+        left = ast.addNode(std::move(node));
+    }
+    return left;
+}
+
+NodeIndex Parser::andExpr() {
+    NodeIndex left = equality();
+    while (match(TokenType::AND)) {
+        Token op = previous();
+        NodeIndex right = equality();
+        ASTNode node(NodeType::BINARY_OP, op.line, op.column);
+        node.binaryOp = BinaryOp::AND;
+        node.left = left;
+        node.right = right;
+        left = ast.addNode(std::move(node));
+    }
+    return left;
+}
+
+NodeIndex Parser::equality() {
+    NodeIndex left = comparison();
+    while (match(TokenType::EQUALEQUAL) || match(TokenType::BANGEQUAL)) {
+        Token op = previous();
+        NodeIndex right = comparison();
+        ASTNode node(NodeType::BINARY_OP, op.line, op.column);
+        node.binaryOp = (op.type == TokenType::EQUALEQUAL) ? BinaryOp::EQ : BinaryOp::NEQ;
+        node.left = left;
+        node.right = right;
+        left = ast.addNode(std::move(node));
+    }
+    return left;
+}
+
+NodeIndex Parser::comparison() {
+    NodeIndex left = term();
+    while (match(TokenType::LESS) || match(TokenType::LESSEQUAL) || match(TokenType::GREATER) || match(TokenType::GREATEREQUAL)) {
+        Token op = previous();
+        NodeIndex right = term();
+        ASTNode node(NodeType::BINARY_OP, op.line, op.column);
+        switch (op.type) {
+            case TokenType::LESS: node.binaryOp = BinaryOp::LT; break;
+            case TokenType::LESSEQUAL: node.binaryOp = BinaryOp::LTE; break;
+            case TokenType::GREATER: node.binaryOp = BinaryOp::GT; break;
+            case TokenType::GREATEREQUAL: node.binaryOp = BinaryOp::GTE; break;
+            default: break;
+        }
+        node.left = left;
+        node.right = right;
+        left = ast.addNode(std::move(node));
+    }
+    return left;
+}
+
+NodeIndex Parser::term() {
+    NodeIndex left = factor();
+    while (match(TokenType::PLUS) || match(TokenType::MINUS)) {
+        Token op = previous();
+        NodeIndex right = factor();
+        ASTNode node(NodeType::BINARY_OP, op.line, op.column);
+        node.binaryOp = (op.type == TokenType::PLUS) ? BinaryOp::ADD : BinaryOp::SUB;
+        node.left = left;
+        node.right = right;
+        left = ast.addNode(std::move(node));
+    }
+    return left;
+}
+
+NodeIndex Parser::factor() {
+    NodeIndex left = unary();
+    while (match(TokenType::STAR) || match(TokenType::SLASH) || match(TokenType::PERCENT)) {
+        Token op = previous();
+        NodeIndex right = unary();
+        ASTNode node(NodeType::BINARY_OP, op.line, op.column);
+        switch (op.type) {
+            case TokenType::STAR: node.binaryOp = BinaryOp::MUL; break;
+            case TokenType::SLASH: node.binaryOp = BinaryOp::DIV; break;
+            case TokenType::PERCENT: node.binaryOp = BinaryOp::MOD; break;
+            default: break;
+        }
+        node.left = left;
+        node.right = right;
+        left = ast.addNode(std::move(node));
+    }
+    return left;
+}
+
+NodeIndex Parser::unary() {
+    if (match(TokenType::BANG) || match(TokenType::MINUS) || match(TokenType::NOT)) {
+        Token op = previous();
+        NodeIndex right = unary();
+        ASTNode node(NodeType::UNARY_OP, op.line, op.column);
+        node.unaryOp = (op.type == TokenType::MINUS) ? UnaryOp::NEG : UnaryOp::NOT;
+        node.left = right;
+        return ast.addNode(std::move(node));
+    }
+    return postfix();
+}
+
+NodeIndex Parser::postfix() {
+    NodeIndex expr = primary();
+    while (true) {
+        if (match(TokenType::LPAREN)) {
+            Token t = previous();
+            ASTNode node(NodeType::CALL, t.line, t.column);
+            node.left = expr;
+            node.children = argumentList();
+            consume(TokenType::RPAREN, "Expected ')' after arguments");
+            expr = ast.addNode(std::move(node));
+        } else if (match(TokenType::DOT)) {
+            Token name = consume(TokenType::IDENTIFIER, "Expected member name");
+            ASTNode node(NodeType::MEMBER_ACCESS, name.line, name.column);
+            node.left = expr;
+            node.name = std::string(name.lexeme);
+            expr = ast.addNode(std::move(node));
+        } else if (match(TokenType::LBRACKET)) {
+            Token t = previous();
+            NodeIndex idx = expression();
+            consume(TokenType::RBRACKET, "Expected ']' after index");
+            ASTNode node(NodeType::INDEX_ACCESS, t.line, t.column);
+            node.left = expr;
+            node.right = idx;
+            expr = ast.addNode(std::move(node));
+        } else break;
+    }
+    return expr;
+}
+
+NodeIndex Parser::primary() {
+    if (match(TokenType::FALSE)) return ast.addNode(ASTNode(NodeType::LITERAL_BOOL, previous().line, previous().column));
+    if (match(TokenType::TRUE)) {
+        ASTNode n(NodeType::LITERAL_BOOL, previous().line, previous().column);
+        n.literal = LiteralValue(true);
+        return ast.addNode(std::move(n));
+    }
+    if (match(TokenType::NIL)) return ast.addNode(ASTNode(NodeType::LITERAL_NIL, previous().line, previous().column));
+    if (match(TokenType::INTEGER)) {
+        ASTNode n(NodeType::LITERAL_INT, previous().line, previous().column);
+        n.literal = LiteralValue(previous().intValue);
+        return ast.addNode(std::move(n));
+    }
+    if (match(TokenType::FLOAT)) {
+        ASTNode n(NodeType::LITERAL_FLOAT, previous().line, previous().column);
+        n.literal = LiteralValue(previous().floatValue);
+        return ast.addNode(std::move(n));
+    }
+    if (match(TokenType::STRING)) {
+        ASTNode n(NodeType::LITERAL_STRING, previous().line, previous().column);
+        n.name = std::string(previous().lexeme.substr(1, previous().lexeme.size() - 2));
+        n.literal = LiteralValue(n.name);
+        return ast.addNode(std::move(n));
+    }
+    if (match(TokenType::IDENTIFIER)) {
+        ASTNode n(NodeType::IDENTIFIER, previous().line, previous().column);
+        n.name = std::string(previous().lexeme);
+        return ast.addNode(std::move(n));
+    }
+    if (match(TokenType::LPAREN)) {
+        NodeIndex expr = expression();
+        consume(TokenType::RPAREN, "Expected ')' after expression");
+        return expr;
+    }
+    if (match(TokenType::LBRACKET)) {
+        Token first = previous();
+        ASTNode node(NodeType::ARRAY_LITERAL, first.line, first.column);
+        while (match(TokenType::NEWLINE)) {}
+        if (!check(TokenType::RBRACKET)) {
+            do {
+                while (match(TokenType::NEWLINE)) {}
+                if (check(TokenType::RBRACKET)) break;
+                node.children.push_back(expression());
+                while (match(TokenType::NEWLINE)) {}
+            } while (match(TokenType::COMMA));
+        }
+        while (match(TokenType::NEWLINE)) {}
+        consume(TokenType::RBRACKET, "Expected ']' after array elements");
+        return ast.addNode(std::move(node));
+    }
+    if (match(TokenType::LBRACE)) {
+        Token first = previous();
+        ASTNode node(NodeType::MAP_LITERAL, first.line, first.column);
+        while (match(TokenType::NEWLINE)) {}
+        if (!check(TokenType::RBRACE)) {
+            do {
+                while (match(TokenType::NEWLINE)) {}
+                if (check(TokenType::RBRACE)) break;
+                node.children.push_back(expression());
+                consume(TokenType::COLON, "Expected ':' after key");
+                node.children.push_back(expression());
+                while (match(TokenType::NEWLINE)) {}
+            } while (match(TokenType::COMMA));
+        }
+        while (match(TokenType::NEWLINE)) {}
+        consume(TokenType::RBRACE, "Expected '}' after map elements");
+        return ast.addNode(std::move(node));
+    }
+
+    error(peek(), "Expected expression");
+    synchronize();
+    return INVALID_NODE;
+}
+
+std::vector<NodeIndex> Parser::argumentList() {
+    std::vector<NodeIndex> args;
+    if (!check(TokenType::RPAREN)) {
+        do {
+            if (tooManyErrors()) break;
+            args.push_back(expression());
+        } while (match(TokenType::COMMA));
+    }
+    return args;
+}
+
+} // namespace roucaarize
+-e 
+
+
+FILE: core/src/value.cpp
+--------------------------------------------------------------------------------
+#include "value.hpp"
+#include <sstream>
+#include <iomanip>
+
+namespace roucaarize {
+
+std::string Value::toString() const {
+    switch (type) {
+        case ValueType::NIL: return "nil";
+        case ValueType::BOOL: return boolVal ? "true" : "false";
+        case ValueType::INT: return std::to_string(intVal);
+        case ValueType::FLOAT: {
+            std::ostringstream oss;
+            oss << std::fixed << std::setprecision(6) << floatVal;
+            std::string s = oss.str();
+            s.erase(s.find_last_not_of('0') + 1, std::string::npos);
+            if (s.back() == '.') s += '0';
+            return s;
+        }
+        case ValueType::STRING: return *stringVal;
+        case ValueType::ARRAY: {
+            std::string res = "[";
+            for (size_t i = 0; i < arrayVal->size(); ++i) {
+                res += (*arrayVal)[i].toString();
+                if (i < arrayVal->size() - 1) res += ", ";
+            }
+            res += "]";
+            return res;
+        }
+        case ValueType::MAP: return "<map>";
+        case ValueType::STRUCT_INSTANCE: return "<struct " + structVal->typeName + ">";
+        case ValueType::FUNCTION: return "<function " + funcVal->name + ">";
+        case ValueType::NATIVE_FUNCTION: return "<native function>";
+        default: return "unknown";
+    }
+}
+
+size_t ValueHasher::operator()(const Value& v) const {
+    switch (v.type) {
+        case ValueType::BOOL: return std::hash<bool>{}(v.boolVal);
+        case ValueType::INT: return std::hash<int64_t>{}(v.intVal);
+        case ValueType::FLOAT: return std::hash<double>{}(v.floatVal);
+        case ValueType::STRING: return std::hash<std::string>{}(*v.stringVal);
+        default: return 0;
+    }
+}
+
+} // namespace roucaarize
+-e 
+
+
+FILE: core/stdlib/include/fs.hpp
+--------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * fs.hpp - Roucaarize File System Standard Library
+ *
+ * File system operations: read, write, exists, mkdir, remove, copy, move.
+ */
+
+#ifndef ROUCAARIZE_STDLIB_FS_HPP
+#define ROUCAARIZE_STDLIB_FS_HPP
+
+#include "value.hpp"
+#include <unordered_map>
+
+namespace roucaarize {
+namespace stdlib {
+
+std::unordered_map<std::string, NativeFunction> getFsLibrary();
+
+} // namespace stdlib
+} // namespace roucaarize
+
+#endif // ROUCAARIZE_STDLIB_FS_HPP
+-e 
+
+
+FILE: core/stdlib/include/net.hpp
+--------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * net.hpp - Roucaarize Network Standard Library
+ *
+ * Network operations: ping, fetch, getIp.
+ */
+
+#ifndef ROUCAARIZE_STDLIB_NET_HPP
+#define ROUCAARIZE_STDLIB_NET_HPP
+
+#include "value.hpp"
+#include <unordered_map>
+
+namespace roucaarize {
+namespace stdlib {
+
+std::unordered_map<std::string, NativeFunction> getNetLibrary();
+
+} // namespace stdlib
+} // namespace roucaarize
+
+#endif // ROUCAARIZE_STDLIB_NET_HPP
+-e 
+
+
+FILE: core/stdlib/include/proc.hpp
+--------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * proc.hpp - Roucaarize Process Standard Library
+ *
+ * Process management: list, isRunning, pkill, cpuUsage, memUsage.
+ */
+
+#ifndef ROUCAARIZE_STDLIB_PROC_HPP
+#define ROUCAARIZE_STDLIB_PROC_HPP
+
+#include "value.hpp"
+#include <unordered_map>
+
+namespace roucaarize {
+namespace stdlib {
+
+std::unordered_map<std::string, NativeFunction> getProcLibrary();
+
+} // namespace stdlib
+} // namespace roucaarize
+
+#endif // ROUCAARIZE_STDLIB_PROC_HPP
+-e 
+
+
+FILE: core/stdlib/include/string.hpp
+--------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * string.hpp - Roucaarize String Standard Library
+ *
+ * String manipulation: toUpperCase, toLowerCase, trim, split,
+ * replace, substring, contains, indexOf, startsWith, endsWith, length.
+ */
+
+#ifndef ROUCAARIZE_STDLIB_STRING_HPP
+#define ROUCAARIZE_STDLIB_STRING_HPP
+
+#include "value.hpp"
+#include <unordered_map>
+
+namespace roucaarize {
+namespace stdlib {
+
+std::unordered_map<std::string, NativeFunction> getStringLibrary();
+
+} // namespace stdlib
+} // namespace roucaarize
+
+#endif // ROUCAARIZE_STDLIB_STRING_HPP
+-e 
+
+
+FILE: core/stdlib/include/sys.hpp
+--------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * sys.hpp - Roucaarize System Standard Library
+ *
+ * System-level operations: exec, spawn, environment variables,
+ * hostname, uptime, and process exit.
+ */
+
+#ifndef ROUCAARIZE_STDLIB_SYS_HPP
+#define ROUCAARIZE_STDLIB_SYS_HPP
+
+#include "value.hpp"
+#include <unordered_map>
+
+namespace roucaarize {
+namespace stdlib {
+
+std::unordered_map<std::string, NativeFunction> getSysLibrary();
+
+} // namespace stdlib
+} // namespace roucaarize
+
+#endif // ROUCAARIZE_STDLIB_SYS_HPP
+-e 
+
+
+FILE: core/stdlib/include/time.hpp
+--------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * time.hpp - Roucaarize Time Standard Library
+ *
+ * Time and timing functions: clock, sleep, millis, nanos,
+ * timestamp, format, year, month, day, hour, minute, second.
+ */
+
+#ifndef ROUCAARIZE_STDLIB_TIME_HPP
+#define ROUCAARIZE_STDLIB_TIME_HPP
+
+#include "value.hpp"
+#include <unordered_map>
+
+namespace roucaarize {
+namespace stdlib {
+
+std::unordered_map<std::string, NativeFunction> getTimeLibrary();
+
+} // namespace stdlib
+} // namespace roucaarize
+
+#endif // ROUCAARIZE_STDLIB_TIME_HPP
+-e 
+
+
+FILE: core/stdlib/src/fs.cpp
+--------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * fs.cpp - Roucaarize File System Standard Library Implementation
+ *
+ * File system operations for Linux orchestration.
+ */
+
+#include "fs.hpp"
+#include <fstream>
+#include <sstream>
+#include <filesystem>
+#include <cstdio>
+
+namespace stdfs = std::filesystem;
+
+namespace roucaarize {
+namespace stdlib {
+
+std::unordered_map<std::string, NativeFunction> getFsLibrary() {
+    std::unordered_map<std::string, NativeFunction> funcs;
+
+    funcs["read"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty() || !args[0].isString()) return Value::nil();
+        std::ifstream file(*args[0].stringVal);
+        if (!file) return Value::nil();
+        std::stringstream buf;
+        buf << file.rdbuf();
+        return Value::fromString(buf.str());
+    };
+
+    funcs["write"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.size() < 2 || !args[0].isString() || !args[1].isString())
+            return Value::fromBool(false);
+        std::ofstream file(*args[0].stringVal);
+        if (!file) return Value::fromBool(false);
+        file << *args[1].stringVal;
+        return Value::fromBool(true);
+    };
+
+    funcs["append"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.size() < 2 || !args[0].isString() || !args[1].isString())
+            return Value::fromBool(false);
+        std::ofstream file(*args[0].stringVal, std::ios::app);
+        if (!file) return Value::fromBool(false);
+        file << *args[1].stringVal;
+        return Value::fromBool(true);
+    };
+
+    funcs["exists"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty() || !args[0].isString()) return Value::fromBool(false);
+        return Value::fromBool(stdfs::exists(*args[0].stringVal));
+    };
+
+    funcs["mkdir"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty() || !args[0].isString()) return Value::fromBool(false);
+        std::error_code ec;
+        bool ok = stdfs::create_directories(*args[0].stringVal, ec);
+        return Value::fromBool(ok || !ec);
+    };
+
+    funcs["remove"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty() || !args[0].isString()) return Value::fromBool(false);
+        std::error_code ec;
+        auto count = stdfs::remove_all(*args[0].stringVal, ec);
+        return Value::fromBool(count > 0 && !ec);
+    };
+
+    funcs["copy"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.size() < 2 || !args[0].isString() || !args[1].isString())
+            return Value::fromBool(false);
+        std::error_code ec;
+        stdfs::copy(*args[0].stringVal, *args[1].stringVal,
+                    stdfs::copy_options::recursive | stdfs::copy_options::overwrite_existing, ec);
+        return Value::fromBool(!ec);
+    };
+
+    funcs["move"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.size() < 2 || !args[0].isString() || !args[1].isString())
+            return Value::fromBool(false);
+        std::error_code ec;
+        stdfs::rename(*args[0].stringVal, *args[1].stringVal, ec);
+        return Value::fromBool(!ec);
+    };
+
+    funcs["isDir"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty() || !args[0].isString()) return Value::fromBool(false);
+        return Value::fromBool(stdfs::is_directory(*args[0].stringVal));
+    };
+
+    funcs["chmod"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.size() < 2 || !args[0].isString() || !args[1].isInt())
+            return Value::fromBool(false);
+        std::error_code ec;
+        stdfs::permissions(*args[0].stringVal,
+                           static_cast<stdfs::perms>(args[1].intVal),
+                           stdfs::perm_options::replace, ec);
+        return Value::fromBool(!ec);
+    };
+
+    return funcs;
+}
+
+} // namespace stdlib
+} // namespace roucaarize
+-e 
+
+
+FILE: core/stdlib/src/net.cpp
+--------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * net.cpp - Roucaarize Network Standard Library Implementation
+ *
+ * Network operations for Linux orchestration.
+ */
+
+#include "net.hpp"
+#include <cstdlib>
+#include <array>
+#include <memory>
+#include <fstream>
+#include <sstream>
+
+namespace roucaarize {
+namespace stdlib {
+
+static std::string runCmd(const std::string& cmd) {
+    std::array<char, 256> buffer;
+    std::string result;
+    auto pipeClose = [](FILE* f) { if (f) pclose(f); };
+    std::unique_ptr<FILE, decltype(pipeClose)> pipe(popen(cmd.c_str(), "r"), pipeClose);
+    if (!pipe) return "";
+    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr)
+        result += buffer.data();
+    if (!result.empty() && result.back() == '\n') result.pop_back();
+    return result;
+}
+
+std::unordered_map<std::string, NativeFunction> getNetLibrary() {
+    std::unordered_map<std::string, NativeFunction> funcs;
+
+    funcs["ping"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty() || !args[0].isString()) return Value::fromBool(false);
+        std::string cmd = "ping -c 1 -W 2 " + *args[0].stringVal + " > /dev/null 2>&1";
+        int ret = std::system(cmd.c_str());
+        return Value::fromBool(ret == 0);
+    };
+
+    funcs["fetch"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty() || !args[0].isString()) return Value::nil();
+        std::string cmd = "curl -s " + *args[0].stringVal;
+        return Value::fromString(runCmd(cmd));
+    };
+
+    funcs["getIp"] = [](Evaluator&, const std::vector<Value>&) -> Value {
+        return Value::fromString(runCmd("hostname -I 2>/dev/null | awk '{print $1}'"));
+    };
+
+    return funcs;
+}
+
+} // namespace stdlib
+} // namespace roucaarize
+-e 
+
+
+FILE: core/stdlib/src/proc.cpp
+--------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * proc.cpp - Roucaarize Process Standard Library Implementation
+ *
+ * Process management for Linux orchestration.
+ */
+
+#include "proc.hpp"
+#include <cstdlib>
+#include <array>
+#include <memory>
+#include <fstream>
+#include <sstream>
+#include <csignal>
+
+namespace roucaarize {
+namespace stdlib {
+
+static std::string runCmd(const std::string& cmd) {
+    std::array<char, 256> buffer;
+    std::string result;
+    auto pipeClose = [](FILE* f) { if (f) pclose(f); };
+    std::unique_ptr<FILE, decltype(pipeClose)> pipe(popen(cmd.c_str(), "r"), pipeClose);
+    if (!pipe) return "";
+    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr)
+        result += buffer.data();
+    if (!result.empty() && result.back() == '\n') result.pop_back();
+    return result;
+}
+
+std::unordered_map<std::string, NativeFunction> getProcLibrary() {
+    std::unordered_map<std::string, NativeFunction> funcs;
+
+    funcs["list"] = [](Evaluator&, const std::vector<Value>&) -> Value {
+        return Value::fromString(runCmd("ps -eo pid,comm --no-headers"));
+    };
+
+    funcs["isRunning"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty()) return Value::fromBool(false);
+        if (args[0].isInt()) {
+            int ret = kill(static_cast<pid_t>(args[0].intVal), 0);
+            return Value::fromBool(ret == 0);
+        }
+        if (args[0].isString()) {
+            std::string cmd = "pgrep -x " + *args[0].stringVal + " > /dev/null 2>&1";
+            return Value::fromBool(std::system(cmd.c_str()) == 0);
+        }
+        return Value::fromBool(false);
+    };
+
+    funcs["pkill"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty() || !args[0].isString()) return Value::fromBool(false);
+        std::string cmd = "pkill " + *args[0].stringVal;
+        return Value::fromBool(std::system(cmd.c_str()) == 0);
+    };
+
+    funcs["cpuUsage"] = [](Evaluator&, const std::vector<Value>&) -> Value {
+        return Value::fromString(runCmd("top -bn1 | grep 'Cpu(s)' | awk '{print $2}'"));
+    };
+
+    funcs["memUsage"] = [](Evaluator&, const std::vector<Value>&) -> Value {
+        return Value::fromString(runCmd("free -m | awk 'NR==2{printf \"%s/%sMB (%.1f%%)\", $3,$2,$3*100/$2}'"));
+    };
+
+    return funcs;
+}
+
+} // namespace stdlib
+} // namespace roucaarize
+-e 
+
+
+FILE: core/stdlib/src/string.cpp
+--------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * string.cpp - Roucaarize String Standard Library Implementation
+ *
+ * String manipulation functions.
+ */
+
+#include "string.hpp"
+#include <algorithm>
+#include <cctype>
+#include <sstream>
+
+namespace roucaarize {
+namespace stdlib {
+
+static std::string strToUpper(std::string s) {
+    std::transform(s.begin(), s.end(), s.begin(),
+                   [](unsigned char c) { return std::toupper(c); });
+    return s;
+}
+
+static std::string strToLower(std::string s) {
+    std::transform(s.begin(), s.end(), s.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+    return s;
+}
+
+static std::string strTrim(std::string s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+            [](unsigned char ch) { return !std::isspace(ch); }));
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+            [](unsigned char ch) { return !std::isspace(ch); }).base(), s.end());
+    return s;
+}
+
+std::unordered_map<std::string, NativeFunction> getStringLibrary() {
+    std::unordered_map<std::string, NativeFunction> funcs;
+
+    funcs["toUpperCase"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty() || !args[0].isString()) return Value::nil();
+        return Value::fromString(strToUpper(*args[0].stringVal));
+    };
+
+    funcs["toLowerCase"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty() || !args[0].isString()) return Value::nil();
+        return Value::fromString(strToLower(*args[0].stringVal));
+    };
+
+    funcs["trim"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty() || !args[0].isString()) return Value::nil();
+        return Value::fromString(strTrim(*args[0].stringVal));
+    };
+
+    funcs["split"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.size() < 2 || !args[0].isString() || !args[1].isString()) {
+            return Value::fromArray({});
+        }
+        std::string text = *args[0].stringVal;
+        std::string delim = *args[1].stringVal;
+        std::vector<Value> arr;
+        size_t pos = 0;
+        while ((pos = text.find(delim)) != std::string::npos) {
+            arr.push_back(Value::fromString(text.substr(0, pos)));
+            text.erase(0, pos + delim.length());
+        }
+        arr.push_back(Value::fromString(text));
+        return Value::fromArray(std::move(arr));
+    };
+
+    funcs["replace"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.size() < 3 || !args[0].isString() || !args[1].isString() || !args[2].isString())
+            return args.empty() ? Value::nil() : args[0];
+        std::string text = *args[0].stringVal;
+        std::string from = *args[1].stringVal;
+        std::string to = *args[2].stringVal;
+        if (from.empty()) return Value::fromString(text);
+        size_t start = 0;
+        while ((start = text.find(from, start)) != std::string::npos) {
+            text.replace(start, from.length(), to);
+            start += to.length();
+        }
+        return Value::fromString(text);
+    };
+
+    funcs["substring"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.size() < 3 || !args[0].isString() || !args[1].isInt() || !args[2].isInt())
+            return Value::fromString("");
+        std::string text = *args[0].stringVal;
+        int64_t start = args[1].intVal;
+        int64_t length = args[2].intVal;
+        if (start < 0) start = 0;
+        if (start >= static_cast<int64_t>(text.length())) return Value::fromString("");
+        if (length < 0) length = 0;
+        return Value::fromString(text.substr(static_cast<size_t>(start), static_cast<size_t>(length)));
+    };
+
+    funcs["contains"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.size() < 2 || !args[0].isString() || !args[1].isString())
+            return Value::fromBool(false);
+        return Value::fromBool(args[0].stringVal->find(*args[1].stringVal) != std::string::npos);
+    };
+
+    funcs["indexOf"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.size() < 2 || !args[0].isString() || !args[1].isString())
+            return Value::fromInt(-1);
+        size_t pos = args[0].stringVal->find(*args[1].stringVal);
+        return Value::fromInt(pos == std::string::npos ? -1 : static_cast<int64_t>(pos));
+    };
+
+    funcs["startsWith"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.size() < 2 || !args[0].isString() || !args[1].isString())
+            return Value::fromBool(false);
+        const auto& text = *args[0].stringVal;
+        const auto& prefix = *args[1].stringVal;
+        if (prefix.length() > text.length()) return Value::fromBool(false);
+        return Value::fromBool(std::equal(prefix.begin(), prefix.end(), text.begin()));
+    };
+
+    funcs["endsWith"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.size() < 2 || !args[0].isString() || !args[1].isString())
+            return Value::fromBool(false);
+        const auto& text = *args[0].stringVal;
+        const auto& suffix = *args[1].stringVal;
+        if (suffix.length() > text.length()) return Value::fromBool(false);
+        return Value::fromBool(std::equal(suffix.rbegin(), suffix.rend(), text.rbegin()));
+    };
+
+    funcs["length"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty() || !args[0].isString()) return Value::fromInt(0);
+        return Value::fromInt(static_cast<int64_t>(args[0].stringVal->size()));
+    };
+
+    return funcs;
+}
+
+} // namespace stdlib
+} // namespace roucaarize
+-e 
+
+
+FILE: core/stdlib/src/sys.cpp
+--------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * sys.cpp - Roucaarize System Standard Library Implementation
+ *
+ * System-level operations for Linux orchestration.
+ */
+
+#include "sys.hpp"
+#include <cstdlib>
+#include <array>
+#include <memory>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <unistd.h>
+
+namespace roucaarize {
+namespace stdlib {
+
+static std::string execCommand(const std::string& cmd) {
+    std::array<char, 256> buffer;
+    std::string result;
+    auto pipeClose = [](FILE* f) { if (f) pclose(f); };
+    std::unique_ptr<FILE, decltype(pipeClose)> pipe(popen(cmd.c_str(), "r"), pipeClose);
+    if (!pipe) return "";
+    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr)
+        result += buffer.data();
+    if (!result.empty() && result.back() == '\n') result.pop_back();
+    return result;
+}
+
+std::unordered_map<std::string, NativeFunction> getSysLibrary() {
+    std::unordered_map<std::string, NativeFunction> funcs;
+
+    funcs["exec"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty() || !args[0].isString()) return Value::nil();
+        std::string output = execCommand(*args[0].stringVal);
+        return Value::fromString(output);
+    };
+
+    funcs["spawn"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty() || !args[0].isString()) return Value::fromInt(-1);
+        int ret = std::system(args[0].stringVal->c_str());
+        return Value::fromInt(static_cast<int64_t>(WEXITSTATUS(ret)));
+    };
+
+    funcs["getEnv"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty() || !args[0].isString()) return Value::nil();
+        const char* val = std::getenv(args[0].stringVal->c_str());
+        return val ? Value::fromString(val) : Value::nil();
+    };
+
+    funcs["setEnv"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.size() < 2 || !args[0].isString() || !args[1].isString())
+            return Value::fromBool(false);
+        int ret = setenv(args[0].stringVal->c_str(), args[1].stringVal->c_str(), 1);
+        return Value::fromBool(ret == 0);
+    };
+
+    funcs["getUid"] = [](Evaluator&, const std::vector<Value>&) -> Value {
+        return Value::fromInt(static_cast<int64_t>(getuid()));
+    };
+
+    funcs["exit"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        int code = args.empty() ? 0 : static_cast<int>(args[0].asDouble());
+        std::exit(code);
+        return Value::nil();
+    };
+
+    funcs["hostname"] = [](Evaluator&, const std::vector<Value>&) -> Value {
+        char buf[256];
+        if (gethostname(buf, sizeof(buf)) == 0) return Value::fromString(buf);
+        return Value::fromString("unknown");
+    };
+
+    funcs["uptime"] = [](Evaluator&, const std::vector<Value>&) -> Value {
+        std::ifstream file("/proc/uptime");
+        if (!file) return Value::fromFloat(0.0);
+        double secs = 0;
+        file >> secs;
+        return Value::fromFloat(secs);
+    };
+
+    return funcs;
+}
+
+} // namespace stdlib
+} // namespace roucaarize
+-e 
+
+
+FILE: core/stdlib/src/time.cpp
+--------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * time.cpp - Roucaarize Time Standard Library Implementation
+ *
+ * Time and timing functions.
+ */
+
+#include "time.hpp"
+#include <chrono>
+#include <thread>
+#include <ctime>
+#include <iomanip>
+#include <sstream>
+
+namespace roucaarize {
+namespace stdlib {
+
+std::unordered_map<std::string, NativeFunction> getTimeLibrary() {
+    std::unordered_map<std::string, NativeFunction> funcs;
+
+    funcs["clock"] = [](Evaluator&, const std::vector<Value>&) -> Value {
+        auto now = std::chrono::high_resolution_clock::now();
+        auto epoch = now.time_since_epoch();
+        return Value::fromFloat(std::chrono::duration<double>(epoch).count());
+    };
+
+    funcs["sleep"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (!args.empty() && args[0].isNumber()) {
+            int ms = static_cast<int>(args[0].asDouble());
+            std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+        }
+        return Value::nil();
+    };
+
+    funcs["millis"] = [](Evaluator&, const std::vector<Value>&) -> Value {
+        auto now = std::chrono::steady_clock::now();
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+            now.time_since_epoch()).count();
+        return Value::fromInt(ms);
+    };
+
+    funcs["nanos"] = [](Evaluator&, const std::vector<Value>&) -> Value {
+        auto now = std::chrono::steady_clock::now();
+        auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+            now.time_since_epoch()).count();
+        return Value::fromInt(ns);
+    };
+
+    funcs["timestamp"] = [](Evaluator&, const std::vector<Value>&) -> Value {
+        auto now = std::chrono::system_clock::now();
+        auto epoch = std::chrono::duration_cast<std::chrono::seconds>(
+            now.time_since_epoch()).count();
+        return Value::fromInt(epoch);
+    };
+
+    funcs["format"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
+        std::string format = "%Y-%m-%d %H:%M:%S";
+        if (!args.empty() && args[0].isString()) format = *args[0].stringVal;
+        auto now = std::chrono::system_clock::now();
+        auto time = std::chrono::system_clock::to_time_t(now);
+        auto tm = std::localtime(&time);
+        std::ostringstream oss;
+        oss << std::put_time(tm, format.c_str());
+        return Value::fromString(oss.str());
+    };
+
+    funcs["year"] = [](Evaluator&, const std::vector<Value>&) -> Value {
+        auto now = std::chrono::system_clock::now();
+        auto time = std::chrono::system_clock::to_time_t(now);
+        auto tm = std::localtime(&time);
+        return Value::fromInt(tm->tm_year + 1900);
+    };
+
+    funcs["month"] = [](Evaluator&, const std::vector<Value>&) -> Value {
+        auto now = std::chrono::system_clock::now();
+        auto time = std::chrono::system_clock::to_time_t(now);
+        auto tm = std::localtime(&time);
+        return Value::fromInt(tm->tm_mon + 1);
+    };
+
+    funcs["day"] = [](Evaluator&, const std::vector<Value>&) -> Value {
+        auto now = std::chrono::system_clock::now();
+        auto time = std::chrono::system_clock::to_time_t(now);
+        auto tm = std::localtime(&time);
+        return Value::fromInt(tm->tm_mday);
+    };
+
+    funcs["hour"] = [](Evaluator&, const std::vector<Value>&) -> Value {
+        auto now = std::chrono::system_clock::now();
+        auto time = std::chrono::system_clock::to_time_t(now);
+        auto tm = std::localtime(&time);
+        return Value::fromInt(tm->tm_hour);
+    };
+
+    funcs["minute"] = [](Evaluator&, const std::vector<Value>&) -> Value {
+        auto now = std::chrono::system_clock::now();
+        auto time = std::chrono::system_clock::to_time_t(now);
+        auto tm = std::localtime(&time);
+        return Value::fromInt(tm->tm_min);
+    };
+
+    funcs["second"] = [](Evaluator&, const std::vector<Value>&) -> Value {
+        auto now = std::chrono::system_clock::now();
+        auto time = std::chrono::system_clock::to_time_t(now);
+        auto tm = std::localtime(&time);
+        return Value::fromInt(tm->tm_sec);
+    };
+
+    return funcs;
+}
+
+} // namespace stdlib
+} // namespace roucaarize
+-e 
+
+
+FILE: examples/advanced.rou
+--------------------------------------------------------------------------------
+// Roucaarize - Advanced Example (Clean Design)
+// All functions declared first, then invoked in orchestration block.
+// Demonstrates structs, maps, error handling, closures, and higher-order functions.
+
+// ============================================================================
+// Section 1: Data Structures
+// ============================================================================
+
+struct Server {
+    name,
+    ip,
+    port,
+    status
+}
+
+// ============================================================================
+// Section 2: Validation Functions
+// ============================================================================
+
+function validatePort(p) {
+    if (p < 1 or p > 65535) {
+        throw "Invalid port: " + toString(p)
+    }
+    return p
+}
+
+// ============================================================================
+// Section 3: Higher-Order Functions
+// ============================================================================
+
+function apply(fn, value) {
+    return fn(value)
+}
+
+function double(x) {
+    return x * 2
+}
+
+function square(x) {
+    return x * x
+}
+
+function makeMultiplier(factor) {
+    function multiply(x) {
+        return x * factor
+    }
+    return multiply
+}
+
+// ============================================================================
+// Section 4: Display Functions
+// ============================================================================
+
+function showServer(srv) {
+    print("Server: " + srv.name + " at " + srv.ip + ":" + toString(srv.port))
+    print("Status: " + srv.status)
+}
+
+function showConfig(cfg, key) {
+    print("Config " + key + ": " + toString(cfg[key]))
+}
+
+function showServerFleet(servers) {
+    print("Server fleet:")
+    for (s in servers) {
+        print("  " + s.name + " [" + s.status + "] -> " + s.ip)
+    }
+}
+
+function showArrayOps(numbers) {
+    print("Numbers: " + toString(numbers))
+    print("Length: " + toString(len(numbers)))
+    push(numbers, 42)
+    print("After push(42): " + toString(numbers))
+    last = pop(numbers)
+    print("Popped: " + toString(last))
+    print("After pop: " + toString(numbers))
+}
+
+function demonstrateErrorHandling() {
+    // Division by zero
+    try {
+        result = 10 / 0
+    } catch (err) {
+        print("Caught error: " + err)
+    }
+
+    // Port validation
+    try {
+        validatePort(99999)
+    } catch (err) {
+        print("Validation error: " + err)
+    }
+
+    // Try-catch-finally
+    try {
+        print("Opening resource...")
+        throw "simulated failure"
+    } catch (err) {
+        print("Caught: " + err)
+    } finally {
+        print("Cleanup: resource released")
+    }
+}
+
+function demonstrateHigherOrder() {
+    print("double(5) = " + toString(apply(double, 5)))
+    print("square(5) = " + toString(apply(square, 5)))
+
+    triple = makeMultiplier(3)
+    print("triple(4) = " + toString(triple(4)))
+    print("triple(10) = " + toString(triple(10)))
+}
+
+// ============================================================================
+// Section 5: Orchestration Entry Point
+// ============================================================================
+
+print("== Roucaarize Advanced Demo ==")
+print("")
+
+// Structs
+print("== Structs ==")
+web = Server("web01", "192.168.1.10", 80, "running")
+db = Server("db01", "192.168.1.20", 5432, "running")
+showServer(web)
+web.status = "maintenance"
+print("Updated status: " + web.status)
+print("")
+
+// Maps
+print("== Maps ==")
+config = {"host": "localhost", "port": 8080, "debug": true}
+showConfig(config, "host")
+showConfig(config, "port")
+config["timeout"] = 30
+showConfig(config, "timeout")
+print("")
+
+// Error handling
+print("== Error Handling ==")
+demonstrateErrorHandling()
+print("")
+
+// Higher-order functions and closures
+print("== Higher-Order Functions ==")
+demonstrateHigherOrder()
+print("")
+
+// Array operations
+print("== Array Operations ==")
+numbers = [5, 2, 8, 1, 9]
+showArrayOps(numbers)
+print("")
+
+// Nested data structures
+print("== Server Fleet ==")
+servers = [Server("web01", "10.0.0.1", 80, "active"), Server("web02", "10.0.0.2", 80, "active"), Server("db01", "10.0.0.3", 5432, "standby")]
+showServerFleet(servers)
+
+print("")
+print("Advanced example completed successfully.")
+-e 
+
+
+FILE: examples/basics.rou
+--------------------------------------------------------------------------------
+// Roucaarize - Basics Example (Clean Design)
+// All functions declared first, then invoked in orchestration block.
+// Demonstrates variables, functions, control flow, arrays, and loops.
+
+// ============================================================================
+// Section 1: Utility Functions
+// ============================================================================
+
+function add(x, y) {
+    return x + y
+}
+
+function greet(who) {
+    return "Hello, " + who + "!"
+}
+
+function factorial(n) {
+    if (n <= 1) {
+        return 1
+    }
+    return n * factorial(n - 1)
+}
+
+// ============================================================================
+// Section 2: Demonstration Functions
+// ============================================================================
+
+function showArithmetic(a, b) {
+    print("Add: " + toString(a + b))
+    print("Sub: " + toString(a - b))
+    print("Mul: " + toString(a * b))
+    print("Div: " + toString(a / b))
+    print("Mod: " + toString(a % b))
+}
+
+function showBooleans(a, b) {
+    print(toString(a) + " > " + toString(b) + ": " + toString(a > b))
+    print(toString(a) + " == " + toString(b) + ": " + toString(a == b))
+}
+
+function showArrayIteration(items, label) {
+    print(label + ": " + toString(items))
+    print("First: " + items[0])
+    print("Length: " + toString(len(items)))
+    for (item in items) {
+        print("  - " + item)
+    }
+}
+
+function showCountdown(limit) {
+    counter = 0
+    while (counter < limit) {
+        print("Counter: " + toString(counter))
+        counter = counter + 1
+    }
+}
+
+function evaluateGrade(score) {
+    if (score >= 90) {
+        return "A"
+    } else if (score >= 80) {
+        return "B"
+    } else if (score >= 70) {
+        return "C"
+    } else {
+        return "F"
+    }
+}
+
+function makeCounter() {
+    count = 0
+    function increment() {
+        count = count + 1
+        return count
+    }
+    return increment
+}
+
+function showTypeInfo(label, value) {
+    print("typeof " + label + ": " + typeof(value))
+}
+
+// ============================================================================
+// Section 3: Orchestration Entry Point
+// ============================================================================
+
+print("== Roucaarize Basics Demo ==")
+print("")
+
+// Variables
+name = "Roucaarize"
+version = 1
+pi = 3.14159
+print("Language: " + name)
+print("Version: " + toString(version))
+print("Pi: " + toString(pi))
+print("")
+
+// Arithmetic
+print("== Arithmetic ==")
+showArithmetic(10, 3)
+print("")
+
+// Booleans
+print("== Booleans ==")
+showBooleans(10, 3)
+print("")
+
+// String concatenation
+greeting = "Hello" + " " + "World"
+print(greeting)
+print("")
+
+// Functions
+print("== Functions ==")
+print(greet("Roucaarize"))
+print("add(5, 7) = " + toString(add(5, 7)))
+print("5! = " + toString(factorial(5)))
+print("")
+
+// Arrays and iteration
+print("== Arrays ==")
+fruits = ["apple", "banana", "cherry"]
+showArrayIteration(fruits, "Fruits")
+print("")
+
+// While loop
+print("== While Loop ==")
+showCountdown(3)
+print("")
+
+// Conditionals
+print("== Grades ==")
+score = 85
+grade = evaluateGrade(score)
+print("Score " + toString(score) + " = Grade: " + grade)
+print("")
+
+// Type checking
+print("== Type Info ==")
+showTypeInfo("42", 42)
+showTypeInfo("'hello'", "hello")
+showTypeInfo("true", true)
+showTypeInfo("nil", nil)
+
+print("")
+print("Basics example completed successfully.")
+-e 
+
+
+FILE: examples/modularity/calculator.rou
+--------------------------------------------------------------------------------
+// calculator.rou
+// Core logic that bonds math operations and formatting together
+
+import "math/operations.rou" as math
+import "utils/formatter.rou" as fmt
+
+function calculateAndFormat(opName, a, b) {
+    result = 0
+    if (opName == "add") {
+        result = math.add(a, b)
+    } else if (opName == "sub") {
+        result = math.sub(a, b)
+    } else if (opName == "mul") {
+        result = math.mul(a, b)
+    } else if (opName == "div") {
+        result = math.div(a, b)
+    } else {
+        throw "Unknown operation: " + opName
+    }
+    
+    return fmt.formatResult(opName, a, b, result)
+}
+-e 
+
+
+FILE: examples/modularity/config.rou
+--------------------------------------------------------------------------------
+// config.rou
+// Global configuration settings
+
+struct Config {
+    debug,
+    precision
+}
+
+function getConfig() {
+    return Config(true, 2)
+}
+-e 
+
+
+FILE: examples/modularity/main.rou
+--------------------------------------------------------------------------------
+// main.rou 
+// Entry point for the calculator simulation
+
+import "calculator.rou" as calc
+
+print("== Roucaarize Modular Calculator ==")
+
+try {
+    print(calc.calculateAndFormat("add", 10, 5))
+    print(calc.calculateAndFormat("sub", 10, 5))
+    print(calc.calculateAndFormat("mul", 10, 5))
+    print(calc.calculateAndFormat("div", 10, 5))
+    
+    // Simulate error constraint
+    print("Testing error handling:")
+    print(calc.calculateAndFormat("div", 10, 0))
+} catch (err) {
+    print("Calculator Error: " + toString(err))
+}
+
+print("== Calculator Session Ended ==")
+-e 
+
+
+FILE: examples/modularity/math/operations.rou
+--------------------------------------------------------------------------------
+// math/operations.rou
+// Provides basic mathematical operations
+
+function add(a, b) {
+    return a + b
+}
+
+function sub(a, b) {
+    return a - b
+}
+
+function mul(a, b) {
+    return a * b
+}
+
+function div(a, b) {
+    if (b == 0) {
+        throw "Division by zero"
+    }
+    return a / b
+}
+-e 
+
+
+FILE: examples/modularity/utils/formatter.rou
+--------------------------------------------------------------------------------
+// utils/formatter.rou
+// Formatting utility functions
+
+import "../config.rou" as config
+
+function formatResult(operation, a, b, result) {
+    prefix = ""
+    cfg = config.getConfig()
+    
+    if (cfg.debug) {
+        prefix = "[DEBUG] "
+    }
+    
+    return prefix + operation + " of " + toString(a) + " and " + toString(b) + " is: " + toString(result)
+}
+-e 
+
+
+FILE: examples/orchestration.rou
+--------------------------------------------------------------------------------
+// Roucaarize - Linux Orchestration Example (Clean Design)
+// All functions declared first, then invoked in orchestration block.
+// Demonstrates real-world orchestration using stdlib modules.
+
+import stdlib sys as s
+import stdlib fs as f
+import stdlib time as t
+import stdlib proc as p
+import stdlib string as str
+
+// ============================================================================
+// Section 1: Display Functions
+// ============================================================================
+
+function printHeader(title) {
+    print("== " + title + " ==")
+}
+
+function printField(label, value) {
+    print(label + ": " + value)
+}
+
+// ============================================================================
+// Section 2: System Information Functions
+// ============================================================================
+
+function showSystemInfo() {
+    printHeader("System Information")
+    printField("Hostname", s.hostname())
+    printField("Uptime", toString(s.uptime()) + " seconds")
+    printField("User ID", toString(s.getUid()))
+    printField("Home", s.getEnv("HOME"))
+    printField("Date", t.format("%Y-%m-%d %H:%M:%S"))
+    print("")
+}
+
+function showTimeInfo() {
+    printHeader("Time Operations")
+    printField("Year", toString(t.year()))
+    printField("Month", toString(t.month()))
+    printField("Day", toString(t.day()))
+    printField("Hour", toString(t.hour()))
+    printField("Minute", toString(t.minute()))
+    printField("Second", toString(t.second()))
+    printField("Timestamp", toString(t.timestamp()))
+    print("")
+}
+
+function showSystemCommands() {
+    printHeader("System Commands")
+    kernelVersion = s.exec("uname -r")
+    printField("Kernel", kernelVersion)
+    diskUsage = s.exec("df -h / | tail -1 | awk '{print $5}'")
+    printField("Disk usage (/)", diskUsage)
+    print("")
+}
+
+function showProcessInfo() {
+    printHeader("Process Info")
+    printField("Memory usage", p.memUsage())
+    print("")
+}
+
+// ============================================================================
+// Section 3: Health Check Functions
+// ============================================================================
+
+function healthCheck(serviceName) {
+    running = p.isRunning(serviceName)
+    if (running) {
+        print("[OK] " + serviceName + " is running")
+    } else {
+        print("[WARN] " + serviceName + " is not running")
+    }
+    return running
+}
+
+function runHealthChecks(services) {
+    printHeader("Service Health")
+    for (svc in services) {
+        healthCheck(svc)
+    }
+    print("")
+}
+
+// ============================================================================
+// Section 4: File Operation Functions
+// ============================================================================
+
+function demonstrateFileOps() {
+    printHeader("File Operations")
+    tempFile = "/tmp/roucaarize_test.txt"
+    content = "Hello from Roucaarize!\nWritten at: " + t.format("%H:%M:%S")
+
+    f.write(tempFile, content)
+    print("Wrote to: " + tempFile)
+
+    readBack = f.read(tempFile)
+    print("Read back: " + readBack)
+
+    printField("File exists", toString(f.exists(tempFile)))
+
+    f.append(tempFile, "\nAppended line")
+    print("Content after append:")
+    print(f.read(tempFile))
+
+    f.remove(tempFile)
+    print("Cleaned up temp file")
+    print("")
+}
+
+// ============================================================================
+// Section 5: String Operation Functions
+// ============================================================================
+
+function demonstrateStringOps() {
+    printHeader("String Operations")
+    message = "  Roucaarize Linux Orchestration  "
+    print("Original: '" + message + "'")
+    print("Trimmed: '" + str.trim(message) + "'")
+    print("Upper: " + str.toUpperCase("roucaarize"))
+    print("Lower: " + str.toLowerCase("ROUCAARIZE"))
+    printField("Contains 'Linux'", toString(str.contains(message, "Linux")))
+
+    parts = str.split("one:two:three", ":")
+    print("Split 'one:two:three':")
+    for (part in parts) {
+        print("  - " + part)
+    }
+
+    replaced = str.replace("Hello World", "World", "Roucaarize")
+    printField("Replace", replaced)
+    print("")
+}
+
+// ============================================================================
+// Section 6: Performance Test Function
+// ============================================================================
+
+function runPerformanceTest(limit) {
+    printHeader("Performance Test")
+    startTime = t.millis()
+    sum = 0
+    i = 0
+    while (i < limit) {
+        sum = sum + i
+        i = i + 1
+    }
+    endTime = t.millis()
+    elapsed = endTime - startTime
+    printField("Sum of 0.." + toString(limit - 1), toString(sum))
+    printField("Time elapsed", toString(elapsed) + "ms")
+    print("")
+}
+
+// ============================================================================
+// Section 7: Orchestration Entry Point
+// ============================================================================
+
+showSystemInfo()
+runHealthChecks(["sshd", "systemd"])
+demonstrateFileOps()
+demonstrateStringOps()
+showTimeInfo()
+showSystemCommands()
+showProcessInfo()
+runPerformanceTest(10000)
+
+print("Orchestration example completed successfully.")
+-e 
+
+
+FILE: examples/runExamples.sh
+--------------------------------------------------------------------------------
+#!/bin/bash
+
+# Roucaarize Comprehensive Test Runner & Report Generator
+# This script runs all .rou examples, shows progress, and captures detailed output.
+
+REPORT_FILE="verificationReport.txt"
+BIN="../bin/roucaarize"
+
+# Ensure binary exists
+if [ ! -f "$BIN" ]; then
+    echo "Error: Binary not found at $BIN. Please run 'make' first."
+    exit 1
+fi
+
+echo "=========================================================="
+echo "   Roucaarize Comprehensive Runner (Examples & Benchmarks)"
+echo "=========================================================="
+echo "Starting test suite at $(date)"
+echo ""
+
+# Detect System Specs
+CPU_INFO=$(grep "model name" /proc/cpuinfo | head -n 1 | cut -d ':' -f 2 | xargs)
+MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk '{print $2/1024 " MB"}')
+OS_INFO=$(cat /etc/os-release | grep PRETTY_NAME | cut -d '"' -f 2)
+
+# Initialize Report
+echo "Roucaarize Execution & Benchmark Report" > "$REPORT_FILE"
+echo "Generated on: $(date)" >> "$REPORT_FILE"
+echo "--------------------------------------" >> "$REPORT_FILE"
+echo "SYSTEM SPECIFICATIONS:" >> "$REPORT_FILE"
+echo "  OS:  $OS_INFO" >> "$REPORT_FILE"
+echo "  CPU: $CPU_INFO" >> "$REPORT_FILE"
+echo "  RAM: $MEM_TOTAL" >> "$REPORT_FILE"
+echo "--------------------------------------" >> "$REPORT_FILE"
+
+# Find and sort all .rou files inside current directory (examples)
+FILES=$(find . -type f -name "*.rou" | sort)
+TOTAL=$(echo "$FILES" | wc -l)
+COUNT=0
+PASSED=0
+
+PEAK_RAM=0
+PEAK_CPU=0
+PEAK_RAM_TEST=""
+PEAK_CPU_TEST=""
+
+for f in $FILES; do
+    COUNT=$((COUNT + 1))
+    echo -n "[$COUNT/$TOTAL] Running $f..."
+    
+    # Run with 10s timeout, use /usr/bin/time to capture metrics
+    TIME_LOG="/tmp/rouTime_${COUNT}.log"
+    temp_out=$(/usr/bin/time -v -o "$TIME_LOG" timeout 10s "$BIN" "$f" 2>&1)
+    exit_code=$?
+    
+    RAM_KB=$(grep "Maximum resident set size" "$TIME_LOG" | awk '{print $6}')
+    CPU_PCT=$(grep "Percent of CPU this job got" "$TIME_LOG" | awk '{print $7}' | tr -d '%')
+    
+    if [ ! -z "$RAM_KB" ] && [ "$RAM_KB" -gt "$PEAK_RAM" ]; then
+        PEAK_RAM=$RAM_KB
+        PEAK_RAM_TEST=$f
+    fi
+    if [ ! -z "$CPU_PCT" ] && [ "$CPU_PCT" -gt "$PEAK_CPU" ]; then
+        PEAK_CPU=$CPU_PCT
+        PEAK_CPU_TEST=$f
+    fi
+    
+    if [ $exit_code -eq 0 ]; then
+        echo -e " \033[0;32mPASS\033[0m (RAM: ${RAM_KB}KB, CPU: ${CPU_PCT}%)"
+        PASSED=$((PASSED + 1))
+        echo "[x] $f: PASS (RAM: ${RAM_KB}KB, CPU: ${CPU_PCT}%)" >> "$REPORT_FILE"
+        echo "    Output Details:" >> "$REPORT_FILE"
+        echo "$temp_out" | sed 's/^/      /' >> "$REPORT_FILE"
+    elif [ $exit_code -eq 124 ]; then
+        echo -e " \033[0;31mTIMEOUT\033[0m (RAM: ${RAM_KB}KB, CPU: ${CPU_PCT}%)"
+        echo "[ ] $f: FAIL (Timeout) (RAM: ${RAM_KB}KB, CPU: ${CPU_PCT}%)" >> "$REPORT_FILE"
+        echo "    Error Details: Execution timed out after 10s" >> "$REPORT_FILE"
+    else
+        echo -e " \033[0;31mFAIL\033[0m (Exit: $exit_code, RAM: ${RAM_KB}KB, CPU: ${CPU_PCT}%)"
+        echo "[ ] $f: FAIL (Exit Code: $exit_code) (RAM: ${RAM_KB}KB, CPU: ${CPU_PCT}%)" >> "$REPORT_FILE"
+        echo "    Error Details:" >> "$REPORT_FILE"
+        echo "$temp_out" | sed 's/^/      /' >> "$REPORT_FILE"
+    fi
+    
+    echo "--------------------------------------" >> "$REPORT_FILE"
+done
+
+echo ""
+echo "=========================================================="
+echo "RESULTS SUMMARY:"
+echo "Total Tests: $TOTAL"
+echo "Passed:      $PASSED"
+echo "Failed:      $((TOTAL - PASSED))"
+echo "--------------------------------------"
+echo "PERFORMANCE METRICS:"
+echo "Peak RAM:    ${PEAK_RAM} KB (by $PEAK_RAM_TEST)"
+echo "Peak CPU:    ${PEAK_CPU}% (by $PEAK_CPU_TEST)"
+echo ""
+echo "Detailed report saved to: $REPORT_FILE"
+echo "=========================================================="
+
+# Append summary to report file
+echo "" >> "$REPORT_FILE"
+echo "==========================================================" >> "$REPORT_FILE"
+echo "RESULTS SUMMARY:" >> "$REPORT_FILE"
+echo "Total Tests: $TOTAL" >> "$REPORT_FILE"
+echo "Passed:      $PASSED" >> "$REPORT_FILE"
+echo "Failed:      $((TOTAL - PASSED))" >> "$REPORT_FILE"
+echo "--------------------------------------" >> "$REPORT_FILE"
+echo "PERFORMANCE METRICS:" >> "$REPORT_FILE"
+echo "Peak RAM:    ${PEAK_RAM} KB (by $PEAK_RAM_TEST)" >> "$REPORT_FILE"
+echo "Peak CPU:    ${PEAK_CPU}% (by $PEAK_CPU_TEST)" >> "$REPORT_FILE"
+echo "==========================================================" >> "$REPORT_FILE"
+-e 
+
+
+FILE: examples/verificationReport.txt
+--------------------------------------------------------------------------------
+Roucaarize Execution & Benchmark Report
+Generated on: Thu Mar 26 10:57:40 PM WIB 2026
+--------------------------------------
+SYSTEM SPECIFICATIONS:
+  OS:  Ubuntu 24.04.4 LTS
+  CPU: 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz
+  RAM: 7635.43 MB
+--------------------------------------
+[x] ./advanced.rou: PASS (RAM: 4404KB, CPU: 50%)
+    Output Details:
+      == Roucaarize Advanced Demo ==
+      
+      == Structs ==
+      Server: web01 at 192.168.1.10:80
+      Status: running
+      Updated status: maintenance
+      
+      == Maps ==
+      Config host: localhost
+      Config port: 8080
+      Config timeout: 30
+      
+      == Error Handling ==
+      Caught error: Division by zero
+      Validation error: Invalid port: 99999
+      Opening resource...
+      Caught: simulated failure
+      Cleanup: resource released
+      
+      == Higher-Order Functions ==
+      double(5) = 10
+      square(5) = 25
+      triple(4) = 12
+      triple(10) = 30
+      
+      == Array Operations ==
+      Numbers: [5, 2, 8, 1, 9]
+      Length: 5
+      After push(42): [5, 2, 8, 1, 9, 42]
+      Popped: 42
+      After pop: [5, 2, 8, 1, 9]
+      
+      == Server Fleet ==
+      Server fleet:
+        web01 [active] -> 10.0.0.1
+        web02 [active] -> 10.0.0.2
+        db01 [standby] -> 10.0.0.3
+      
+      Advanced example completed successfully.
+--------------------------------------
+[x] ./basics.rou: PASS (RAM: 4648KB, CPU: 50%)
+    Output Details:
+      == Roucaarize Basics Demo ==
+      
+      Language: Roucaarize
+      Version: 1
+      Pi: 3.14159
+      
+      == Arithmetic ==
+      Add: 13
+      Sub: 7
+      Mul: 30
+      Div: 3
+      Mod: 1
+      
+      == Booleans ==
+      10 > 3: true
+      10 == 3: false
+      
+      Hello World
+      
+      == Functions ==
+      Hello, Roucaarize!
+      add(5, 7) = 12
+      5! = 120
+      
+      == Arrays ==
+      Fruits: [apple, banana, cherry]
+      First: apple
+      Length: 3
+        - apple
+        - banana
+        - cherry
+      
+      == While Loop ==
+      Counter: 0
+      Counter: 1
+      Counter: 2
+      
+      == Grades ==
+      Score 85 = Grade: B
+      
+      == Type Info ==
+      typeof 42: int
+      typeof 'hello': string
+      typeof true: bool
+      typeof nil: nil
+      
+      Basics example completed successfully.
+--------------------------------------
+[x] ./modularity/calculator.rou: PASS (RAM: 4136KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./modularity/config.rou: PASS (RAM: 3944KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./modularity/main.rou: PASS (RAM: 4292KB, CPU: 100%)
+    Output Details:
+      == Roucaarize Modular Calculator ==
+      Calculator Error: Undefined variable: calc
+      == Calculator Session Ended ==
+--------------------------------------
+[x] ./modularity/math/operations.rou: PASS (RAM: 3908KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./modularity/utils/formatter.rou: PASS (RAM: 3888KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./orchestration.rou: PASS (RAM: 4956KB, CPU: 105%)
+    Output Details:
+      == System Information ==
+      Hostname: localhost
+      Uptime: 4888.96 seconds
+      User ID: 1000
+      Home: /home/user
+      Date: 2026-03-26 22:57:40
+      
+      == Service Health ==
+      [WARN] sshd is not running
+      [OK] systemd is running
+      
+      == File Operations ==
+      Wrote to: /tmp/roucaarize_test.txt
+      Read back: Hello from Roucaarize!\nWritten at: 22:57:40
+      File exists: true
+      Content after append:
+      Hello from Roucaarize!\nWritten at: 22:57:40\nAppended line
+      Cleaned up temp file
+      
+      == String Operations ==
+      Original: '  Roucaarize Linux Orchestration  '
+      Trimmed: 'Roucaarize Linux Orchestration'
+      Upper: ROUCAARIZE
+      Lower: roucaarize
+      Contains 'Linux': true
+      Split 'one:two:three':
+        - one
+        - two
+        - three
+      Replace: Hello Roucaarize
+      
+      == Time Operations ==
+      Year: 2026
+      Month: 3
+      Day: 26
+      Hour: 22
+      Minute: 57
+      Second: 40
+      Timestamp: 1774540660
+      
+      == System Commands ==
+      Kernel: 6.17.0-19-generic
+      Disk usage (/): 6%
+      
+      == Process Info ==
+      Memory usage: 3333/7635MB (43.7%)
+      
+      == Performance Test ==
+      Sum of 0..9999: 49995000
+      Time elapsed: 2ms
+      
+      Orchestration example completed successfully.
+--------------------------------------
+
+==========================================================
+RESULTS SUMMARY:
+Total Tests: 8
+Passed:      8
+Failed:      0
+--------------------------------------
+PERFORMANCE METRICS:
+Peak RAM:    4956 KB (by ./orchestration.rou)
+Peak CPU:    105% (by ./orchestration.rou)
+==========================================================
+-e 
+
+
+FILE: Makefile
+--------------------------------------------------------------------------------
+# Roucaarize Makefile
+# Tree-Walking Interpreter Build System
+
+# Compiler settings
+CXX := g++
+CXXFLAGS := -std=c++20 -Wall -Wextra -Wpedantic -O3 -march=native -fno-rtti -fno-stack-protector -MMD -MP
+CXXFLAGS_DEBUG := -std=c++20 -Wall -Wextra -Wpedantic -g -O0 -DDEBUG -MMD -MP
+
+# Directories
+SRC_DIR := core/src
+STDLIB_SRC := core/stdlib/src
+INC_DIR := core/include
+STDLIB_INC := core/stdlib/include
+BUILD_DIR = build
+BIN_DIR := bin
+
+# Source files
+SOURCES_CORE := $(wildcard $(SRC_DIR)/*.cpp)
+SOURCES_STDLIB := $(wildcard $(STDLIB_SRC)/*.cpp)
+OBJECTS_CORE := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SOURCES_CORE))
+OBJECTS_STDLIB := $(patsubst $(STDLIB_SRC)/%.cpp,$(BUILD_DIR)/stdlib/%.o,$(SOURCES_STDLIB))
+OBJECTS := $(OBJECTS_CORE) $(OBJECTS_STDLIB)
+OBJECTS_DEBUG_CORE := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/debug/%.o,$(SOURCES_CORE))
+OBJECTS_DEBUG_STDLIB := $(patsubst $(STDLIB_SRC)/%.cpp,$(BUILD_DIR)/debug/stdlib/%.o,$(SOURCES_STDLIB))
+OBJECTS_DEBUG := $(OBJECTS_DEBUG_CORE) $(OBJECTS_DEBUG_STDLIB)
+
+# Target
+TARGET := $(BIN_DIR)/roucaarize
+TARGET_DEBUG := $(BIN_DIR)/roucaarize-debug
+
+# Include path
+INCLUDES := -I$(INC_DIR) -I$(STDLIB_INC)
+
+# Default target
+.PHONY: all
+all: release
+
+# Release build
+.PHONY: release
+release: $(TARGET)
+
+$(TARGET): $(OBJECTS) | $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) $(OBJECTS) -o $@
+	@echo "Build complete: $@"
+
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+$(BUILD_DIR)/stdlib/%.o: $(STDLIB_SRC)/%.cpp | $(BUILD_DIR)/stdlib
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Debug build
+.PHONY: debug
+debug: $(TARGET_DEBUG)
+
+$(TARGET_DEBUG): $(OBJECTS_DEBUG) | $(BIN_DIR)
+	$(CXX) $(CXXFLAGS_DEBUG) $(OBJECTS_DEBUG) -o $@
+	@echo "Debug build complete: $@"
+
+$(BUILD_DIR)/debug/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)/debug
+	$(CXX) $(CXXFLAGS_DEBUG) $(INCLUDES) -c $< -o $@
+
+$(BUILD_DIR)/debug/stdlib/%.o: $(STDLIB_SRC)/%.cpp | $(BUILD_DIR)/debug/stdlib
+	$(CXX) $(CXXFLAGS_DEBUG) $(INCLUDES) -c $< -o $@
+
+# Create directories
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+$(BUILD_DIR)/stdlib:
+	mkdir -p $(BUILD_DIR)/stdlib
+
+$(BUILD_DIR)/debug:
+	mkdir -p $(BUILD_DIR)/debug
+
+$(BUILD_DIR)/debug/stdlib:
+	mkdir -p $(BUILD_DIR)/debug/stdlib
+
+$(BIN_DIR):
+	mkdir -p $(BIN_DIR)
+
+# Clean build artifacts
+.PHONY: clean
+clean:
+	rm -rf $(BUILD_DIR) $(BIN_DIR)
+	@echo "Clean complete"
+
+# Rebuild
+.PHONY: rebuild
+rebuild: clean all
+
+# Run interpreter
+.PHONY: run
+run: $(TARGET)
+	./$(TARGET)
+
+# Run with script
+.PHONY: run-script
+run-script: $(TARGET)
+	@if [ -z "$(SCRIPT)" ]; then \
+		echo "Usage: make run-script SCRIPT=path/to/script.rou"; \
+	else \
+		./$(TARGET) $(SCRIPT); \
+	fi
+
+# Run examples
+.PHONY: run-examples
+run-examples: $(TARGET)
+	@echo "Running examples..."
+	@for f in examples/*.rou; do \
+		echo "Running $$f..."; \
+		./$(TARGET) $$f; \
+	done
+
+# Install to /usr/local/bin
+.PHONY: install
+install: clean release
+	install -m 755 $(TARGET) /usr/local/bin/roucaarize
+	@echo "Installed to /usr/local/bin/roucaarize"
+
+# Uninstall
+.PHONY: uninstall
+uninstall:
+	rm -f /usr/local/bin/roucaarize
+	@echo "Uninstalled roucaarize"
+
+# Listing Target
+list:
+	@mkdir -p z_listing
+	@echo "================================================================================" > z_listing/listing.txt
+	@echo "ROUCAARIZE PROJECT CODEBASE LISTING" >> z_listing/listing.txt
+	@echo "Generated on: $$(date)" >> z_listing/listing.txt
+	@echo "================================================================================" >> z_listing/listing.txt
+	@echo "" >> z_listing/listing.txt
+	@echo "This document contains a comprehensive listing of all source code files within" >> z_listing/listing.txt
+	@echo "the Roucaarize project, including core, stdlib, and examples." >> z_listing/listing.txt
+	@echo "Roucaarize is a minimalist, tree-walking interpreter for Linux orchestration." >> z_listing/listing.txt
+	@echo "" >> z_listing/listing.txt
+	@echo "Directory Structure Overview:" >> z_listing/listing.txt
+	@echo "1. core/include: Header files for the Lexer, Parser, and Evaluator." >> z_listing/listing.txt
+	@echo "2. core/src: Implementation of the tree-walking interpreter logic." >> z_listing/listing.txt
+	@echo "3. core/stdlib: Standard library modules (sys, fs, net, proc, string, time)." >> z_listing/listing.txt
+	@echo "4. examples: Collection of example scripts demonstrating language features." >> z_listing/listing.txt
+	@echo "" >> z_listing/listing.txt
+	@echo "================================================================================" >> z_listing/listing.txt
+	@echo "" >> z_listing/listing.txt
+	@for f in $$(find core examples -type f | sort) Makefile; do \
+		echo "FILE: $$f" >> z_listing/listing.txt; \
+		echo "--------------------------------------------------------------------------------" >> z_listing/listing.txt; \
+		cat "$$f" >> z_listing/listing.txt; \
+		echo -e "\n\n" >> z_listing/listing.txt; \
+	done
+	@echo "Codebase listing generated at z_listing/listing.txt"
+
+# Core Listing Target
+core-list:
+	@mkdir -p z_listing
+	@echo "================================================================================" > z_listing/core_listing.txt
+	@echo "ROUCAARIZE CORE CODEBASE LISTING" >> z_listing/core_listing.txt
+	@echo "Generated on: $$(date)" >> z_listing/core_listing.txt
+	@echo "================================================================================" >> z_listing/core_listing.txt
+	@echo "" >> z_listing/core_listing.txt
+	@echo "This document contains a listing of all source code files within the core/ directory." >> z_listing/core_listing.txt
+	@echo "Roucaarize is a minimalist, tree-walking interpreter for Linux orchestration." >> z_listing/core_listing.txt
+	@echo "" >> z_listing/core_listing.txt
+	@echo "================================================================================" >> z_listing/core_listing.txt
+	@echo "" >> z_listing/core_listing.txt
+	@for f in $$(find core -type f | sort); do \
+		echo "FILE: $$f" >> z_listing/core_listing.txt; \
+		echo "--------------------------------------------------------------------------------" >> z_listing/core_listing.txt; \
+		cat "$$f" >> z_listing/core_listing.txt; \
+		echo -e "\n\n" >> z_listing/core_listing.txt; \
+	done
+	@echo "Core codebase listing generated at z_listing/core_listing.txt"
+
+# Help
+.PHONY: all release debug clean rebuild run run-script run-examples install uninstall help list core-list
+help:
+	@echo "Roucaarize Build System"
+	@echo ""
+	@echo "Targets:"
+	@echo "  all          Build release version (default)"
+	@echo "  release      Build optimized interpreter"
+	@echo "  debug        Build debug version with symbols"
+	@echo "  clean        Remove build artifacts"
+	@echo "  rebuild      Clean and rebuild"
+	@echo "  run          Run without script"
+	@echo "  run-script   Run script: make run-script SCRIPT=file.rou"
+	@echo "  run-examples Run all example scripts"
+	@echo "  list         Generate codebase listing"
+	@echo "  core-list    Generate core-only listing"
+	@echo "  install      Install to /usr/local/bin"
+	@echo "  help         Show this help"
+
+# Include generated dependencies
+-include $(OBJECTS:.o=.d)
+-include $(OBJECTS_DEBUG:.o=.d)
+-e 
+
+
