@@ -1,0 +1,6 @@
+// utils/formatter.rou
+// Formatting utility functions
+
+function formatResult(operation, a, b, result) {
+    return operation + " of " + toString(a) + " and " + toString(b) + " is: " + toString(result)
+}

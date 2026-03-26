@@ -1,0 +1,21 @@
+// main.rou 
+// Entry point for the calculator simulation
+
+import "calculator.rou" as calc
+
+print("== Roucaarize Modular Calculator ==")
+
+try {
+    print(calc.calculateAndFormat("add", 10, 5))
+    print(calc.calculateAndFormat("sub", 10, 5))
+    print(calc.calculateAndFormat("mul", 10, 5))
+    print(calc.calculateAndFormat("div", 10, 5))
+    
+    // Simulate error constraint
+    print("Testing error handling:")
+    print(calc.calculateAndFormat("div", 10, 0))
+} catch (err) {
+    print("Calculator Error: " + toString(err))
+}
+
+print("== Calculator Session Ended ==")

@@ -1,0 +1,22 @@
+// calculator.rou
+// Core logic that bonds math operations and formatting together
+
+import "math/operations.rou" as math
+import "utils/formatter.rou" as fmt
+
+function calculateAndFormat(opName, a, b) {
+    result = 0
+    if (opName == "add") {
+        result = math.add(a, b)
+    } else if (opName == "sub") {
+        result = math.sub(a, b)
+    } else if (opName == "mul") {
+        result = math.mul(a, b)
+    } else if (opName == "div") {
+        result = math.div(a, b)
+    } else {
+        throw "Unknown operation: " + opName
+    }
+    
+    return fmt.formatResult(opName, a, b, result)
+}
