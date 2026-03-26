@@ -4,7 +4,8 @@
 # This script runs all .rou examples, shows progress, and captures detailed output.
 
 REPORT_FILE="verificationReport.txt"
-BIN="../bin/roucaarize"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BIN="$SCRIPT_DIR/../bin/roucaarize"
 
 # Ensure binary exists
 if [ ! -f "$BIN" ]; then
