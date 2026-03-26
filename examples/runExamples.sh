@@ -3,7 +3,7 @@
 # Roucaarize Comprehensive Test Runner & Report Generator
 # This script runs all .rou examples, shows progress, and captures detailed output.
 
-REPORT_FILE="verificationReport.txt"
+REPORT_FILE="examples/verificationReport.txt"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BIN="$SCRIPT_DIR/../bin/roucaarize"
 
@@ -12,6 +12,9 @@ if [ ! -f "$BIN" ]; then
     echo "Error: Binary not found at $BIN. Please run 'make' first."
     exit 1
 fi
+
+# Switch to the script's directory so find . only scopes within examples/
+cd "$SCRIPT_DIR" || exit 1
 
 echo "=========================================================="
 echo "   Roucaarize Comprehensive Runner (Examples & Benchmarks)"
