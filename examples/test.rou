@@ -1,0 +1,26 @@
+// Test script for Roucaarize orchestration language
+import stdlib sys as s
+
+function greet(name) {
+    print("Hello, " + name + "!")
+}
+
+names = ["Antigravity", "Roucaarize", "Linux"]
+print("--- Starting Orchestration Test ---")
+
+for (n in names) {
+    greet(n)
+}
+
+print("--- System Info ---")
+// Testing mock system call
+print("System uptime:", s.uptime())
+print("Checking system status...")
+
+try {
+    greet("User")
+} catch (e) {
+    print("Caught error:", e)
+}
+
+print("Test complete.")
