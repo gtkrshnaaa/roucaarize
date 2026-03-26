@@ -93,7 +93,8 @@ private:
         
         limits.grammarNodeBudget = 50000 * limits.cpuCores;
         limits.grammarAstLimit = 100000 * limits.cpuCores;
-        limits.timeoutSeconds = 5 + (limits.cpuCores * 2);
+        limits.timeoutSeconds = 5; // Fast deterministic timeout 
+
         
         return limits;
     }
