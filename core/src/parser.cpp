@@ -444,25 +444,36 @@ NodeIndex Parser::primary() {
     if (match(TokenType::LBRACKET)) {
         Token first = previous();
         ASTNode node(NodeType::ARRAY_LITERAL, first.line, first.column);
+        while (match(TokenType::NEWLINE)) {}
         if (!check(TokenType::RBRACKET)) {
-            do { node.children.push_back(expression()); } while (match(TokenType::COMMA));
+            do {
+                while (match(TokenType::NEWLINE)) {}
+                node.children.push_back(expression());
+                while (match(TokenType::NEWLINE)) {}
+            } while (match(TokenType::COMMA));
         }
+        while (match(TokenType::NEWLINE)) {}
         consume(TokenType::RBRACKET, "Expected ']' after array elements");
         return ast.addNode(std::move(node));
     }
     if (match(TokenType::LBRACE)) {
         Token first = previous();
         ASTNode node(NodeType::MAP_LITERAL, first.line, first.column);
+        while (match(TokenType::NEWLINE)) {}
         if (!check(TokenType::RBRACE)) {
             do {
+                while (match(TokenType::NEWLINE)) {}
                 node.children.push_back(expression());
                 consume(TokenType::COLON, "Expected ':' after key");
                 node.children.push_back(expression());
+                while (match(TokenType::NEWLINE)) {}
             } while (match(TokenType::COMMA));
         }
+        while (match(TokenType::NEWLINE)) {}
         consume(TokenType::RBRACE, "Expected '}' after map elements");
         return ast.addNode(std::move(node));
     }
+
     error(peek(), "Expected expression");
     synchronize();
     return INVALID_NODE;
