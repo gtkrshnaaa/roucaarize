@@ -63,24 +63,23 @@ enum class UnaryOp : uint8_t {
 };
 
 struct LiteralValue {
-    std::variant<std::monostate, bool, int64_t, double, std::string> data;
+    std::variant<std::monostate, bool, int64_t, double> data;
     LiteralValue() : data(std::monostate{}) {}
     explicit LiteralValue(bool b) : data(b) {}
     explicit LiteralValue(int64_t i) : data(i) {}
     explicit LiteralValue(double d) : data(d) {}
-    explicit LiteralValue(std::string s) : data(std::move(s)) {}
 };
 
 struct ASTNode {
     NodeType type;
     int32_t line;
     int32_t column;
-    std::string name;
+    uint32_t nameIdx = INVALID_NODE;
     NodeIndex left = INVALID_NODE;
     NodeIndex right = INVALID_NODE;
     NodeIndex extra = INVALID_NODE;
-    std::vector<NodeIndex> children;
-    std::vector<std::string> paramNames;
+    uint32_t childrenIdx = INVALID_NODE;
+    uint32_t paramsIdx = INVALID_NODE;
     LiteralValue literal;
     BinaryOp binaryOp = BinaryOp::ADD;
     UnaryOp unaryOp = UnaryOp::NEG;
@@ -102,8 +101,53 @@ public:
     NodeIndex root() const { return rootIndex; }
     void setRoot(NodeIndex idx) { rootIndex = idx; }
 
+    uint32_t addString(std::string s) {
+        for (uint32_t i = 0; i < stringPool.size(); ++i) {
+            if (stringPool[i] == s) return i;
+        }
+        uint32_t idx = stringPool.size();
+        stringPool.push_back(std::move(s));
+        return idx;
+    }
+    const std::string& getString(uint32_t idx) const {
+        if (idx == INVALID_NODE || idx >= stringPool.size()) {
+            static const std::string empty_str = "";
+            return empty_str;
+        }
+        return stringPool[idx];
+    }
+    
+    uint32_t addChildren(std::vector<NodeIndex> c) {
+        uint32_t idx = childrenPool.size();
+        childrenPool.push_back(std::move(c));
+        return idx;
+    }
+    const std::vector<NodeIndex>& getChildren(uint32_t idx) const {
+        if (idx == INVALID_NODE || idx >= childrenPool.size()) {
+            static const std::vector<NodeIndex> empty_vec;
+            return empty_vec;
+        }
+        return childrenPool[idx];
+    }
+    
+    uint32_t addParams(std::vector<uint32_t> p) {
+        uint32_t idx = paramsPool.size();
+        paramsPool.push_back(std::move(p));
+        return idx;
+    }
+    const std::vector<uint32_t>& getParams(uint32_t idx) const {
+        if (idx == INVALID_NODE || idx >= paramsPool.size()) {
+            static const std::vector<uint32_t> empty_vec;
+            return empty_vec;
+        }
+        return paramsPool[idx];
+    }
+
 private:
     std::vector<ASTNode> nodes;
+    std::vector<std::string> stringPool;
+    std::vector<std::vector<NodeIndex>> childrenPool;
+    std::vector<std::vector<uint32_t>> paramsPool;
     NodeIndex rootIndex = INVALID_NODE;
 };
 
