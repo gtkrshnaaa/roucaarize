@@ -1,0 +1,103 @@
+================================================================================
+                   ULTIMATE LANGUAGE BENCHMARK BATTLE
+================================================================================
+Execution Date: Thu Mar 26 11:05:36 PM WIB 2026
+
+SYSTEM SPECIFICATIONS:
+  OS:  Ubuntu 24.04.4 LTS
+  CPU: 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz
+  RAM: 7635.43 MB
+================================================================================
+
+================================================================================
+--- Roucaarize ---
+Arch: AST-Walking Interpreter (C++20 Native)
+Starting benchmarks...
+Fib(23): 28657
+Loop Sum: 44999850000
+Array Size: 20000
+Map Entries: 10000
+Done!
+
+[System Resources]
+  Peak RAM : 7872 KB
+  CPU Load : 99%
+  Total Time: 0.63 s
+
+================================================================================
+--- PHP 8 (Standard) ---
+Arch: Bytecode (Stack-based) - Zend (OpCache Only)
+Starting benchmarks...
+Fib(23): 28657
+Loop Sum: 44999850000
+Array Size: 20000
+Map Entries: 10000
+Done!
+
+[System Resources]
+  Peak RAM : 27108 KB
+  CPU Load : 100%
+  Total Time: 0.02 s
+
+================================================================================
+--- PHP 8 (JIT) ---
+Arch: Zend Engine + JIT Enabled (Max Power)
+Starting benchmarks...
+Fib(23): 28657
+Loop Sum: 44999850000
+Array Size: 20000
+Map Entries: 10000
+Done!
+
+[System Resources]
+  Peak RAM : 29404 KB
+  CPU Load : 100%
+  Total Time: 0.01 s
+
+================================================================================
+--- Lua 5.4 ---
+Arch: Bytecode (Register-based) - Standard Interpreter
+Starting benchmarks...
+Fib(23): 28657
+Loop Sum: 44999850000
+Array Size: 20000
+Map Entries: 10000
+Done!
+
+[System Resources]
+  Peak RAM : 3740 KB
+  CPU Load : 90%
+  Total Time: 0.01 s
+
+================================================================================
+--- LuaJIT ---
+Arch: JIT Compiled - Trace-based Compiler
+Starting benchmarks...
+Fib(23): 28657
+Loop Sum: 44999850000
+Array Size: 20000
+Map Entries: 10000
+Done!
+
+[System Resources]
+  Peak RAM : 3604 KB
+  CPU Load : 100%
+  Total Time: 0.00 s
+
+================================================================================
+--- Python 3 ---
+Arch: Bytecode (Stack-based) - CPython Interpreter
+Starting benchmarks...
+Fib(23): 28657
+Loop Sum: 44999850000
+Array Size: 20000
+Map Entries: 10000
+Done!
+
+[System Resources]
+  Peak RAM : 10676 KB
+  CPU Load : 96%
+  Total Time: 0.02 s
+
+================================================================================
+Benchmark Complete.
