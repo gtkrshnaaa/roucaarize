@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * evaluator.cpp - AST tree-walker and runtime execution engine implementation
+ */
+
 #include "evaluator.hpp"
 #include "runtimeGuard.hpp"
 #include <iostream>

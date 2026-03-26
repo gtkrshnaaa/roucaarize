@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * grammar.hpp - Static analyzer and resource protector checker definitions
+ */
+
 #ifndef ROUCAARIZE_GRAMMAR_HPP
 #define ROUCAARIZE_GRAMMAR_HPP
 

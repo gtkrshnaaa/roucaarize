@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * value.hpp - Variant value types (objects, strings, arrays, maps, closures)
+ */
+
 #ifndef ROUCAARIZE_VALUE_HPP
 #define ROUCAARIZE_VALUE_HPP
 

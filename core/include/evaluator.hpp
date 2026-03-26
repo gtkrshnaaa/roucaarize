@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * evaluator.hpp - Evaluator definitions for tree-walking interpretation execution phase
+ */
+
 #ifndef ROUCAARIZE_EVALUATOR_HPP
 #define ROUCAARIZE_EVALUATOR_HPP
 

@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * ast.hpp - Abstract Syntax Tree (AST) node structures and storage representations
+ */
+
 #ifndef ROUCAARIZE_AST_HPP
 #define ROUCAARIZE_AST_HPP
 

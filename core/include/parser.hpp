@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * parser.hpp - Recursive descent semantic parser definitions
+ */
+
 #ifndef ROUCAARIZE_PARSER_HPP
 #define ROUCAARIZE_PARSER_HPP
 

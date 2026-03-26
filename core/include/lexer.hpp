@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * lexer.hpp - Lexical analyzer for tokenizing raw source code
+ */
+
 #ifndef ROUCAARIZE_LEXER_HPP
 #define ROUCAARIZE_LEXER_HPP
 

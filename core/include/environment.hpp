@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * environment.hpp - Lexical scoping environment for blocks, functions, and variables
+ */
+
 #ifndef ROUCAARIZE_ENVIRONMENT_HPP
 #define ROUCAARIZE_ENVIRONMENT_HPP
 

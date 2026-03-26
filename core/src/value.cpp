@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * value.cpp - Dynamic typing conversion and utility methods implementation
+ */
+
 #include "value.hpp"
 #include <sstream>
 #include <iomanip>

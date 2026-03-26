@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * token.hpp - Lexical tokens definition and metadata structures
+ */
+
 #ifndef ROUCAARIZE_TOKEN_HPP
 #define ROUCAARIZE_TOKEN_HPP
 

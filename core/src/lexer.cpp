@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * lexer.cpp - Source code scanning implementation and keyword mappings
+ */
+
 #include "lexer.hpp"
 #include <charconv>
 #include <array>

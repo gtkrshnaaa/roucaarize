@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * parser.cpp - Recursive descent parser implementation and recovery routines
+ */
+
 #include "parser.hpp"
 #include <iostream>
 
