@@ -429,7 +429,7 @@ Value Evaluator::executeWhile(const ASTNode& node) {
             if (runtime_guard::checkTimeout()) {
                 throw std::runtime_error(
                     "Execution timeout: while loop exceeded "
-                    + std::to_string(GUARD_TIMEOUT_SECONDS) + "s limit");
+                    + std::to_string(runtime_guard::SystemLimits::get().timeoutSeconds) + "s limit");
             }
         }
     }
@@ -447,9 +447,8 @@ Value Evaluator::executeFor(const ASTNode& node) {
         evalBlock(node.right, loopEnv);
         if (++iterCount % GUARD_LOOP_CHECK_INTERVAL == 0) {
             if (runtime_guard::checkTimeout()) {
-                throw std::runtime_error(
-                    "Execution timeout: for loop exceeded "
-                    + std::to_string(GUARD_TIMEOUT_SECONDS) + "s limit");
+                throw std::runtime_error("Execution timeout: for loop exceeded "
+                    + std::to_string(runtime_guard::SystemLimits::get().timeoutSeconds) + "s limit");
             }
         }
     }

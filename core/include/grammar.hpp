@@ -21,8 +21,6 @@ namespace roucaarize {
 // ============================================================================
 
 static constexpr uint32_t MAX_ANALYSIS_DEPTH = 256;
-static constexpr uint32_t MAX_NODE_BUDGET    = 50000;
-static constexpr uint32_t MAX_AST_NODES      = 100000;
 static constexpr uint32_t MAX_DIAGNOSTICS    = 200;
 
 enum class DiagLevel {

@@ -24,22 +24,17 @@
 #include <cstdint>
 #include <ctime>
 #include <sys/resource.h>
+#include <sys/sysinfo.h>
+#include <thread>
 #include <stdexcept>
+#include <string>
 
 // ============================================================================
 // Configuration Defaults
 // ============================================================================
 
-#ifndef GUARD_TIMEOUT_SECONDS
-#define GUARD_TIMEOUT_SECONDS 10
-#endif
-
 #ifndef GUARD_MEMORY_LIMIT_MB
 #define GUARD_MEMORY_LIMIT_MB 0
-#endif
-
-#ifndef GUARD_MAX_RECURSION_DEPTH
-#define GUARD_MAX_RECURSION_DEPTH 10000
 #endif
 
 #ifndef GUARD_LOOP_CHECK_INTERVAL
@@ -51,6 +46,64 @@
 // ============================================================================
 
 namespace runtime_guard {
+
+// ============================================================================
+// Dynamic Hardware Capabilities
+// ============================================================================
+
+struct SystemLimits {
+    size_t totalRamMB;
+    unsigned int cpuCores;
+    
+    uint32_t recursionDepth;
+    uint32_t grammarNodeBudget;
+    uint32_t grammarAstLimit;
+    uint32_t timeoutSeconds;
+
+    static const SystemLimits& get() {
+        static SystemLimits instance = detect();
+        return instance;
+    }
+
+private:
+    static SystemLimits detect() {
+        SystemLimits limits;
+        limits.totalRamMB = 1024; // fallback 1GB
+        limits.cpuCores = 1;      // fallback 1 core
+        
+        struct sysinfo info;
+        if (sysinfo(&info) == 0) {
+            limits.totalRamMB = (info.totalram * info.mem_unit) / (1024 * 1024);
+        }
+        
+        unsigned int cores = std::thread::hardware_concurrency();
+        if (cores > 0) {
+            limits.cpuCores = cores;
+        }
+        
+        // Dynamic constraints calculations
+        struct rlimit rl;
+        if (getrlimit(RLIMIT_STACK, &rl) == 0 && rl.rlim_cur != RLIM_INFINITY) {
+            // Evaluator AST traversal takes ~2KB per depth. 
+            // 8MB default stack allows roughly 4000 deep, so we cap cleanly.
+            limits.recursionDepth = (rl.rlim_cur / (1024 * 1024)) * 350;
+        } else {
+            limits.recursionDepth = 2500; // Fallback bound
+        }
+        
+        limits.grammarNodeBudget = 50000 * limits.cpuCores;
+        limits.grammarAstLimit = 100000 * limits.cpuCores;
+        limits.timeoutSeconds = 5 + (limits.cpuCores * 2);
+        
+        return limits;
+    }
+};
+
+/**
+ * Hot-path static cache for Maximum Recursion Depth to avoid TLS
+ * or mutex overhead inside deep stack construction.
+ */
+inline uint32_t cached_max_recursion_depth = 1000;
 
 /**
  * Thread-local jump buffer for signal-based crash recovery.
@@ -146,9 +199,12 @@ inline void timeoutHandler(int /* sig */, siginfo_t* /* si */, void* /* unused *
  * @param memLimitMB  Virtual memory cap in megabytes (0 = no limit)
  */
 inline void initialize(
-    uint32_t timeoutSec = GUARD_TIMEOUT_SECONDS,
+    uint32_t timeoutSec = SystemLimits::get().timeoutSeconds,
     uint32_t memLimitMB = GUARD_MEMORY_LIMIT_MB
 ) {
+    // ---- Layer 0: Cache dynamic limits for fast path ----
+    cached_max_recursion_depth = SystemLimits::get().recursionDepth;
+
     // ---- Layer 1: Alternate Signal Stack ----
     stack_t ss;
     ss.ss_sp = malloc(SIGSTKSZ * 4);
@@ -246,11 +302,11 @@ struct ExecutionRegionGuard {
  */
 struct RecursionGuard {
     RecursionGuard() {
-        if (++recursion_depth > GUARD_MAX_RECURSION_DEPTH) {
+        if (++recursion_depth > cached_max_recursion_depth) {
             --recursion_depth;
             throw std::runtime_error(
                 "Maximum recursion depth exceeded (" +
-                std::to_string(GUARD_MAX_RECURSION_DEPTH) + ")");
+                std::to_string(cached_max_recursion_depth) + ")");
         }
     }
     ~RecursionGuard() {

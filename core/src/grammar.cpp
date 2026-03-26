@@ -14,9 +14,8 @@
  *
  * Resource Limits:
  * - MAX_ANALYSIS_DEPTH (256): Maximum recursion depth per traversal
- * - MAX_NODE_BUDGET (50000): Maximum nodes visited per analysis
- * - MAX_AST_NODES (100000): AST size threshold; skip deep analysis if exceeded
  * - MAX_DIAGNOSTICS (200): Cap on reported diagnostics per file
+ * - Dynamic Budget & AST Limits: Calculated by `SystemLimits` via CPU core heuristics
  *
  * LANGUAGE OVERVIEW:
  * Roucaarize is a minimalist, high-performance language compiled to Linux
@@ -85,6 +84,7 @@
 #include "grammar.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
+#include "runtimeGuard.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -213,9 +213,10 @@ AnalysisResult GrammarChecker::analyzeSource(const std::string& source, const st
 
     // Phase 3: AST size pre-check
     const ASTNode& rootNode = ast.get(root);
-    if (rootNode.type == NodeType::PROGRAM && rootNode.children.size() > MAX_AST_NODES) {
+    uint32_t ast_limit = runtime_guard::SystemLimits::get().grammarAstLimit;
+    if (rootNode.type == NodeType::PROGRAM && rootNode.children.size() > ast_limit) {
         addDiag(DiagLevel::WARNING, 0, 0,
-                "File exceeds analysis node limit (" + std::to_string(MAX_AST_NODES) +
+                "File exceeds analysis node limit (" + std::to_string(ast_limit) +
                 " top-level statements). Analysis truncated for resource safety.",
                 "analysis.budget");
         result.budgetExceeded = true;
@@ -355,7 +356,8 @@ void GrammarChecker::printSummary(size_t totalFiles, size_t totalErrors,
 // ============================================================================
 
 bool GrammarChecker::withinBudget() const {
-    return nodeVisitCount_ < MAX_NODE_BUDGET &&
+    uint32_t budget = runtime_guard::SystemLimits::get().grammarNodeBudget;
+    return nodeVisitCount_ < budget &&
            diagnostics.size() < MAX_DIAGNOSTICS;
 }
 
