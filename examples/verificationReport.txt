@@ -1,12 +1,12 @@
 Roucaarize Execution & Benchmark Report
-Generated on: Thu Mar 26 10:51:12 PM WIB 2026
+Generated on: Thu Mar 26 10:57:40 PM WIB 2026
 --------------------------------------
 SYSTEM SPECIFICATIONS:
   OS:  Ubuntu 24.04.4 LTS
   CPU: 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz
   RAM: 7635.43 MB
 --------------------------------------
-[x] examples/advanced.rou: PASS (RAM: 4400KB, CPU: 100%)
+[x] ./advanced.rou: PASS (RAM: 4404KB, CPU: 50%)
     Output Details:
       == Roucaarize Advanced Demo ==
       
@@ -48,7 +48,7 @@ SYSTEM SPECIFICATIONS:
       
       Advanced example completed successfully.
 --------------------------------------
-[x] examples/basics.rou: PASS (RAM: 4640KB, CPU: 100%)
+[x] ./basics.rou: PASS (RAM: 4648KB, CPU: 50%)
     Output Details:
       == Roucaarize Basics Demo ==
       
@@ -98,36 +98,36 @@ SYSTEM SPECIFICATIONS:
       
       Basics example completed successfully.
 --------------------------------------
-[x] examples/modularity/calculator.rou: PASS (RAM: 4140KB, CPU: 0%)
+[x] ./modularity/calculator.rou: PASS (RAM: 4136KB, CPU: 100%)
     Output Details:
       
 --------------------------------------
-[x] examples/modularity/config.rou: PASS (RAM: 4012KB, CPU: 0%)
+[x] ./modularity/config.rou: PASS (RAM: 3944KB, CPU: 100%)
     Output Details:
       
 --------------------------------------
-[x] examples/modularity/main.rou: PASS (RAM: 4344KB, CPU: 100%)
+[x] ./modularity/main.rou: PASS (RAM: 4292KB, CPU: 100%)
     Output Details:
       == Roucaarize Modular Calculator ==
       Calculator Error: Undefined variable: calc
       == Calculator Session Ended ==
 --------------------------------------
-[x] examples/modularity/math/operations.rou: PASS (RAM: 4008KB, CPU: 100%)
+[x] ./modularity/math/operations.rou: PASS (RAM: 3908KB, CPU: 100%)
     Output Details:
       
 --------------------------------------
-[x] examples/modularity/utils/formatter.rou: PASS (RAM: 3880KB, CPU: 100%)
+[x] ./modularity/utils/formatter.rou: PASS (RAM: 3888KB, CPU: 100%)
     Output Details:
       
 --------------------------------------
-[x] examples/orchestration.rou: PASS (RAM: 4932KB, CPU: 103%)
+[x] ./orchestration.rou: PASS (RAM: 4956KB, CPU: 105%)
     Output Details:
       == System Information ==
       Hostname: localhost
-      Uptime: 4501.05 seconds
+      Uptime: 4888.96 seconds
       User ID: 1000
       Home: /home/user
-      Date: 2026-03-26 22:51:12
+      Date: 2026-03-26 22:57:40
       
       == Service Health ==
       [WARN] sshd is not running
@@ -135,10 +135,10 @@ SYSTEM SPECIFICATIONS:
       
       == File Operations ==
       Wrote to: /tmp/roucaarize_test.txt
-      Read back: Hello from Roucaarize!\nWritten at: 22:51:12
+      Read back: Hello from Roucaarize!\nWritten at: 22:57:40
       File exists: true
       Content after append:
-      Hello from Roucaarize!\nWritten at: 22:51:12\nAppended line
+      Hello from Roucaarize!\nWritten at: 22:57:40\nAppended line
       Cleaned up temp file
       
       == String Operations ==
@@ -158,16 +158,16 @@ SYSTEM SPECIFICATIONS:
       Month: 3
       Day: 26
       Hour: 22
-      Minute: 51
-      Second: 12
-      Timestamp: 1774540272
+      Minute: 57
+      Second: 40
+      Timestamp: 1774540660
       
       == System Commands ==
       Kernel: 6.17.0-19-generic
       Disk usage (/): 6%
       
       == Process Info ==
-      Memory usage: 3174/7635MB (41.6%)
+      Memory usage: 3333/7635MB (43.7%)
       
       == Performance Test ==
       Sum of 0..9999: 49995000
@@ -183,6 +183,6 @@ Passed:      8
 Failed:      0
 --------------------------------------
 PERFORMANCE METRICS:
-Peak RAM:    4932 KB (by examples/orchestration.rou)
-Peak CPU:    103% (by examples/orchestration.rou)
+Peak RAM:    4956 KB (by ./orchestration.rou)
+Peak CPU:    105% (by ./orchestration.rou)
 ==========================================================

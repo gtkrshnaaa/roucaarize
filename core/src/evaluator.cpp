@@ -6,6 +6,7 @@
  */
 
 #include "evaluator.hpp"
+#include "error.hpp"
 #include "runtimeGuard.hpp"
 #include <iostream>
 #include <stdexcept>
@@ -107,7 +108,7 @@ Value Evaluator::evaluate(const AST& ast, NodeIndex root) {
         return evalNode(root);
     } catch (const RuntimeException& e) {
         if (e.isReturn) return e.value;
-        throw std::runtime_error("Unhandled exception: " + e.value.toString());
+        throw RuntimeError(currentAST->get(root), "Unhandled exception: " + e.value.toString());
     }
 }
 
@@ -167,7 +168,7 @@ Value Evaluator::evalNode(NodeIndex idx) {
         case NodeType::THROW_STMT:     return executeThrow(node);
         case NodeType::CATCH_STMT:     return Value::nil();
         default:
-            throw std::runtime_error("Unknown node type: " + std::to_string(static_cast<int>(node.type)));
+            throw RuntimeError(node, "Unknown node type: " + std::to_string(static_cast<int>(node.type)));
     }
 }
 
@@ -178,7 +179,7 @@ Value Evaluator::evalNode(NodeIndex idx) {
 Value Evaluator::evalIdentifier(const ASTNode& node) {
     Value val;
     if (environment->get(node.name, val)) return val;
-    throw std::runtime_error("Undefined variable: " + node.name);
+    throw RuntimeError(node, "Undefined variable: " + node.name);
 }
 
 Value Evaluator::evalBinary(const ASTNode& node) {
@@ -203,13 +204,13 @@ Value Evaluator::evalBinary(const ASTNode& node) {
                 return Value::fromInt(left.intVal * right.intVal);
             return Value::fromFloat(left.asDouble() * right.asDouble());
         case BinaryOp::DIV:
-            if (right.asDouble() == 0) throw std::runtime_error("Division by zero");
+            if (right.asDouble() == 0) throw RuntimeError(node, "Division by zero");
             if (left.type == ValueType::INT && right.type == ValueType::INT)
                 return Value::fromInt(left.intVal / right.intVal);
             return Value::fromFloat(left.asDouble() / right.asDouble());
         case BinaryOp::MOD:
             if (left.type == ValueType::INT && right.type == ValueType::INT) {
-                if (right.intVal == 0) throw std::runtime_error("Modulo by zero");
+                if (right.intVal == 0) throw RuntimeError(node, "Modulo by zero");
                 return Value::fromInt(left.intVal % right.intVal);
             }
             break;
@@ -222,7 +223,7 @@ Value Evaluator::evalBinary(const ASTNode& node) {
         case BinaryOp::AND: return Value::fromBool(left.isTruthy() && right.isTruthy());
         case BinaryOp::OR:  return Value::fromBool(left.isTruthy() || right.isTruthy());
     }
-    throw std::runtime_error("Invalid binary operation");
+    throw RuntimeError(node, "Invalid binary operation");
 }
 
 Value Evaluator::evalUnary(const ASTNode& node) {
@@ -239,13 +240,18 @@ Value Evaluator::evalCall(const ASTNode& node) {
     std::vector<Value> args;
     for (NodeIndex argIdx : node.children) args.push_back(evalNode(argIdx));
 
-    if (callee.type == ValueType::NATIVE_FUNCTION)
-        return (*callee.nativeVal)(*this, args);
+    if (callee.type == ValueType::NATIVE_FUNCTION) {
+        try {
+            return (*callee.nativeVal)(*this, args);
+        } catch (const std::exception& e) {
+            throw RuntimeError(node, e.what());
+        }
+    }
 
     if (callee.type == ValueType::FUNCTION) {
         const auto& fd = *callee.funcVal;
         if (args.size() != fd.params.size())
-            throw std::runtime_error("Expected " + std::to_string(fd.params.size()) +
+            throw RuntimeError(node, "Expected " + std::to_string(fd.params.size()) +
                                      " arguments but got " + std::to_string(args.size()));
         auto callEnv = std::make_shared<Environment>(fd.closure);
         for (size_t i = 0; i < args.size(); ++i) callEnv->define(fd.params[i], args[i]);
@@ -256,7 +262,7 @@ Value Evaluator::evalCall(const ASTNode& node) {
             throw;
         }
     }
-    throw std::runtime_error("Object is not callable");
+    throw RuntimeError(node, "Object is not callable");
 }
 
 Value Evaluator::evalMemberAccess(const ASTNode& node) {
@@ -266,7 +272,7 @@ Value Evaluator::evalMemberAccess(const ASTNode& node) {
     if (left.type == ValueType::STRUCT_INSTANCE) {
         auto it = left.structVal->fields.find(node.name);
         if (it != left.structVal->fields.end()) return it->second;
-        throw std::runtime_error("Undefined field '" + node.name + "' on struct '" + left.structVal->typeName + "'");
+        throw RuntimeError(node, "Undefined field '" + node.name + "' on struct '" + left.structVal->typeName + "'");
     }
 
     // Stdlib module member access (module stored as MAP with native functions)
@@ -275,7 +281,7 @@ Value Evaluator::evalMemberAccess(const ASTNode& node) {
         Value key = Value::fromString(node.name);
         auto it = left.mapVal->entries.find(key);
         if (it != left.mapVal->entries.end()) return it->second;
-        throw std::runtime_error("Undefined method '" + node.name + "' on module");
+        throw RuntimeError(node, "Undefined method '" + node.name + "' on module");
     }
 
     // Array built-in methods
@@ -304,7 +310,7 @@ Value Evaluator::evalMemberAccess(const ASTNode& node) {
         if (node.name == "length") return Value::fromInt(static_cast<int64_t>(left.stringVal->size()));
     }
 
-    throw std::runtime_error("Cannot access member '" + node.name + "' on " + left.toString());
+    throw RuntimeError(node, "Cannot access member '" + node.name + "' on " + left.toString());
 }
 
 Value Evaluator::evalIndexAccess(const ASTNode& node) {
@@ -316,7 +322,7 @@ Value Evaluator::evalIndexAccess(const ASTNode& node) {
         auto& arr = *left.arrayVal;
         if (i < 0) i += static_cast<int64_t>(arr.size());
         if (i < 0 || i >= static_cast<int64_t>(arr.size()))
-            throw std::runtime_error("Array index out of bounds: " + std::to_string(index.intVal));
+            throw RuntimeError(node, "Array index out of bounds: " + std::to_string(index.intVal));
         return arr[static_cast<size_t>(i)];
     }
 
@@ -331,11 +337,11 @@ Value Evaluator::evalIndexAccess(const ASTNode& node) {
         auto& str = *left.stringVal;
         if (i < 0) i += static_cast<int64_t>(str.size());
         if (i < 0 || i >= static_cast<int64_t>(str.size()))
-            throw std::runtime_error("String index out of bounds");
+            throw RuntimeError(node, "String index out of bounds");
         return Value::fromString(std::string(1, str[static_cast<size_t>(i)]));
     }
 
-    throw std::runtime_error("Cannot index into " + left.toString());
+    throw RuntimeError(node, "Cannot index into " + left.toString());
 }
 
 Value Evaluator::evalArrayLiteral(const ASTNode& node) {
@@ -391,7 +397,7 @@ Value Evaluator::executeMemberAssign(const ASTNode& node) {
         obj.mapVal->entries[Value::fromString(node.name)] = val;
         return val;
     }
-    throw std::runtime_error("Cannot assign member on non-struct/map value");
+    throw RuntimeError(node, "Cannot assign member on non-struct/map value");
 }
 
 Value Evaluator::executeIndexAssign(const ASTNode& node) {
@@ -404,7 +410,7 @@ Value Evaluator::executeIndexAssign(const ASTNode& node) {
         int64_t i = index.intVal;
         if (i < 0) i += static_cast<int64_t>(arr.size());
         if (i < 0 || i >= static_cast<int64_t>(arr.size()))
-            throw std::runtime_error("Array index out of bounds during assignment");
+            throw RuntimeError(node, "Array index out of bounds during assignment");
         arr[static_cast<size_t>(i)] = val;
         return val;
     }
@@ -412,7 +418,7 @@ Value Evaluator::executeIndexAssign(const ASTNode& node) {
         obj.mapVal->entries[index] = val;
         return val;
     }
-    throw std::runtime_error("Cannot index-assign on this type");
+    throw RuntimeError(node, "Cannot index-assign on this type");
 }
 
 Value Evaluator::executeIf(const ASTNode& node) {
@@ -427,7 +433,7 @@ Value Evaluator::executeWhile(const ASTNode& node) {
         evalNode(node.right);
         if (++iterCount % GUARD_LOOP_CHECK_INTERVAL == 0) {
             if (runtime_guard::checkTimeout()) {
-                throw std::runtime_error(
+                throw RuntimeError(node, 
                     "Execution timeout: while loop exceeded "
                     + std::to_string(runtime_guard::SystemLimits::get().timeoutSeconds) + "s limit");
             }
@@ -439,7 +445,7 @@ Value Evaluator::executeWhile(const ASTNode& node) {
 Value Evaluator::executeFor(const ASTNode& node) {
     Value iterable = evalNode(node.left);
     if (iterable.type != ValueType::ARRAY)
-        throw std::runtime_error("Can only iterate over arrays");
+        throw RuntimeError(node, "Can only iterate over arrays");
     uint32_t iterCount = 0;
     for (const auto& item : *iterable.arrayVal) {
         auto loopEnv = std::make_shared<Environment>(environment);
@@ -447,7 +453,7 @@ Value Evaluator::executeFor(const ASTNode& node) {
         evalBlock(node.right, loopEnv);
         if (++iterCount % GUARD_LOOP_CHECK_INTERVAL == 0) {
             if (runtime_guard::checkTimeout()) {
-                throw std::runtime_error("Execution timeout: for loop exceeded "
+                throw RuntimeError(node, "Execution timeout: for loop exceeded "
                     + std::to_string(runtime_guard::SystemLimits::get().timeoutSeconds) + "s limit");
             }
         }
@@ -504,7 +510,7 @@ Value Evaluator::executeImportStdlib(const ASTNode& node) {
 
     auto it = stdlibRegistry.find(moduleName);
     if (it == stdlibRegistry.end())
-        throw std::runtime_error("Unknown stdlib module: " + moduleName);
+        throw RuntimeError(node, "Unknown stdlib module: " + moduleName);
 
     // Create a MAP value containing all module functions
     auto moduleMap = std::make_shared<MapInstance>();

@@ -6,6 +6,7 @@
  */
 
 #include "parser.hpp"
+#include "error_formatter.hpp"
 #include <iostream>
 
 namespace roucaarize {
@@ -57,8 +58,11 @@ void Parser::synchronize() {
 
 void Parser::error(const Token& token, const std::string& msg) {
     if (panicMode_) return;
-    if (tooManyErrors()) return;
-    errorMessages.push_back("Error at [Line " + std::to_string(token.line) + "]: " + msg + " (got '" + std::string(token.lexeme) + "')");
+    if (peek().type != TokenType::ENDOFFILE) {
+        errorMessages.push_back(ErrorFormatter::formatSnippet(source, token.line, token.column, msg, "Syntax Error"));
+    } else {
+        errorMessages.push_back(ErrorFormatter::formatSnippet(source, token.line, token.column, msg + " at EOF", "Syntax Error"));
+    }
 }
 
 NodeIndex Parser::parse() {
@@ -70,7 +74,7 @@ NodeIndex Parser::parse() {
 NodeIndex Parser::program() {
     ASTNode node(NodeType::PROGRAM, 1, 1);
     while (!isAtEnd() && !tooManyErrors()) {
-        if (match(TokenType::NEWLINE)) continue;
+        if (match(TokenType::NEWLINE) || match(TokenType::SEMICOLON)) continue;
         size_t before = current;
         node.children.push_back(declaration());
         // Stall detection: if no token was consumed, force advance
@@ -246,7 +250,7 @@ NodeIndex Parser::block() {
     ASTNode node(NodeType::BLOCK, first.line, first.column);
     if (first.type == TokenType::LBRACE) {
         while (!check(TokenType::RBRACE) && !isAtEnd() && !tooManyErrors()) {
-            if (match(TokenType::NEWLINE)) continue;
+            if (match(TokenType::NEWLINE) || match(TokenType::SEMICOLON)) continue;
             size_t before = current;
             node.children.push_back(declaration());
             // Stall detection: break if no token was consumed

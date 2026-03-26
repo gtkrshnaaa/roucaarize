@@ -24,6 +24,8 @@
 #include "string.hpp"
 #include "time.hpp"
 #include "runtimeGuard.hpp"
+#include "error.hpp"
+#include "error_formatter.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -62,8 +64,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    std::string source;
     try {
-        std::string source = readFile(filename);
+        source = readFile(filename);
         
         if (grammarOnly) {
             GrammarChecker checker;
@@ -99,8 +102,12 @@ int main(int argc, char* argv[]) {
 
         evaluator.evaluate(parser.getAST(), parser.getAST().root());
 
+    } catch (const RuntimeError& e) {
+        std::cerr << ErrorFormatter::formatSnippet(source, e.getLine(), e.getColumn(), e.what(), "Runtime Panic") << "\n";
+        return 1;
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << "\n";
+        // Fallback for native C++ exceptions like std::bad_alloc lacking node context
+        std::cerr << "\n\033[1;31m[System Error]\033[0m " << e.what() << "\n";
         return 1;
     }
 

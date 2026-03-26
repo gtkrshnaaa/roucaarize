@@ -1,0 +1,4 @@
+function test() {
+    let name = "Gilang
+    print(name);
+}

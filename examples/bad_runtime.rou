@@ -1,0 +1,9 @@
+function triggerCrash() {
+    print(nonExistentVariable);
+}
+
+function main() {
+    triggerCrash();
+}
+
+main();

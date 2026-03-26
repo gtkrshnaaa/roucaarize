@@ -6,6 +6,7 @@
  */
 
 #include "lexer.hpp"
+#include "error_formatter.hpp"
 #include <charconv>
 #include <array>
 
@@ -124,7 +125,7 @@ Token Lexer::string() {
 }
 
 void Lexer::addError(const std::string& msg) {
-    errorMessages.push_back("Error at [Line " + std::to_string(line) + "]: " + msg);
+    errorMessages.push_back(ErrorFormatter::formatSnippet(std::string(source), line, column, msg, "Syntax Error"));
 }
 
 Token Lexer::scanToken() {

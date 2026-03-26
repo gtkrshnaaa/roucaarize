@@ -169,8 +169,18 @@ inline void crashHandler(int sig, siginfo_t* si, void* /* unused */) {
         siglongjmp(recovery_env, sig);
     }
     fprintf(stderr,
-            "\n[RuntimeGuard] Fatal %s at address %p\n",
-            signalName(sig), si ? si->si_addr : nullptr);
+        "\n======================================================================\n"
+        "\033[1;31m[Roucaarize Panic] FATAL KERNEL SIGNAL RECEIVED\033[0m\n"
+        "======================================================================\n"
+        "Signal : %s\n"
+        "Address: %p\n\n"
+        "This represents a severe native crash, typically caused by:\n"
+        " - Out of bounds memory access (SIGSEGV/SIGBUS)\n"
+        " - Internal C++ Interpreter memory corruption\n"
+        " - Exhausted hardware resources bypassing soft limits\n\n"
+        "Please report this incident block to the environment maintainers.\n"
+        "======================================================================\n",
+        signalName(sig), si ? si->si_addr : nullptr);
     _exit(128 + sig);
 }
 
