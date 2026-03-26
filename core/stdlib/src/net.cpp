@@ -20,7 +20,8 @@ namespace stdlib {
 static std::string runCmd(const std::string& cmd) {
     std::array<char, 256> buffer;
     std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
+    auto pipeClose = [](FILE* f) { if (f) pclose(f); };
+    std::unique_ptr<FILE, decltype(pipeClose)> pipe(popen(cmd.c_str(), "r"), pipeClose);
     if (!pipe) return "";
     while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr)
         result += buffer.data();
