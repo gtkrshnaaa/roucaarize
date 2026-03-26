@@ -1,0 +1,169 @@
+// Roucaarize - Linux Orchestration Example (Clean Design)
+// All functions declared first, then invoked in orchestration block.
+// Demonstrates real-world orchestration using stdlib modules.
+
+import stdlib sys as s
+import stdlib fs as f
+import stdlib time as t
+import stdlib proc as p
+import stdlib string as str
+
+// ============================================================================
+// Section 1: Display Functions
+// ============================================================================
+
+function printHeader(title) {
+    print("== " + title + " ==")
+}
+
+function printField(label, value) {
+    print(label + ": " + value)
+}
+
+// ============================================================================
+// Section 2: System Information Functions
+// ============================================================================
+
+function showSystemInfo() {
+    printHeader("System Information")
+    printField("Hostname", s.hostname())
+    printField("Uptime", toString(s.uptime()) + " seconds")
+    printField("User ID", toString(s.getUid()))
+    printField("Home", s.getEnv("HOME"))
+    printField("Date", t.format("%Y-%m-%d %H:%M:%S"))
+    print("")
+}
+
+function showTimeInfo() {
+    printHeader("Time Operations")
+    printField("Year", toString(t.year()))
+    printField("Month", toString(t.month()))
+    printField("Day", toString(t.day()))
+    printField("Hour", toString(t.hour()))
+    printField("Minute", toString(t.minute()))
+    printField("Second", toString(t.second()))
+    printField("Timestamp", toString(t.timestamp()))
+    print("")
+}
+
+function showSystemCommands() {
+    printHeader("System Commands")
+    kernelVersion = s.exec("uname -r")
+    printField("Kernel", kernelVersion)
+    diskUsage = s.exec("df -h / | tail -1 | awk '{print $5}'")
+    printField("Disk usage (/)", diskUsage)
+    print("")
+}
+
+function showProcessInfo() {
+    printHeader("Process Info")
+    printField("Memory usage", p.memUsage())
+    print("")
+}
+
+// ============================================================================
+// Section 3: Health Check Functions
+// ============================================================================
+
+function healthCheck(serviceName) {
+    running = p.isRunning(serviceName)
+    if (running) {
+        print("[OK] " + serviceName + " is running")
+    } else {
+        print("[WARN] " + serviceName + " is not running")
+    }
+    return running
+}
+
+function runHealthChecks(services) {
+    printHeader("Service Health")
+    for (svc in services) {
+        healthCheck(svc)
+    }
+    print("")
+}
+
+// ============================================================================
+// Section 4: File Operation Functions
+// ============================================================================
+
+function demonstrateFileOps() {
+    printHeader("File Operations")
+    tempFile = "/tmp/roucaarize_test.txt"
+    content = "Hello from Roucaarize!\nWritten at: " + t.format("%H:%M:%S")
+
+    f.write(tempFile, content)
+    print("Wrote to: " + tempFile)
+
+    readBack = f.read(tempFile)
+    print("Read back: " + readBack)
+
+    printField("File exists", toString(f.exists(tempFile)))
+
+    f.append(tempFile, "\nAppended line")
+    print("Content after append:")
+    print(f.read(tempFile))
+
+    f.remove(tempFile)
+    print("Cleaned up temp file")
+    print("")
+}
+
+// ============================================================================
+// Section 5: String Operation Functions
+// ============================================================================
+
+function demonstrateStringOps() {
+    printHeader("String Operations")
+    message = "  Roucaarize Linux Orchestration  "
+    print("Original: '" + message + "'")
+    print("Trimmed: '" + str.trim(message) + "'")
+    print("Upper: " + str.toUpperCase("roucaarize"))
+    print("Lower: " + str.toLowerCase("ROUCAARIZE"))
+    printField("Contains 'Linux'", toString(str.contains(message, "Linux")))
+
+    parts = str.split("one:two:three", ":")
+    print("Split 'one:two:three':")
+    for (part in parts) {
+        print("  - " + part)
+    }
+
+    replaced = str.replace("Hello World", "World", "Roucaarize")
+    printField("Replace", replaced)
+    print("")
+}
+
+// ============================================================================
+// Section 6: Performance Test Function
+// ============================================================================
+
+function runPerformanceTest(limit) {
+    printHeader("Performance Test")
+    startTime = t.millis()
+    sum = 0
+    i = 0
+    while (i < limit) {
+        sum = sum + i
+        i = i + 1
+    }
+    endTime = t.millis()
+    elapsed = endTime - startTime
+    printField("Sum of 0.." + toString(limit - 1), toString(sum))
+    printField("Time elapsed", toString(elapsed) + "ms")
+    print("")
+}
+
+// ============================================================================
+// Section 7: Orchestration Entry Point
+// ============================================================================
+
+showSystemInfo()
+runHealthChecks(["sshd", "systemd"])
+demonstrateFileOps()
+demonstrateStringOps()
+showTimeInfo()
+showSystemCommands()
+showProcessInfo()
+runPerformanceTest(10000)
+
+print("Orchestration example completed successfully.")
