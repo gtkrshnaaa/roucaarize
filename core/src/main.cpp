@@ -1,7 +1,28 @@
+/**
+ * Copyright (c) 2026 Gilang Teja Krishna
+ * github.com/gtkrshnaaa
+ *
+ * main.cpp - Roucaarize CLI Entry Point
+ *
+ * Command-line interface for the Roucaarize tree-walking interpreter
+ * and static grammar analyzer.
+ *
+ * Usage:
+ *   roucaarize <script.rou>           Run a script
+ *   roucaarize -grammar <script.rou>  Static analysis only
+ *   roucaarize -g <script.rou>        Short form for grammar check
+ */
+
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "evaluator.hpp"
 #include "grammar.hpp"
+#include "sys.hpp"
+#include "fs.hpp"
+#include "net.hpp"
+#include "proc.hpp"
+#include "string.hpp"
+#include "time.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -64,6 +85,14 @@ int main(int argc, char* argv[]) {
         }
 
         Evaluator evaluator;
+        // Register all stdlib modules
+        evaluator.registerStdlib("sys", stdlib::getSysLibrary());
+        evaluator.registerStdlib("fs", stdlib::getFsLibrary());
+        evaluator.registerStdlib("net", stdlib::getNetLibrary());
+        evaluator.registerStdlib("proc", stdlib::getProcLibrary());
+        evaluator.registerStdlib("string", stdlib::getStringLibrary());
+        evaluator.registerStdlib("time", stdlib::getTimeLibrary());
+
         evaluator.evaluate(parser.getAST(), parser.getAST().root());
 
     } catch (const std::exception& e) {
