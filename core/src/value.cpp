@@ -1,0 +1,48 @@
+#include "value.hpp"
+#include <sstream>
+#include <iomanip>
+
+namespace roucaarize {
+
+std::string Value::toString() const {
+    switch (type) {
+        case ValueType::NIL: return "nil";
+        case ValueType::BOOL: return boolVal ? "true" : "false";
+        case ValueType::INT: return std::to_string(intVal);
+        case ValueType::FLOAT: {
+            std::ostringstream oss;
+            oss << std::fixed << std::setprecision(6) << floatVal;
+            std::string s = oss.str();
+            s.erase(s.find_last_not_of('0') + 1, std::string::npos);
+            if (s.back() == '.') s += '0';
+            return s;
+        }
+        case ValueType::STRING: return *stringVal;
+        case ValueType::ARRAY: {
+            std::string res = "[";
+            for (size_t i = 0; i < arrayVal->size(); ++i) {
+                res += (*arrayVal)[i].toString();
+                if (i < arrayVal->size() - 1) res += ", ";
+            }
+            res += "]";
+            return res;
+        }
+        case ValueType::MAP: return "<map>";
+        case ValueType::STRUCT_INSTANCE: return "<struct " + structVal->typeName + ">";
+        case ValueType::FUNCTION: return "<function " + funcVal->name + ">";
+        case ValueType::NATIVE_FUNCTION: return "<native function>";
+        default: return "unknown";
+    }
+}
+
+size_t ValueHasher::operator()(const Value& v) const {
+    switch (v.type) {
+        case ValueType::BOOL: return std::hash<bool>{}(v.boolVal);
+        case ValueType::INT: return std::hash<int64_t>{}(v.intVal);
+        case ValueType::FLOAT: return std::hash<double>{}(v.floatVal);
+        case ValueType::STRING: return std::hash<std::string>{}(*v.stringVal);
+        default: return 0;
+    }
+}
+
+} // namespace roucaarize
