@@ -3,8 +3,8 @@
 # Roucaarize Comprehensive Test Runner & Report Generator
 # This script runs all .rou examples, shows progress, and captures detailed output.
 
-REPORT_FILE="examples/verificationReport.txt"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPORT_FILE="$SCRIPT_DIR/verificationReport.txt"
 BIN="$SCRIPT_DIR/../bin/roucaarize"
 
 # Ensure binary exists
