@@ -25,9 +25,6 @@ docs/*.html
 !docs/index.html
 
 # Generated files
-*.rou
-!examples/**/*.rou
-!languagebench/**/*.rou
 
 # Script & Temp Dirs
 zListing/
