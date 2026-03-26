@@ -125,12 +125,12 @@ Value Evaluator::evalNode(NodeIndex idx) {
         case NodeType::PROGRAM:
         case NodeType::BLOCK: {
             Value last;
-            for (NodeIndex child : node.children) last = executeStatement(child);
+            for (NodeIndex child : currentAST->getChildren(node.childrenIdx)) last = executeStatement(child);
             return last;
         }
         case NodeType::LITERAL_INT:    return Value::fromInt(std::get<int64_t>(node.literal.data));
         case NodeType::LITERAL_FLOAT:  return Value::fromFloat(std::get<double>(node.literal.data));
-        case NodeType::LITERAL_STRING: return Value::fromString(node.name);
+        case NodeType::LITERAL_STRING: return Value::fromString(currentAST->getString(node.nameIdx));
         case NodeType::LITERAL_BOOL:   return Value::fromBool(std::get<bool>(node.literal.data));
         case NodeType::LITERAL_NIL:    return Value::nil();
         case NodeType::IDENTIFIER:     return evalIdentifier(node);
@@ -150,11 +150,11 @@ Value Evaluator::evalNode(NodeIndex idx) {
         case NodeType::TRY_STMT:       return executeTryCatch(node);
         case NodeType::FUNC_DECL: {
             FunctionDef fd;
-            fd.name = node.name;
-            fd.params = node.paramNames;
+            fd.name = currentAST->getString(node.nameIdx);
+            for(auto p : currentAST->getParams(node.paramsIdx)) fd.params.push_back(currentAST->getString(p));
             fd.bodyIndex = node.left;
             fd.closure = environment;
-            environment->define(node.name, Value::fromFunction(std::move(fd)));
+            environment->define(currentAST->getString(node.nameIdx), Value::fromFunction(std::move(fd)));
             return Value::nil();
         }
         case NodeType::STRUCT_DECL:    return executeStructDecl(node);
@@ -178,8 +178,8 @@ Value Evaluator::evalNode(NodeIndex idx) {
 
 Value Evaluator::evalIdentifier(const ASTNode& node) {
     Value val;
-    if (environment->get(node.name, val)) return val;
-    throw RuntimeError(node, "Undefined variable: " + node.name);
+    if (environment->get(currentAST->getString(node.nameIdx), val)) return val;
+    throw RuntimeError(node, "Undefined variable: " + currentAST->getString(node.nameIdx));
 }
 
 Value Evaluator::evalBinary(const ASTNode& node) {
@@ -238,7 +238,7 @@ Value Evaluator::evalUnary(const ASTNode& node) {
 Value Evaluator::evalCall(const ASTNode& node) {
     Value callee = evalNode(node.left);
     std::vector<Value> args;
-    for (NodeIndex argIdx : node.children) args.push_back(evalNode(argIdx));
+    for (NodeIndex argIdx : currentAST->getChildren(node.childrenIdx)) args.push_back(evalNode(argIdx));
 
     if (callee.type == ValueType::NATIVE_FUNCTION) {
         try {
@@ -270,31 +270,31 @@ Value Evaluator::evalMemberAccess(const ASTNode& node) {
 
     // Struct instance field access
     if (left.type == ValueType::STRUCT_INSTANCE) {
-        auto it = left.getStruct()->fields.find(node.name);
+        auto it = left.getStruct()->fields.find(currentAST->getString(node.nameIdx));
         if (it != left.getStruct()->fields.end()) return it->second;
-        throw RuntimeError(node, "Undefined field '" + node.name + "' on struct '" + left.getStruct()->typeName + "'");
+        throw RuntimeError(node, "Undefined field '" + currentAST->getString(node.nameIdx) + "' on struct '" + left.getStruct()->typeName + "'");
     }
 
     // Stdlib module member access (module stored as MAP with native functions)
     if (left.type == ValueType::MAP && left.getMap()) {
         // Module methods stored as entries in the map
-        Value key = Value::fromString(node.name);
+        Value key = Value::fromString(currentAST->getString(node.nameIdx));
         auto it = left.getMap()->entries.find(key);
         if (it != left.getMap()->entries.end()) return it->second;
-        throw RuntimeError(node, "Undefined method '" + node.name + "' on module");
+        throw RuntimeError(node, "Undefined method '" + currentAST->getString(node.nameIdx) + "' on module");
     }
 
     // Array built-in methods
     if (left.type == ValueType::ARRAY) {
-        if (node.name == "length") return Value::fromInt(static_cast<int64_t>(left.getArray()->size()));
-        if (node.name == "push") {
+        if (currentAST->getString(node.nameIdx) == "length") return Value::fromInt(static_cast<int64_t>(left.getArray()->size()));
+        if (currentAST->getString(node.nameIdx) == "push") {
             auto captured = left.getArray();
             return Value::fromNative([captured](Evaluator&, const std::vector<Value>& args) -> Value {
                 if (!args.empty()) captured->push_back(args[0]);
                 return Value::nil();
             });
         }
-        if (node.name == "pop") {
+        if (currentAST->getString(node.nameIdx) == "pop") {
             auto captured = left.getArray();
             return Value::fromNative([captured](Evaluator&, const std::vector<Value>&) -> Value {
                 if (captured->empty()) return Value::nil();
@@ -307,10 +307,10 @@ Value Evaluator::evalMemberAccess(const ASTNode& node) {
 
     // String built-in methods
     if (left.type == ValueType::STRING) {
-        if (node.name == "length") return Value::fromInt(static_cast<int64_t>(left.getString()->size()));
+        if (currentAST->getString(node.nameIdx) == "length") return Value::fromInt(static_cast<int64_t>(left.getString()->size()));
     }
 
-    throw RuntimeError(node, "Cannot access member '" + node.name + "' on " + left.toString());
+    throw RuntimeError(node, "Cannot access member '" + currentAST->getString(node.nameIdx) + "' on " + left.toString());
 }
 
 Value Evaluator::evalIndexAccess(const ASTNode& node) {
@@ -346,16 +346,16 @@ Value Evaluator::evalIndexAccess(const ASTNode& node) {
 
 Value Evaluator::evalArrayLiteral(const ASTNode& node) {
     std::vector<Value> arr;
-    arr.reserve(node.children.size());
-    for (NodeIndex child : node.children) arr.push_back(evalNode(child));
+    arr.reserve(currentAST->getChildren(node.childrenIdx).size());
+    for (NodeIndex child : currentAST->getChildren(node.childrenIdx)) arr.push_back(evalNode(child));
     return Value::fromArray(std::move(arr));
 }
 
 Value Evaluator::evalMapLiteral(const ASTNode& node) {
     auto map = std::make_shared<MapInstance>();
-    for (size_t i = 0; i + 1 < node.children.size(); i += 2) {
-        Value key = evalNode(node.children[i]);
-        Value val = evalNode(node.children[i + 1]);
+    for (size_t i = 0; i + 1 < currentAST->getChildren(node.childrenIdx).size(); i += 2) {
+        Value key = evalNode(currentAST->getChildren(node.childrenIdx)[i]);
+        Value val = evalNode(currentAST->getChildren(node.childrenIdx)[i + 1]);
         map->entries[key] = val;
     }
     return Value::fromMap(std::move(map));
@@ -382,7 +382,7 @@ Value Evaluator::executeStatement(NodeIndex idx) { return evalNode(idx); }
 
 Value Evaluator::executeVarAssign(const ASTNode& node) {
     Value val = evalNode(node.left);
-    if (!environment->assign(node.name, val)) environment->define(node.name, val);
+    if (!environment->assign(currentAST->getString(node.nameIdx), val)) environment->define(currentAST->getString(node.nameIdx), val);
     return val;
 }
 
@@ -390,11 +390,11 @@ Value Evaluator::executeMemberAssign(const ASTNode& node) {
     Value obj = evalNode(node.left);
     Value val = evalNode(node.right);
     if (obj.type == ValueType::STRUCT_INSTANCE) {
-        obj.getStruct()->fields[node.name] = val;
+        obj.getStruct()->fields[currentAST->getString(node.nameIdx)] = val;
         return val;
     }
     if (obj.type == ValueType::MAP) {
-        obj.getMap()->entries[Value::fromString(node.name)] = val;
+        obj.getMap()->entries[Value::fromString(currentAST->getString(node.nameIdx))] = val;
         return val;
     }
     throw RuntimeError(node, "Cannot assign member on non-struct/map value");
@@ -449,7 +449,7 @@ Value Evaluator::executeFor(const ASTNode& node) {
     uint32_t iterCount = 0;
     for (const auto& item : *iterable.getArray()) {
         auto loopEnv = std::make_shared<Environment>(environment);
-        loopEnv->define(node.name, item);
+        loopEnv->define(currentAST->getString(node.nameIdx), item);
         evalBlock(node.right, loopEnv);
         if (++iterCount % GUARD_LOOP_CHECK_INTERVAL == 0) {
             if (runtime_guard::checkTimeout()) {
@@ -467,11 +467,11 @@ Value Evaluator::executeTryCatch(const ASTNode& node) {
     } catch (const RuntimeException& e) {
         if (e.isReturn) throw;
         auto catchEnv = std::make_shared<Environment>(environment);
-        if (!node.name.empty()) catchEnv->define(node.name, e.value);
+        if (!currentAST->getString(node.nameIdx).empty()) catchEnv->define(currentAST->getString(node.nameIdx), e.value);
         evalBlock(node.right, catchEnv);
     } catch (const std::exception& e) {
         auto catchEnv = std::make_shared<Environment>(environment);
-        if (!node.name.empty()) catchEnv->define(node.name, Value::fromString(e.what()));
+        if (!currentAST->getString(node.nameIdx).empty()) catchEnv->define(currentAST->getString(node.nameIdx), Value::fromString(e.what()));
         evalBlock(node.right, catchEnv);
     }
     // Execute finally block if present
@@ -486,8 +486,9 @@ Value Evaluator::executeThrow(const ASTNode& node) {
 
 Value Evaluator::executeStructDecl(const ASTNode& node) {
     // Register a struct constructor as a native function
-    std::string structName = node.name;
-    std::vector<std::string> fieldNames = node.paramNames;
+    std::string structName = currentAST->getString(node.nameIdx);
+    std::vector<std::string> fieldNames;
+    for(auto p : currentAST->getParams(node.paramsIdx)) fieldNames.push_back(currentAST->getString(p));
 
     auto constructor = Value::fromNative(
         [structName, fieldNames](Evaluator&, const std::vector<Value>& args) -> Value {
@@ -505,8 +506,8 @@ Value Evaluator::executeStructDecl(const ASTNode& node) {
 }
 
 Value Evaluator::executeImportStdlib(const ASTNode& node) {
-    std::string moduleName = node.name;
-    std::string alias = node.paramNames.empty() ? moduleName : node.paramNames[0];
+    std::string moduleName = currentAST->getString(node.nameIdx);
+    std::string alias = currentAST->getParams(node.paramsIdx).empty() ? moduleName : currentAST->getString(currentAST->getParams(node.paramsIdx)[0]);
 
     auto it = stdlibRegistry.find(moduleName);
     if (it == stdlibRegistry.end())

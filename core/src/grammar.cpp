@@ -214,7 +214,7 @@ AnalysisResult GrammarChecker::analyzeSource(const std::string& source, const st
     // Phase 3: AST size pre-check
     const ASTNode& rootNode = ast.get(root);
     uint32_t ast_limit = runtime_guard::SystemLimits::get().grammarAstLimit;
-    if (rootNode.type == NodeType::PROGRAM && rootNode.children.size() > ast_limit) {
+    if (rootNode.type == NodeType::PROGRAM && ast.getChildren(rootNode.childrenIdx).size() > ast_limit) {
         addDiag(DiagLevel::WARNING, 0, 0,
                 "File exceeds analysis node limit (" + std::to_string(ast_limit) +
                 " top-level statements). Analysis truncated for resource safety.",
@@ -436,31 +436,31 @@ void GrammarChecker::registerTopLevel(const AST& ast, NodeIndex idx) {
     const ASTNode& node = ast.get(idx);
     if (node.type != NodeType::PROGRAM) return;
 
-    for (NodeIndex child : node.children) {
+    for (NodeIndex child : ast.getChildren(node.childrenIdx)) {
         const ASTNode& childNode = ast.get(child);
         if (childNode.type == NodeType::FUNC_DECL) {
-            if (isFunctionDeclared(childNode.name)) {
+            if (isFunctionDeclared(ast.getString(childNode.nameIdx))) {
                 addDiag(DiagLevel::WARNING, childNode.line, childNode.column,
-                        "Function '" + childNode.name + "' is declared multiple times",
+                        "Function '" + ast.getString(childNode.nameIdx) + "' is declared multiple times",
                         "semantic.duplicateFunc");
             }
-            declareFunction(childNode.name);
+            declareFunction(ast.getString(childNode.nameIdx));
         } else if (childNode.type == NodeType::STRUCT_DECL) {
-            if (structFields.count(childNode.name)) {
+            if (structFields.count(ast.getString(childNode.nameIdx))) {
                 addDiag(DiagLevel::ERROR, childNode.line, childNode.column,
-                        "Struct '" + childNode.name + "' is defined multiple times",
+                        "Struct '" + ast.getString(childNode.nameIdx) + "' is defined multiple times",
                         "semantic.duplicateStruct");
             }
-            structFields[childNode.name] = childNode.paramNames;
-            declareFunction(childNode.name);
+            std::vector<std::string> p; for(auto id : ast.getParams(childNode.paramsIdx)) p.push_back(ast.getString(id)); structFields[ast.getString(childNode.nameIdx)] = p;
+            declareFunction(ast.getString(childNode.nameIdx));
         } else if (childNode.type == NodeType::IMPORT_STDLIB) {
-            if (!childNode.paramNames.empty()) {
-                importAliases.insert(childNode.paramNames[0]);
-                declareVariable(childNode.paramNames[0]);
+            if (!ast.getParams(childNode.paramsIdx).empty()) {
+                importAliases.insert(ast.getString(ast.getParams(childNode.paramsIdx)[0]));
+                declareVariable(ast.getString(ast.getParams(childNode.paramsIdx)[0]));
             }
-            if (knownStdlibModules.find(childNode.name) == knownStdlibModules.end()) {
+            if (knownStdlibModules.find(ast.getString(childNode.nameIdx)) == knownStdlibModules.end()) {
                 addDiag(DiagLevel::ERROR, childNode.line, childNode.column,
-                        "Unknown stdlib module '" + childNode.name +
+                        "Unknown stdlib module '" + ast.getString(childNode.nameIdx) +
                         "' — known modules for orchestration: sys, fs, net, proc, string",
                         "semantic.unknownStdlib");
             }
@@ -482,7 +482,7 @@ void GrammarChecker::analyze(const AST& ast, NodeIndex idx, uint32_t depth) {
 
     switch (node.type) {
         case NodeType::PROGRAM: {
-            for (NodeIndex child : node.children) {
+            for (NodeIndex child : ast.getChildren(node.childrenIdx)) {
                 if (!withinBudget()) break;
                 analyze(ast, child, depth + 1);
             }
@@ -491,28 +491,28 @@ void GrammarChecker::analyze(const AST& ast, NodeIndex idx, uint32_t depth) {
 
         case NodeType::VAR_ASSIGN: {
             // Naming: check camelCase
-            if (!node.name.empty() && !isLowerCamelCase(node.name)) {
-                if (node.name.length() > 1) {
+            if (!ast.getString(node.nameIdx).empty() && !isLowerCamelCase(ast.getString(node.nameIdx))) {
+                if (ast.getString(node.nameIdx).length() > 1) {
                     addDiag(DiagLevel::WARNING, node.line, node.column,
-                            "Variable '" + node.name + "' should use camelCase (no underscores allowed)",
+                            "Variable '" + ast.getString(node.nameIdx) + "' should use camelCase (no underscores allowed)",
                             "naming.camelCase");
                 }
             }
             // Semantics: analyze value, then declare
             analyze(ast, node.left, depth + 1);
-            declareVariable(node.name);
+            declareVariable(ast.getString(node.nameIdx));
             break;
         }
 
         case NodeType::FUNC_DECL: {
             // Naming: function name
-            if (!node.name.empty() && !isLowerCamelCase(node.name)) {
+            if (!ast.getString(node.nameIdx).empty() && !isLowerCamelCase(ast.getString(node.nameIdx))) {
                 addDiag(DiagLevel::WARNING, node.line, node.column,
-                        "Function '" + node.name + "' should use camelCase",
+                        "Function '" + ast.getString(node.nameIdx) + "' should use camelCase",
                         "naming.funcCamelCase");
             }
             // Naming: parameter names
-            for (const auto& param : node.paramNames) {
+            for (auto paramIdx : ast.getParams(node.paramsIdx)) { std::string param = ast.getString(paramIdx);
                 if (!isLowerCamelCase(param)) {
                     addDiag(DiagLevel::WARNING, node.line, node.column,
                             "Parameter '" + param + "' should use camelCase",
@@ -522,23 +522,23 @@ void GrammarChecker::analyze(const AST& ast, NodeIndex idx, uint32_t depth) {
             // Performance: empty function body
             if (node.left != INVALID_NODE) {
                 const ASTNode& body = ast.get(node.left);
-                if (body.type == NodeType::BLOCK && body.children.empty()) {
+                if (body.type == NodeType::BLOCK && ast.getChildren(body.childrenIdx).empty()) {
                     addDiag(DiagLevel::WARNING, node.line, node.column,
-                            "Function '" + node.name + "' has an empty body",
+                            "Function '" + ast.getString(node.nameIdx) + "' has an empty body",
                             "perf.emptyFunction");
                 }
             }
             // Semantics: scope and parameter analysis
             pushScope(true);
-            for (const auto& param : node.paramNames) declareVariable(param);
+            for (auto paramIdx : ast.getParams(node.paramsIdx)) declareVariable(ast.getString(paramIdx));
             analyze(ast, node.left, depth + 1);
 
             if (!scopeStack.empty()) {
                 const auto& funcScope = scopeStack.back();
-                for (const auto& param : node.paramNames) {
+                for (auto paramIdx : ast.getParams(node.paramsIdx)) { std::string param = ast.getString(paramIdx);
                     if (funcScope.readVariables.find(param) == funcScope.readVariables.end()) {
                         addDiag(DiagLevel::WARNING, node.line, node.column,
-                                "Parameter '" + param + "' of function '" + node.name + "' is never used",
+                                "Parameter '" + param + "' of function '" + ast.getString(node.nameIdx) + "' is never used",
                                 "semantic.unusedParam");
                     }
                 }
@@ -549,13 +549,13 @@ void GrammarChecker::analyze(const AST& ast, NodeIndex idx, uint32_t depth) {
 
         case NodeType::STRUCT_DECL: {
             // Naming: struct name must be PascalCase
-            if (!node.name.empty() && !isUpperCamelCase(node.name)) {
+            if (!ast.getString(node.nameIdx).empty() && !isUpperCamelCase(ast.getString(node.nameIdx))) {
                 addDiag(DiagLevel::ERROR, node.line, node.column,
-                        "Struct '" + node.name + "' must use PascalCase (no underscores)",
+                        "Struct '" + ast.getString(node.nameIdx) + "' must use PascalCase (no underscores)",
                         "naming.structPascalCase");
             }
             // Naming: field names
-            for (const auto& field : node.paramNames) {
+            for (auto fieldIdx : ast.getParams(node.paramsIdx)) { std::string field = ast.getString(fieldIdx);
                 if (!isLowerCamelCase(field)) {
                     addDiag(DiagLevel::WARNING, node.line, node.column,
                             "Struct field '" + field + "' should use camelCase",
@@ -567,8 +567,8 @@ void GrammarChecker::analyze(const AST& ast, NodeIndex idx, uint32_t depth) {
 
         case NodeType::IMPORT_STDLIB: {
             // Naming: import alias
-            if (!node.paramNames.empty()) {
-                const auto& alias = node.paramNames[0];
+            if (!ast.getParams(node.paramsIdx).empty()) {
+                std::string alias = ast.getString(ast.getParams(node.paramsIdx)[0]);
                 if (!isLowerCamelCase(alias)) {
                     addDiag(DiagLevel::WARNING, node.line, node.column,
                             "Import alias '" + alias + "' should be lowercase",
@@ -580,16 +580,16 @@ void GrammarChecker::analyze(const AST& ast, NodeIndex idx, uint32_t depth) {
 
         case NodeType::IDENTIFIER: {
             // Semantics: check variable usage before assignment
-            if (!node.name.empty() &&
-                !isVariableDeclared(node.name) &&
-                !isFunctionDeclared(node.name) &&
-                !importAliases.count(node.name) &&
-                structFields.find(node.name) == structFields.end()) {
+            if (!ast.getString(node.nameIdx).empty() &&
+                !isVariableDeclared(ast.getString(node.nameIdx)) &&
+                !isFunctionDeclared(ast.getString(node.nameIdx)) &&
+                !importAliases.count(ast.getString(node.nameIdx)) &&
+                structFields.find(ast.getString(node.nameIdx)) == structFields.end()) {
                 addDiag(DiagLevel::WARNING, node.line, node.column,
-                        "Variable '" + node.name + "' used before assignment",
+                        "Variable '" + ast.getString(node.nameIdx) + "' used before assignment",
                         "semantic.undefinedVar");
             } else {
-                markVariableRead(node.name);
+                markVariableRead(ast.getString(node.nameIdx));
             }
             break;
         }
@@ -599,18 +599,18 @@ void GrammarChecker::analyze(const AST& ast, NodeIndex idx, uint32_t depth) {
             if (node.left != INVALID_NODE) {
                 const ASTNode& callee = ast.get(node.left);
                 if (callee.type == NodeType::IDENTIFIER) {
-                    if (!isFunctionDeclared(callee.name) &&
-                        structFields.find(callee.name) == structFields.end()) {
+                    if (!isFunctionDeclared(ast.getString(callee.nameIdx)) &&
+                        structFields.find(ast.getString(callee.nameIdx)) == structFields.end()) {
                         addDiag(DiagLevel::ERROR, callee.line, callee.column,
-                                "Undefined function '" + callee.name + "'",
+                                "Undefined function '" + ast.getString(callee.nameIdx) + "'",
                                 "semantic.undefinedFunc");
                     }
-                    markVariableRead(callee.name);
+                    markVariableRead(ast.getString(callee.nameIdx));
                 } else if (callee.type == NodeType::MEMBER_ACCESS) {
                     analyze(ast, callee.left, depth + 1);
                 }
             }
-            for (NodeIndex arg : node.children) {
+            for (NodeIndex arg : ast.getChildren(node.childrenIdx)) {
                 if (!withinBudget()) break;
                 analyze(ast, arg, depth + 1);
             }
@@ -619,9 +619,9 @@ void GrammarChecker::analyze(const AST& ast, NodeIndex idx, uint32_t depth) {
 
         case NodeType::BLOCK: {
             bool foundReturn = false;
-            for (size_t i = 0; i < node.children.size(); ++i) {
+            for (size_t i = 0; i < ast.getChildren(node.childrenIdx).size(); ++i) {
                 if (!withinBudget()) break;
-                NodeIndex child = node.children[i];
+                NodeIndex child = ast.getChildren(node.childrenIdx)[i];
                 if (foundReturn) {
                     const ASTNode& deadNode = ast.get(child);
                     addDiag(DiagLevel::WARNING, deadNode.line, deadNode.column,
@@ -647,19 +647,19 @@ void GrammarChecker::analyze(const AST& ast, NodeIndex idx, uint32_t depth) {
 
         case NodeType::FOR_STMT: {
             // Naming: iterator variable
-            if (!node.name.empty() && !isLowerCamelCase(node.name)) {
+            if (!ast.getString(node.nameIdx).empty() && !isLowerCamelCase(ast.getString(node.nameIdx))) {
                 addDiag(DiagLevel::WARNING, node.line, node.column,
-                        "Iterator variable '" + node.name + "' should use camelCase",
+                        "Iterator variable '" + ast.getString(node.nameIdx) + "' should use camelCase",
                         "naming.iteratorCamelCase");
             }
             // Semantics: scoped iteration
             pushScope(false);
-            declareVariable(node.name);
+            declareVariable(ast.getString(node.nameIdx));
             analyze(ast, node.left, depth + 1);
             // Performance: empty loop body
             if (node.right != INVALID_NODE) {
                 const ASTNode& body = ast.get(node.right);
-                if (body.type == NodeType::BLOCK && body.children.empty()) {
+                if (body.type == NodeType::BLOCK && ast.getChildren(body.childrenIdx).empty()) {
                     addDiag(DiagLevel::PERF, node.line, node.column,
                             "Empty loop detected. This burns CPU cycles unnecessarily in daemon scripts.",
                             "perf.emptyLoop");
@@ -674,7 +674,7 @@ void GrammarChecker::analyze(const AST& ast, NodeIndex idx, uint32_t depth) {
             // Performance: empty loop body
             if (node.right != INVALID_NODE) {
                 const ASTNode& body = ast.get(node.right);
-                if (body.type == NodeType::BLOCK && body.children.empty()) {
+                if (body.type == NodeType::BLOCK && ast.getChildren(body.childrenIdx).empty()) {
                     addDiag(DiagLevel::PERF, node.line, node.column,
                             "Empty loop detected. This burns CPU cycles unnecessarily in daemon scripts.",
                             "perf.emptyLoop");
@@ -690,11 +690,11 @@ void GrammarChecker::analyze(const AST& ast, NodeIndex idx, uint32_t depth) {
         case NodeType::TRY_STMT: {
             analyze(ast, node.left, depth + 1);
             pushScope(false);
-            if (!node.name.empty()) declareVariable(node.name);
+            if (!ast.getString(node.nameIdx).empty()) declareVariable(ast.getString(node.nameIdx));
             analyze(ast, node.right, depth + 1);
             popScope();
             // Finally block
-            for (NodeIndex child : node.children) {
+            for (NodeIndex child : ast.getChildren(node.childrenIdx)) {
                 if (!withinBudget()) break;
                 analyze(ast, child, depth + 1);
             }
@@ -705,7 +705,7 @@ void GrammarChecker::analyze(const AST& ast, NodeIndex idx, uint32_t depth) {
             // Performance: empty catch
             if (node.left != INVALID_NODE) {
                 const ASTNode& body = ast.get(node.left);
-                if (body.type == NodeType::BLOCK && body.children.empty()) {
+                if (body.type == NodeType::BLOCK && ast.getChildren(body.childrenIdx).empty()) {
                     addDiag(DiagLevel::PERF, node.line, node.column,
                             "Empty catch block detected. Swallowing system errors silently can lead to catastrophic failures during orchestration.",
                             "perf.emptyCatch");
@@ -720,7 +720,7 @@ void GrammarChecker::analyze(const AST& ast, NodeIndex idx, uint32_t depth) {
             if (node.left != INVALID_NODE) analyze(ast, node.left, depth + 1);
             if (node.right != INVALID_NODE) analyze(ast, node.right, depth + 1);
             if (node.extra != INVALID_NODE) analyze(ast, node.extra, depth + 1);
-            for (NodeIndex child : node.children) {
+            for (NodeIndex child : ast.getChildren(node.childrenIdx)) {
                 if (!withinBudget()) break;
                 analyze(ast, child, depth + 1);
             }

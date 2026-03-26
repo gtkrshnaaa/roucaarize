@@ -24,7 +24,7 @@ public:
         : std::runtime_error(message), 
           nodeLine(node.line), 
           nodeColumn(node.column),
-          nodeIdentifier(node.name) {}
+          nodeIdentifier("") {}
           
     RuntimeError(int line, int col, const std::string& message)
         : std::runtime_error(message), 
