@@ -24,20 +24,23 @@ std::string Value::toString() const {
             if (s.back() == '.') s += '0';
             return s;
         }
-        case ValueType::STRING: return *stringVal;
+        case ValueType::STRING: return *getString();
+
         case ValueType::ARRAY: {
             std::string res = "[";
-            for (size_t i = 0; i < arrayVal->size(); ++i) {
-                res += (*arrayVal)[i].toString();
-                if (i < arrayVal->size() - 1) res += ", ";
+            for (size_t i = 0; i < getArray()->size(); ++i) {
+                res += (*getArray())[i].toString();
+                if (i < getArray()->size() - 1) res += ", ";
+
             }
             res += "]";
             return res;
         }
         case ValueType::MAP: return "<map>";
-        case ValueType::STRUCT_INSTANCE: return "<struct " + structVal->typeName + ">";
-        case ValueType::FUNCTION: return "<function " + funcVal->name + ">";
+        case ValueType::STRUCT_INSTANCE: return "<struct " + getStruct()->typeName + ">";
+        case ValueType::FUNCTION: return "<function " + getFunction()->name + ">";
         case ValueType::NATIVE_FUNCTION: return "<native function>";
+
         default: return "unknown";
     }
 }
@@ -47,7 +50,8 @@ size_t ValueHasher::operator()(const Value& v) const {
         case ValueType::BOOL: return std::hash<bool>{}(v.boolVal);
         case ValueType::INT: return std::hash<int64_t>{}(v.intVal);
         case ValueType::FLOAT: return std::hash<double>{}(v.floatVal);
-        case ValueType::STRING: return std::hash<std::string>{}(*v.stringVal);
+        case ValueType::STRING: return std::hash<std::string>{}(*v.getString());
+
         default: return 0;
     }
 }
