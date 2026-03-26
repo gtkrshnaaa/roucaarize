@@ -31,11 +31,11 @@
 // ============================================================================
 
 #ifndef GUARD_TIMEOUT_SECONDS
-#define GUARD_TIMEOUT_SECONDS 30
+#define GUARD_TIMEOUT_SECONDS 2
 #endif
 
 #ifndef GUARD_MEMORY_LIMIT_MB
-#define GUARD_MEMORY_LIMIT_MB 512
+#define GUARD_MEMORY_LIMIT_MB 0
 #endif
 
 #ifndef GUARD_MAX_RECURSION_DEPTH
