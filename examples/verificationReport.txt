@@ -1,0 +1,188 @@
+Roucaarize Execution & Benchmark Report
+Generated on: Thu Mar 26 10:51:12 PM WIB 2026
+--------------------------------------
+SYSTEM SPECIFICATIONS:
+  OS:  Ubuntu 24.04.4 LTS
+  CPU: 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz
+  RAM: 7635.43 MB
+--------------------------------------
+[x] examples/advanced.rou: PASS (RAM: 4400KB, CPU: 100%)
+    Output Details:
+      == Roucaarize Advanced Demo ==
+      
+      == Structs ==
+      Server: web01 at 192.168.1.10:80
+      Status: running
+      Updated status: maintenance
+      
+      == Maps ==
+      Config host: localhost
+      Config port: 8080
+      Config timeout: 30
+      
+      == Error Handling ==
+      Caught error: Division by zero
+      Validation error: Invalid port: 99999
+      Opening resource...
+      Caught: simulated failure
+      Cleanup: resource released
+      
+      == Higher-Order Functions ==
+      double(5) = 10
+      square(5) = 25
+      triple(4) = 12
+      triple(10) = 30
+      
+      == Array Operations ==
+      Numbers: [5, 2, 8, 1, 9]
+      Length: 5
+      After push(42): [5, 2, 8, 1, 9, 42]
+      Popped: 42
+      After pop: [5, 2, 8, 1, 9]
+      
+      == Server Fleet ==
+      Server fleet:
+        web01 [active] -> 10.0.0.1
+        web02 [active] -> 10.0.0.2
+        db01 [standby] -> 10.0.0.3
+      
+      Advanced example completed successfully.
+--------------------------------------
+[x] examples/basics.rou: PASS (RAM: 4640KB, CPU: 100%)
+    Output Details:
+      == Roucaarize Basics Demo ==
+      
+      Language: Roucaarize
+      Version: 1
+      Pi: 3.14159
+      
+      == Arithmetic ==
+      Add: 13
+      Sub: 7
+      Mul: 30
+      Div: 3
+      Mod: 1
+      
+      == Booleans ==
+      10 > 3: true
+      10 == 3: false
+      
+      Hello World
+      
+      == Functions ==
+      Hello, Roucaarize!
+      add(5, 7) = 12
+      5! = 120
+      
+      == Arrays ==
+      Fruits: [apple, banana, cherry]
+      First: apple
+      Length: 3
+        - apple
+        - banana
+        - cherry
+      
+      == While Loop ==
+      Counter: 0
+      Counter: 1
+      Counter: 2
+      
+      == Grades ==
+      Score 85 = Grade: B
+      
+      == Type Info ==
+      typeof 42: int
+      typeof 'hello': string
+      typeof true: bool
+      typeof nil: nil
+      
+      Basics example completed successfully.
+--------------------------------------
+[x] examples/modularity/calculator.rou: PASS (RAM: 4140KB, CPU: 0%)
+    Output Details:
+      
+--------------------------------------
+[x] examples/modularity/config.rou: PASS (RAM: 4012KB, CPU: 0%)
+    Output Details:
+      
+--------------------------------------
+[x] examples/modularity/main.rou: PASS (RAM: 4344KB, CPU: 100%)
+    Output Details:
+      == Roucaarize Modular Calculator ==
+      Calculator Error: Undefined variable: calc
+      == Calculator Session Ended ==
+--------------------------------------
+[x] examples/modularity/math/operations.rou: PASS (RAM: 4008KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] examples/modularity/utils/formatter.rou: PASS (RAM: 3880KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] examples/orchestration.rou: PASS (RAM: 4932KB, CPU: 103%)
+    Output Details:
+      == System Information ==
+      Hostname: localhost
+      Uptime: 4501.05 seconds
+      User ID: 1000
+      Home: /home/user
+      Date: 2026-03-26 22:51:12
+      
+      == Service Health ==
+      [WARN] sshd is not running
+      [OK] systemd is running
+      
+      == File Operations ==
+      Wrote to: /tmp/roucaarize_test.txt
+      Read back: Hello from Roucaarize!\nWritten at: 22:51:12
+      File exists: true
+      Content after append:
+      Hello from Roucaarize!\nWritten at: 22:51:12\nAppended line
+      Cleaned up temp file
+      
+      == String Operations ==
+      Original: '  Roucaarize Linux Orchestration  '
+      Trimmed: 'Roucaarize Linux Orchestration'
+      Upper: ROUCAARIZE
+      Lower: roucaarize
+      Contains 'Linux': true
+      Split 'one:two:three':
+        - one
+        - two
+        - three
+      Replace: Hello Roucaarize
+      
+      == Time Operations ==
+      Year: 2026
+      Month: 3
+      Day: 26
+      Hour: 22
+      Minute: 51
+      Second: 12
+      Timestamp: 1774540272
+      
+      == System Commands ==
+      Kernel: 6.17.0-19-generic
+      Disk usage (/): 6%
+      
+      == Process Info ==
+      Memory usage: 3174/7635MB (41.6%)
+      
+      == Performance Test ==
+      Sum of 0..9999: 49995000
+      Time elapsed: 2ms
+      
+      Orchestration example completed successfully.
+--------------------------------------
+
+==========================================================
+RESULTS SUMMARY:
+Total Tests: 8
+Passed:      8
+Failed:      0
+--------------------------------------
+PERFORMANCE METRICS:
+Peak RAM:    4932 KB (by examples/orchestration.rou)
+Peak CPU:    103% (by examples/orchestration.rou)
+==========================================================

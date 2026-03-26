@@ -3,8 +3,8 @@
 # Roucaarize Comprehensive Test Runner & Report Generator
 # This script runs all .rou examples, shows progress, and captures detailed output.
 
-REPORT_FILE="examples/verification_report.txt"
-BIN="./bin/roucaarize"
+REPORT_FILE="verificationReport.txt"
+BIN="../bin/roucaarize"
 
 # Ensure binary exists
 if [ ! -f "$BIN" ]; then
@@ -33,8 +33,8 @@ echo "  CPU: $CPU_INFO" >> "$REPORT_FILE"
 echo "  RAM: $MEM_TOTAL" >> "$REPORT_FILE"
 echo "--------------------------------------" >> "$REPORT_FILE"
 
-# Find and sort all .rou files inside 'examples' directory
-FILES=$(find examples -type f -name "*.rou" | sort)
+# Find and sort all .rou files inside current directory (examples)
+FILES=$(find . -type f -name "*.rou" | sort)
 TOTAL=$(echo "$FILES" | wc -l)
 COUNT=0
 PASSED=0
@@ -49,7 +49,7 @@ for f in $FILES; do
     echo -n "[$COUNT/$TOTAL] Running $f..."
     
     # Run with 10s timeout, use /usr/bin/time to capture metrics
-    TIME_LOG="/tmp/rou_time_${COUNT}.log"
+    TIME_LOG="/tmp/rouTime_${COUNT}.log"
     temp_out=$(/usr/bin/time -v -o "$TIME_LOG" timeout 10s "$BIN" "$f" 2>&1)
     exit_code=$?
     
