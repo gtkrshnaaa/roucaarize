@@ -2,7 +2,7 @@
  * Copyright (c) 2026 Gilang Teja Krishna
  * github.com/gtkrshnaaa
  *
- * error_formatter.hpp - Beautiful Compiler/Runtime Diagnostics Formatter
+ * errorFormatter.hpp - Beautiful Compiler/Runtime Diagnostics Formatter
  */
 
 #ifndef ROUCAARIZE_ERROR_FORMATTER_HPP
