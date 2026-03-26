@@ -54,12 +54,8 @@ struct Value {
         int64_t intVal;
         double floatVal;
     };
-    std::shared_ptr<std::string> stringVal;
-    std::shared_ptr<std::vector<Value>> arrayVal;
-    std::shared_ptr<struct MapInstance> mapVal;
-    std::shared_ptr<StructInstance> structVal;
-    std::shared_ptr<FunctionDef> funcVal;
-    std::shared_ptr<NativeFunction> nativeVal;
+    std::shared_ptr<void> objVal;
+
 
     Value() : type(ValueType::NIL), intVal(0) {}
 
@@ -67,17 +63,27 @@ struct Value {
     static Value fromBool(bool b) { Value v; v.type = ValueType::BOOL; v.boolVal = b; return v; }
     static Value fromInt(int64_t i) { Value v; v.type = ValueType::INT; v.intVal = i; return v; }
     static Value fromFloat(double d) { Value v; v.type = ValueType::FLOAT; v.floatVal = d; return v; }
-    static Value fromString(std::string s) { Value v; v.type = ValueType::STRING; v.stringVal = std::make_shared<std::string>(std::move(s)); return v; }
-    static Value fromArray(std::vector<Value> a) { Value v; v.type = ValueType::ARRAY; v.arrayVal = std::make_shared<std::vector<Value>>(std::move(a)); return v; }
-    static Value fromMap(std::shared_ptr<MapInstance> m) { Value v; v.type = ValueType::MAP; v.mapVal = std::move(m); return v; }
-    static Value fromStruct(std::shared_ptr<StructInstance> s) { Value v; v.type = ValueType::STRUCT_INSTANCE; v.structVal = std::move(s); return v; }
-    static Value fromNative(NativeFunction fn) { Value v; v.type = ValueType::NATIVE_FUNCTION; v.nativeVal = std::make_shared<NativeFunction>(std::move(fn)); return v; }
-    static Value fromFunction(FunctionDef fd) { Value v; v.type = ValueType::FUNCTION; v.funcVal = std::make_shared<FunctionDef>(std::move(fd)); return v; }
+    static Value fromString(std::string s) { Value v; v.type = ValueType::STRING; v.objVal = std::make_shared<std::string>(std::move(s)); return v; }
+    static Value fromArray(std::vector<Value> a) { Value v; v.type = ValueType::ARRAY; v.objVal = std::make_shared<std::vector<Value>>(std::move(a)); return v; }
+    static Value fromMap(std::shared_ptr<MapInstance> m) { Value v; v.type = ValueType::MAP; v.objVal = std::move(m); return v; }
+    static Value fromStruct(std::shared_ptr<StructInstance> s) { Value v; v.type = ValueType::STRUCT_INSTANCE; v.objVal = std::move(s); return v; }
+    static Value fromNative(NativeFunction fn) { Value v; v.type = ValueType::NATIVE_FUNCTION; v.objVal = std::make_shared<NativeFunction>(std::move(fn)); return v; }
+    static Value fromFunction(FunctionDef fd) { Value v; v.type = ValueType::FUNCTION; v.objVal = std::make_shared<FunctionDef>(std::move(fd)); return v; }
+
     
     bool isNumber() const { return type == ValueType::INT || type == ValueType::FLOAT; }
-    bool isString() const { return type == ValueType::STRING && stringVal; }
+    bool isString() const { return type == ValueType::STRING && objVal; }
     bool isInt() const { return type == ValueType::INT; }
-    bool isArray() const { return type == ValueType::ARRAY && arrayVal; }
+    bool isArray() const { return type == ValueType::ARRAY && objVal; }
+    
+    // Type-safe generic getters
+    std::shared_ptr<std::string> getString() const { return std::static_pointer_cast<std::string>(objVal); }
+    std::shared_ptr<std::vector<Value>> getArray() const { return std::static_pointer_cast<std::vector<Value>>(objVal); }
+    std::shared_ptr<MapInstance> getMap() const { return std::static_pointer_cast<MapInstance>(objVal); }
+    std::shared_ptr<StructInstance> getStruct() const { return std::static_pointer_cast<StructInstance>(objVal); }
+    std::shared_ptr<NativeFunction> getNative() const { return std::static_pointer_cast<NativeFunction>(objVal); }
+    std::shared_ptr<FunctionDef> getFunction() const { return std::static_pointer_cast<FunctionDef>(objVal); }
+
     
     double asDouble() const {
         if (type == ValueType::INT) return static_cast<double>(intVal);
@@ -92,7 +98,8 @@ struct Value {
             case ValueType::BOOL: return boolVal == other.boolVal;
             case ValueType::INT: return intVal == other.intVal;
             case ValueType::FLOAT: return floatVal == other.floatVal;
-            case ValueType::STRING: return *stringVal == *other.stringVal;
+            case ValueType::STRING: return *getString() == *other.getString();
+
             default: return false;
         }
     }
@@ -103,7 +110,8 @@ struct Value {
             case ValueType::BOOL: return boolVal;
             case ValueType::INT: return intVal != 0;
             case ValueType::FLOAT: return floatVal != 0.0;
-            case ValueType::STRING: return !stringVal->empty();
+            case ValueType::STRING: return !getString()->empty();
+
             default: return true;
         }
     }
