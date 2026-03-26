@@ -4,18 +4,27 @@
 #include "ast.hpp"
 #include "value.hpp"
 #include "environment.hpp"
-#include <map>
+#include <unordered_map>
 #include <vector>
+#include <string>
 
 namespace roucaarize {
 
+/**
+ * Roucaarize Tree-Walking Interpreter.
+ *
+ * Traverses the flattened AST and evaluates each node directly.
+ * Stdlib modules are registered as maps of NativeFunctions, resolved
+ * at IMPORT_STDLIB time.
+ */
 class Evaluator {
 public:
     Evaluator();
     Value evaluate(const AST& ast, NodeIndex root);
 
-    // Helpers for native functions
     void defineNative(const std::string& name, NativeFunction fn);
+    void registerStdlib(const std::string& moduleName,
+                        std::unordered_map<std::string, NativeFunction> funcs);
     std::shared_ptr<Environment> getGlobals() { return globals; }
 
 private:
@@ -23,9 +32,13 @@ private:
     std::shared_ptr<Environment> environment;
     const AST* currentAST = nullptr;
 
+    // Stdlib registry: moduleName -> { funcName -> NativeFunction }
+    std::unordered_map<std::string,
+        std::unordered_map<std::string, NativeFunction>> stdlibRegistry;
+
     Value evalNode(NodeIndex idx);
     Value evalBlock(NodeIndex idx, std::shared_ptr<Environment> env);
-    
+
     // Expressions
     Value evalBinary(const ASTNode& node);
     Value evalUnary(const ASTNode& node);
@@ -43,17 +56,18 @@ private:
     Value executeFor(const ASTNode& node);
     Value executeWhile(const ASTNode& node);
     Value executeTryCatch(const ASTNode& node);
-    
-    // Helpers
-    void runtimeError(int32_t line, const std::string& message);
-    bool isTruthy(const Value& v);
+    Value executeStructDecl(const ASTNode& node);
+    Value executeThrow(const ASTNode& node);
+    Value executeMemberAssign(const ASTNode& node);
+    Value executeIndexAssign(const ASTNode& node);
+    Value executeImportStdlib(const ASTNode& node);
 };
 
-// Exception for runtime flow control (return, throw)
+// Flow control exceptions for return and throw
 struct RuntimeException {
     Value value;
     bool isReturn;
-    RuntimeException(Value v, bool ret) : value(v), isReturn(ret) {}
+    RuntimeException(Value v, bool ret) : value(std::move(v)), isReturn(ret) {}
 };
 
 } // namespace roucaarize

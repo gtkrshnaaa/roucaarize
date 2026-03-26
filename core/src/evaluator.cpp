@@ -1,6 +1,7 @@
 #include "evaluator.hpp"
 #include <iostream>
 #include <stdexcept>
+#include <sstream>
 
 namespace roucaarize {
 
@@ -8,23 +9,88 @@ Evaluator::Evaluator() {
     globals = std::make_shared<Environment>();
     environment = globals;
 
-    defineNative("print", [](Evaluator&, const std::vector<Value>& args) {
+    defineNative("print", [](Evaluator&, const std::vector<Value>& args) -> Value {
         for (size_t i = 0; i < args.size(); ++i) {
-            std::cout << args[i].toString() << (i == args.size() - 1 ? "" : " ");
+            if (i > 0) std::cout << " ";
+            std::cout << args[i].toString();
         }
         std::cout << std::endl;
-        return Value();
+        return Value::nil();
     });
 
-    defineNative("panic", [](Evaluator&, const std::vector<Value>& args) {
+    defineNative("log", [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.size() < 2) return Value::nil();
+        std::cerr << "[" << args[0].toString() << "] " << args[1].toString() << std::endl;
+        return Value::nil();
+    });
+
+    defineNative("panic", [](Evaluator&, const std::vector<Value>& args) -> Value {
         std::string msg = args.empty() ? "Panic!" : args[0].toString();
         throw std::runtime_error("Panic: " + msg);
-        return Value();
+        return Value::nil();
+    });
+
+    defineNative("len", [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty()) return Value::fromInt(0);
+        if (args[0].isString()) return Value::fromInt(static_cast<int64_t>(args[0].stringVal->size()));
+        if (args[0].isArray()) return Value::fromInt(static_cast<int64_t>(args[0].arrayVal->size()));
+        return Value::fromInt(0);
+    });
+
+    defineNative("toString", [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty()) return Value::fromString("");
+        return Value::fromString(args[0].toString());
+    });
+
+    defineNative("toInt", [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty()) return Value::fromInt(0);
+        if (args[0].isInt()) return args[0];
+        if (args[0].isNumber()) return Value::fromInt(static_cast<int64_t>(args[0].floatVal));
+        if (args[0].isString()) {
+            try { return Value::fromInt(std::stoll(*args[0].stringVal)); }
+            catch (...) { return Value::fromInt(0); }
+        }
+        return Value::fromInt(0);
+    });
+
+    defineNative("typeof", [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty()) return Value::fromString("nil");
+        switch (args[0].type) {
+            case ValueType::NIL: return Value::fromString("nil");
+            case ValueType::BOOL: return Value::fromString("bool");
+            case ValueType::INT: return Value::fromString("int");
+            case ValueType::FLOAT: return Value::fromString("float");
+            case ValueType::STRING: return Value::fromString("string");
+            case ValueType::ARRAY: return Value::fromString("array");
+            case ValueType::MAP: return Value::fromString("map");
+            case ValueType::STRUCT_INSTANCE: return Value::fromString("struct");
+            case ValueType::FUNCTION: return Value::fromString("function");
+            case ValueType::NATIVE_FUNCTION: return Value::fromString("function");
+        }
+        return Value::fromString("unknown");
+    });
+
+    defineNative("push", [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.size() < 2 || !args[0].isArray()) return Value::nil();
+        args[0].arrayVal->push_back(args[1]);
+        return Value::nil();
+    });
+
+    defineNative("pop", [](Evaluator&, const std::vector<Value>& args) -> Value {
+        if (args.empty() || !args[0].isArray() || args[0].arrayVal->empty()) return Value::nil();
+        Value val = args[0].arrayVal->back();
+        args[0].arrayVal->pop_back();
+        return val;
     });
 }
 
 void Evaluator::defineNative(const std::string& name, NativeFunction fn) {
     globals->define(name, Value::fromNative(std::move(fn)));
+}
+
+void Evaluator::registerStdlib(const std::string& moduleName,
+                                std::unordered_map<std::string, NativeFunction> funcs) {
+    stdlibRegistry[moduleName] = std::move(funcs);
 }
 
 Value Evaluator::evaluate(const AST& ast, NodeIndex root) {
@@ -37,35 +103,41 @@ Value Evaluator::evaluate(const AST& ast, NodeIndex root) {
     }
 }
 
+// ============================================================================
+// Core Node Dispatch
+// ============================================================================
+
 Value Evaluator::evalNode(NodeIndex idx) {
-    if (idx == INVALID_NODE) return Value();
+    if (idx == INVALID_NODE) return Value::nil();
     const ASTNode& node = currentAST->get(idx);
 
     switch (node.type) {
         case NodeType::PROGRAM:
         case NodeType::BLOCK: {
-            for (NodeIndex child : node.children) executeStatement(child);
-            return Value();
+            Value last;
+            for (NodeIndex child : node.children) last = executeStatement(child);
+            return last;
         }
-        case NodeType::LITERAL_INT: return Value::fromInt(std::get<int64_t>(node.literal.data));
-        case NodeType::LITERAL_FLOAT: return Value::fromFloat(std::get<double>(node.literal.data));
+        case NodeType::LITERAL_INT:    return Value::fromInt(std::get<int64_t>(node.literal.data));
+        case NodeType::LITERAL_FLOAT:  return Value::fromFloat(std::get<double>(node.literal.data));
         case NodeType::LITERAL_STRING: return Value::fromString(node.name);
-        case NodeType::LITERAL_BOOL: return Value::fromBool(std::get<bool>(node.literal.data));
-        case NodeType::LITERAL_NIL: return Value();
-        case NodeType::IDENTIFIER: return evalIdentifier(node);
-        case NodeType::BINARY_OP: return evalBinary(node);
-        case NodeType::UNARY_OP: return evalUnary(node);
-        case NodeType::CALL: return evalCall(node);
-        case NodeType::VAR_ASSIGN: return executeVarAssign(node);
-        case NodeType::IF_STMT: return executeIf(node);
-        case NodeType::FOR_STMT: return executeFor(node);
-        case NodeType::WHILE_STMT: return executeWhile(node);
-        case NodeType::TRY_STMT: return executeTryCatch(node);
-        case NodeType::EXPR_STMT: return evalNode(node.left);
-        case NodeType::RETURN_STMT: {
-            Value val = node.left != INVALID_NODE ? evalNode(node.left) : Value();
-            throw RuntimeException(val, true);
-        }
+        case NodeType::LITERAL_BOOL:   return Value::fromBool(std::get<bool>(node.literal.data));
+        case NodeType::LITERAL_NIL:    return Value::nil();
+        case NodeType::IDENTIFIER:     return evalIdentifier(node);
+        case NodeType::BINARY_OP:      return evalBinary(node);
+        case NodeType::UNARY_OP:       return evalUnary(node);
+        case NodeType::CALL:           return evalCall(node);
+        case NodeType::MEMBER_ACCESS:  return evalMemberAccess(node);
+        case NodeType::INDEX_ACCESS:   return evalIndexAccess(node);
+        case NodeType::ARRAY_LITERAL:  return evalArrayLiteral(node);
+        case NodeType::MAP_LITERAL:    return evalMapLiteral(node);
+        case NodeType::VAR_ASSIGN:     return executeVarAssign(node);
+        case NodeType::MEMBER_ASSIGN:  return executeMemberAssign(node);
+        case NodeType::INDEX_ASSIGN:   return executeIndexAssign(node);
+        case NodeType::IF_STMT:        return executeIf(node);
+        case NodeType::FOR_STMT:       return executeFor(node);
+        case NodeType::WHILE_STMT:     return executeWhile(node);
+        case NodeType::TRY_STMT:       return executeTryCatch(node);
         case NodeType::FUNC_DECL: {
             FunctionDef fd;
             fd.name = node.name;
@@ -73,48 +145,26 @@ Value Evaluator::evalNode(NodeIndex idx) {
             fd.bodyIndex = node.left;
             fd.closure = environment;
             environment->define(node.name, Value::fromFunction(std::move(fd)));
-            return Value();
+            return Value::nil();
         }
-        case NodeType::ARRAY_LITERAL: return evalArrayLiteral(node);
-        case NodeType::MAP_LITERAL: return evalMapLiteral(node);
-        case NodeType::MEMBER_ACCESS: return evalMemberAccess(node);
-        case NodeType::IMPORT_STDLIB: {
-            // Import stdlib sys as s -> define "s" as NIL for now (members handled in evalMemberAccess)
-            if (!node.paramNames.empty()) environment->define(node.paramNames[0], Value());
-            return Value();
+        case NodeType::STRUCT_DECL:    return executeStructDecl(node);
+        case NodeType::IMPORT_STDLIB:  return executeImportStdlib(node);
+        case NodeType::IMPORT_FILE:    return Value::nil();
+        case NodeType::EXPR_STMT:      return evalNode(node.left);
+        case NodeType::RETURN_STMT: {
+            Value val = node.left != INVALID_NODE ? evalNode(node.left) : Value::nil();
+            throw RuntimeException(std::move(val), true);
         }
-        case NodeType::IMPORT_FILE: return Value();   // Ignore for now
+        case NodeType::THROW_STMT:     return executeThrow(node);
+        case NodeType::CATCH_STMT:     return Value::nil();
         default:
-            throw std::runtime_error("Unknown node type in evaluator: " + std::to_string(static_cast<int>(node.type)));
+            throw std::runtime_error("Unknown node type: " + std::to_string(static_cast<int>(node.type)));
     }
 }
 
-Value Evaluator::evalArrayLiteral(const ASTNode& node) {
-    std::vector<Value> arr;
-    for (NodeIndex child : node.children) arr.push_back(evalNode(child));
-    return Value::fromArray(std::move(arr));
-}
-
-Value Evaluator::evalMapLiteral(const ASTNode& node) {
-    // Basic map literal implementation
-    return Value(); // Mock for now
-}
-
-Value Evaluator::evalMemberAccess(const ASTNode& node) {
-    Value left = evalNode(node.left);
-    if (left.type == ValueType::STRUCT_INSTANCE) {
-        if (left.structVal->fields.count(node.name)) return left.structVal->fields[node.name];
-        throw std::runtime_error("Undefined field: " + node.name);
-    }
-    // Mock for modules (if left is nil and it's a known alias)
-    if (left.type == ValueType::NIL) {
-        // Mock sys.uptime()
-        if (node.name == "uptime") return Value::fromNative([](Evaluator&, const std::vector<Value>&) { 
-            return Value::fromString("1 hour, 23 minutes"); 
-        });
-    }
-    throw std::runtime_error("Member access on non-struct/unknown module");
-}
+// ============================================================================
+// Expression Evaluators
+// ============================================================================
 
 Value Evaluator::evalIdentifier(const ASTNode& node) {
     Value val;
@@ -125,43 +175,54 @@ Value Evaluator::evalIdentifier(const ASTNode& node) {
 Value Evaluator::evalBinary(const ASTNode& node) {
     Value left = evalNode(node.left);
     Value right = evalNode(node.right);
+
     switch (node.binaryOp) {
         case BinaryOp::ADD:
-            if (left.type == ValueType::INT && right.type == ValueType::INT) return Value::fromInt(left.intVal + right.intVal);
-            if (left.type == ValueType::FLOAT || right.type == ValueType::FLOAT) return Value::fromFloat(left.asDouble() + right.asDouble());
-            if (left.type == ValueType::STRING && right.type == ValueType::STRING) return Value::fromString(*left.stringVal + *right.stringVal);
+            if (left.type == ValueType::INT && right.type == ValueType::INT)
+                return Value::fromInt(left.intVal + right.intVal);
+            if (left.isNumber() && right.isNumber())
+                return Value::fromFloat(left.asDouble() + right.asDouble());
+            if (left.type == ValueType::STRING || right.type == ValueType::STRING)
+                return Value::fromString(left.toString() + right.toString());
             break;
         case BinaryOp::SUB:
-            if (left.type == ValueType::INT && right.type == ValueType::INT) return Value::fromInt(left.intVal - right.intVal);
+            if (left.type == ValueType::INT && right.type == ValueType::INT)
+                return Value::fromInt(left.intVal - right.intVal);
             return Value::fromFloat(left.asDouble() - right.asDouble());
         case BinaryOp::MUL:
-            if (left.type == ValueType::INT && right.type == ValueType::INT) return Value::fromInt(left.intVal * right.intVal);
+            if (left.type == ValueType::INT && right.type == ValueType::INT)
+                return Value::fromInt(left.intVal * right.intVal);
             return Value::fromFloat(left.asDouble() * right.asDouble());
         case BinaryOp::DIV:
             if (right.asDouble() == 0) throw std::runtime_error("Division by zero");
-            if (left.type == ValueType::INT && right.type == ValueType::INT) return Value::fromInt(left.intVal / right.intVal);
+            if (left.type == ValueType::INT && right.type == ValueType::INT)
+                return Value::fromInt(left.intVal / right.intVal);
             return Value::fromFloat(left.asDouble() / right.asDouble());
-        case BinaryOp::EQ: return Value::fromBool(left == right);
+        case BinaryOp::MOD:
+            if (left.type == ValueType::INT && right.type == ValueType::INT) {
+                if (right.intVal == 0) throw std::runtime_error("Modulo by zero");
+                return Value::fromInt(left.intVal % right.intVal);
+            }
+            break;
+        case BinaryOp::EQ:  return Value::fromBool(left == right);
         case BinaryOp::NEQ: return Value::fromBool(!(left == right));
-        case BinaryOp::LT: return Value::fromBool(left.asDouble() < right.asDouble());
+        case BinaryOp::LT:  return Value::fromBool(left.asDouble() < right.asDouble());
         case BinaryOp::LTE: return Value::fromBool(left.asDouble() <= right.asDouble());
-        case BinaryOp::GT: return Value::fromBool(left.asDouble() > right.asDouble());
+        case BinaryOp::GT:  return Value::fromBool(left.asDouble() > right.asDouble());
         case BinaryOp::GTE: return Value::fromBool(left.asDouble() >= right.asDouble());
         case BinaryOp::AND: return Value::fromBool(left.isTruthy() && right.isTruthy());
-        case BinaryOp::OR: return Value::fromBool(left.isTruthy() || right.isTruthy());
-        default: break;
+        case BinaryOp::OR:  return Value::fromBool(left.isTruthy() || right.isTruthy());
     }
     throw std::runtime_error("Invalid binary operation");
 }
 
 Value Evaluator::evalUnary(const ASTNode& node) {
-    Value right = evalNode(node.left);
+    Value operand = evalNode(node.left);
     if (node.unaryOp == UnaryOp::NEG) {
-        if (right.type == ValueType::INT) return Value::fromInt(-right.intVal);
-        return Value::fromFloat(-right.floatVal);
-    } else {
-        return Value::fromBool(!right.isTruthy());
+        if (operand.type == ValueType::INT) return Value::fromInt(-operand.intVal);
+        return Value::fromFloat(-operand.asDouble());
     }
+    return Value::fromBool(!operand.isTruthy());
 }
 
 Value Evaluator::evalCall(const ASTNode& node) {
@@ -169,32 +230,136 @@ Value Evaluator::evalCall(const ASTNode& node) {
     std::vector<Value> args;
     for (NodeIndex argIdx : node.children) args.push_back(evalNode(argIdx));
 
-    if (callee.type == ValueType::NATIVE_FUNCTION) return (*callee.nativeVal)(*this, args);
+    if (callee.type == ValueType::NATIVE_FUNCTION)
+        return (*callee.nativeVal)(*this, args);
+
     if (callee.type == ValueType::FUNCTION) {
         const auto& fd = *callee.funcVal;
-        if (args.size() != fd.params.size()) throw std::runtime_error("Argument count mismatch");
-        auto newEnv = std::make_shared<Environment>(fd.closure);
-        for (size_t i = 0; i < args.size(); ++i) newEnv->define(fd.params[i], args[i]);
+        if (args.size() != fd.params.size())
+            throw std::runtime_error("Expected " + std::to_string(fd.params.size()) +
+                                     " arguments but got " + std::to_string(args.size()));
+        auto callEnv = std::make_shared<Environment>(fd.closure);
+        for (size_t i = 0; i < args.size(); ++i) callEnv->define(fd.params[i], args[i]);
         try {
-            return evalBlock(fd.bodyIndex, newEnv);
+            return evalBlock(fd.bodyIndex, callEnv);
         } catch (const RuntimeException& e) {
             if (e.isReturn) return e.value;
-            throw e;
+            throw;
         }
     }
     throw std::runtime_error("Object is not callable");
 }
 
+Value Evaluator::evalMemberAccess(const ASTNode& node) {
+    Value left = evalNode(node.left);
+
+    // Struct instance field access
+    if (left.type == ValueType::STRUCT_INSTANCE) {
+        auto it = left.structVal->fields.find(node.name);
+        if (it != left.structVal->fields.end()) return it->second;
+        throw std::runtime_error("Undefined field '" + node.name + "' on struct '" + left.structVal->typeName + "'");
+    }
+
+    // Stdlib module member access (module stored as MAP with native functions)
+    if (left.type == ValueType::MAP && left.mapVal) {
+        // Module methods stored as entries in the map
+        Value key = Value::fromString(node.name);
+        auto it = left.mapVal->entries.find(key);
+        if (it != left.mapVal->entries.end()) return it->second;
+        throw std::runtime_error("Undefined method '" + node.name + "' on module");
+    }
+
+    // Array built-in methods
+    if (left.type == ValueType::ARRAY) {
+        if (node.name == "length") return Value::fromInt(static_cast<int64_t>(left.arrayVal->size()));
+        if (node.name == "push") {
+            auto captured = left.arrayVal;
+            return Value::fromNative([captured](Evaluator&, const std::vector<Value>& args) -> Value {
+                if (!args.empty()) captured->push_back(args[0]);
+                return Value::nil();
+            });
+        }
+        if (node.name == "pop") {
+            auto captured = left.arrayVal;
+            return Value::fromNative([captured](Evaluator&, const std::vector<Value>&) -> Value {
+                if (captured->empty()) return Value::nil();
+                Value v = captured->back();
+                captured->pop_back();
+                return v;
+            });
+        }
+    }
+
+    // String built-in methods
+    if (left.type == ValueType::STRING) {
+        if (node.name == "length") return Value::fromInt(static_cast<int64_t>(left.stringVal->size()));
+    }
+
+    throw std::runtime_error("Cannot access member '" + node.name + "' on " + left.toString());
+}
+
+Value Evaluator::evalIndexAccess(const ASTNode& node) {
+    Value left = evalNode(node.left);
+    Value index = evalNode(node.right);
+
+    if (left.type == ValueType::ARRAY && index.type == ValueType::INT) {
+        int64_t i = index.intVal;
+        auto& arr = *left.arrayVal;
+        if (i < 0) i += static_cast<int64_t>(arr.size());
+        if (i < 0 || i >= static_cast<int64_t>(arr.size()))
+            throw std::runtime_error("Array index out of bounds: " + std::to_string(index.intVal));
+        return arr[static_cast<size_t>(i)];
+    }
+
+    if (left.type == ValueType::MAP) {
+        auto it = left.mapVal->entries.find(index);
+        if (it != left.mapVal->entries.end()) return it->second;
+        return Value::nil();
+    }
+
+    if (left.type == ValueType::STRING && index.type == ValueType::INT) {
+        int64_t i = index.intVal;
+        auto& str = *left.stringVal;
+        if (i < 0) i += static_cast<int64_t>(str.size());
+        if (i < 0 || i >= static_cast<int64_t>(str.size()))
+            throw std::runtime_error("String index out of bounds");
+        return Value::fromString(std::string(1, str[static_cast<size_t>(i)]));
+    }
+
+    throw std::runtime_error("Cannot index into " + left.toString());
+}
+
+Value Evaluator::evalArrayLiteral(const ASTNode& node) {
+    std::vector<Value> arr;
+    arr.reserve(node.children.size());
+    for (NodeIndex child : node.children) arr.push_back(evalNode(child));
+    return Value::fromArray(std::move(arr));
+}
+
+Value Evaluator::evalMapLiteral(const ASTNode& node) {
+    auto map = std::make_shared<MapInstance>();
+    for (size_t i = 0; i + 1 < node.children.size(); i += 2) {
+        Value key = evalNode(node.children[i]);
+        Value val = evalNode(node.children[i + 1]);
+        map->entries[key] = val;
+    }
+    return Value::fromMap(std::move(map));
+}
+
+// ============================================================================
+// Statement Executors
+// ============================================================================
+
 Value Evaluator::evalBlock(NodeIndex idx, std::shared_ptr<Environment> env) {
     auto previous = environment;
     environment = std::move(env);
     try {
-        evalNode(idx);
+        Value result = evalNode(idx);
         environment = previous;
-        return Value();
-    } catch (const RuntimeException& e) {
+        return result;
+    } catch (...) {
         environment = previous;
-        throw e;
+        throw;
     }
 }
 
@@ -206,36 +371,122 @@ Value Evaluator::executeVarAssign(const ASTNode& node) {
     return val;
 }
 
+Value Evaluator::executeMemberAssign(const ASTNode& node) {
+    Value obj = evalNode(node.left);
+    Value val = evalNode(node.right);
+    if (obj.type == ValueType::STRUCT_INSTANCE) {
+        obj.structVal->fields[node.name] = val;
+        return val;
+    }
+    if (obj.type == ValueType::MAP) {
+        obj.mapVal->entries[Value::fromString(node.name)] = val;
+        return val;
+    }
+    throw std::runtime_error("Cannot assign member on non-struct/map value");
+}
+
+Value Evaluator::executeIndexAssign(const ASTNode& node) {
+    Value obj = evalNode(node.left);
+    Value index = evalNode(node.right);
+    Value val = evalNode(node.extra);
+
+    if (obj.type == ValueType::ARRAY && index.type == ValueType::INT) {
+        auto& arr = *obj.arrayVal;
+        int64_t i = index.intVal;
+        if (i < 0) i += static_cast<int64_t>(arr.size());
+        if (i < 0 || i >= static_cast<int64_t>(arr.size()))
+            throw std::runtime_error("Array index out of bounds during assignment");
+        arr[static_cast<size_t>(i)] = val;
+        return val;
+    }
+    if (obj.type == ValueType::MAP) {
+        obj.mapVal->entries[index] = val;
+        return val;
+    }
+    throw std::runtime_error("Cannot index-assign on this type");
+}
+
 Value Evaluator::executeIf(const ASTNode& node) {
     if (evalNode(node.left).isTruthy()) return evalNode(node.right);
-    else if (node.extra != INVALID_NODE) return evalNode(node.extra);
-    return Value();
+    if (node.extra != INVALID_NODE) return evalNode(node.extra);
+    return Value::nil();
 }
 
 Value Evaluator::executeWhile(const ASTNode& node) {
     while (evalNode(node.left).isTruthy()) evalNode(node.right);
-    return Value();
+    return Value::nil();
 }
 
 Value Evaluator::executeFor(const ASTNode& node) {
     Value iterable = evalNode(node.left);
-    if (iterable.type != ValueType::ARRAY) throw std::runtime_error("Can only iterate over arrays");
+    if (iterable.type != ValueType::ARRAY)
+        throw std::runtime_error("Can only iterate over arrays");
     for (const auto& item : *iterable.arrayVal) {
-        auto newEnv = std::make_shared<Environment>(environment);
-        newEnv->define(node.name, item);
-        evalBlock(node.right, newEnv);
+        auto loopEnv = std::make_shared<Environment>(environment);
+        loopEnv->define(node.name, item);
+        evalBlock(node.right, loopEnv);
     }
-    return Value();
+    return Value::nil();
 }
 
 Value Evaluator::executeTryCatch(const ASTNode& node) {
     try {
-        return evalNode(node.left);
+        evalNode(node.left);
+    } catch (const RuntimeException& e) {
+        if (e.isReturn) throw;
+        auto catchEnv = std::make_shared<Environment>(environment);
+        if (!node.name.empty()) catchEnv->define(node.name, e.value);
+        evalBlock(node.right, catchEnv);
     } catch (const std::exception& e) {
-        auto newEnv = std::make_shared<Environment>(environment);
-        if (!node.name.empty()) newEnv->define(node.name, Value::fromString(e.what()));
-        return evalBlock(node.right, newEnv);
+        auto catchEnv = std::make_shared<Environment>(environment);
+        if (!node.name.empty()) catchEnv->define(node.name, Value::fromString(e.what()));
+        evalBlock(node.right, catchEnv);
     }
+    // Execute finally block if present
+    if (node.extra != INVALID_NODE) evalNode(node.extra);
+    return Value::nil();
+}
+
+Value Evaluator::executeThrow(const ASTNode& node) {
+    Value val = evalNode(node.left);
+    throw RuntimeException(std::move(val), false);
+}
+
+Value Evaluator::executeStructDecl(const ASTNode& node) {
+    // Register a struct constructor as a native function
+    std::string structName = node.name;
+    std::vector<std::string> fieldNames = node.paramNames;
+
+    auto constructor = Value::fromNative(
+        [structName, fieldNames](Evaluator&, const std::vector<Value>& args) -> Value {
+            if (args.size() != fieldNames.size())
+                throw std::runtime_error("Struct '" + structName + "' expects " +
+                    std::to_string(fieldNames.size()) + " fields");
+            auto inst = std::make_shared<StructInstance>();
+            inst->typeName = structName;
+            for (size_t i = 0; i < fieldNames.size(); ++i)
+                inst->fields[fieldNames[i]] = args[i];
+            return Value::fromStruct(std::move(inst));
+        });
+    environment->define(structName, constructor);
+    return Value::nil();
+}
+
+Value Evaluator::executeImportStdlib(const ASTNode& node) {
+    std::string moduleName = node.name;
+    std::string alias = node.paramNames.empty() ? moduleName : node.paramNames[0];
+
+    auto it = stdlibRegistry.find(moduleName);
+    if (it == stdlibRegistry.end())
+        throw std::runtime_error("Unknown stdlib module: " + moduleName);
+
+    // Create a MAP value containing all module functions
+    auto moduleMap = std::make_shared<MapInstance>();
+    for (auto& [funcName, fn] : it->second) {
+        moduleMap->entries[Value::fromString(funcName)] = Value::fromNative(fn);
+    }
+    environment->define(alias, Value::fromMap(std::move(moduleMap)));
+    return Value::nil();
 }
 
 } // namespace roucaarize
