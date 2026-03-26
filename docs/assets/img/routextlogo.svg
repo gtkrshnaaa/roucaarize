@@ -1,47 +1,58 @@
-<svg width="900" height="300" viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg">
+<svg width="800" height="150" viewBox="0 0 800 150" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Soft Pastel Gradient -->
-    <linearGradient id="rouGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#818cf8;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#c084fc;stop-opacity:1" />
+    <!-- Pearl Gradient: Milky white base with very subtle rainbow hues -->
+    <linearGradient id="pearl" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="20%" stop-color="#FFF5F8" /> <!-- Faint Pink -->
+      <stop offset="40%" stop-color="#F0F9FF" /> <!-- Faint Blue -->
+      <stop offset="60%" stop-color="#F2FFF9" /> <!-- Faint Green -->
+      <stop offset="80%" stop-color="#FFFBF0" /> <!-- Faint Yellow -->
+      <stop offset="100%" stop-color="#F8F8F8" />
     </linearGradient>
     
-    <!-- Glassmorphism Filter -->
-    <filter id="glass" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="12" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
-    
-    <!-- Subtle Glow -->
-    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="8" result="glow" />
-      <feComposite in="SourceGraphic" in2="glow" operator="over" />
+    <!-- Luster/Shine effect -->
+    <linearGradient id="luster" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="white" stop-opacity="0.9" />
+      <stop offset="45%" stop-color="white" stop-opacity="0.1" />
+      <stop offset="55%" stop-color="black" stop-opacity="0.05" />
+      <stop offset="100%" stop-color="black" stop-opacity="0.15" />
+    </linearGradient>
+
+    <!-- Subtle glow to make it feel "pearly" -->
+    <filter id="pearlGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur" />
+      <feComponentTransfer in="blur" result="lowAlpha">
+        <feFuncA type="linear" slope="0.3" />
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode in="lowAlpha" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
     </filter>
   </defs>
-  
-  <!-- Icon: Cute stylized 'R' in a glass orb -->
-  <g transform="translate(120, 150)">
-    <!-- Outer Glow Orb -->
-    <circle cx="0" cy="0" r="70" fill="url(#rouGradient)" opacity="0.3" filter="url(#softGlow)" />
-    <!-- Glass Orb -->
-    <circle cx="0" cy="0" r="60" fill="white" fill-opacity="0.1" stroke="white" stroke-opacity="0.4" stroke-width="2" />
-    <!-- Stylized R -->
-    <path d="M-15,-22 L-15,18 M-15,-22 L8,-22 C20,-22 20,-2 8,-2 L-15,-2 M5,-2 L18,18" 
-          stroke="url(#rouGradient)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none" />
-    <!-- Sparkle -->
-    <circle cx="25" cy="-25" r="4" fill="white" opacity="0.8" />
-  </g>
 
-  <!-- Text: ROUCAARIZE -->
-  <text x="240" y="175" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="900" font-size="100" fill="#1e1b4b" letter-spacing="2">
+  <style>
+    @font-face {
+      font-family: 'Unbounded';
+      font-style: normal;
+      font-weight: 900;
+      src: local('Unbounded Black'), local('Unbounded-Black'), url(https://fonts.gstatic.com/s/unbounded/v3/9oUn730S6H7FSA_YmC_lXf6fPqC4yNSc.woff2) format('woff2');
+    }
+    .roucaarize-text {
+      font-family: 'Unbounded', 'Inter', 'Segoe UI', system-ui, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+  </style>
+
+  <!-- Base pearl text -->
+  <text x="50%" y="95" text-anchor="middle" font-size="95" fill="url(#pearl)" filter="url(#pearlGlow)" class="roucaarize-text">
     ROUCAARIZE
   </text>
   
-  <text x="245" y="215" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="500" font-size="22" fill="#6366f1" letter-spacing="6" opacity="0.8">
-    CLEAN LINUX ORCHESTRATION
+  <!-- Overlay luster for that 3D pearlescent feel -->
+  <text x="50%" y="95" text-anchor="middle" font-size="95" fill="url(#luster)" class="roucaarize-text" opacity="0.5" pointer-events="none">
+    ROUCAARIZE
   </text>
-  
-  <!-- Subtle decorative elements -->
-  <circle cx="850" cy="50" r="20" fill="url(#rouGradient)" opacity="0.1" />
-  <circle cx="820" cy="250" r="15" fill="none" stroke="url(#rouGradient)" stroke-width="2" opacity="0.2" />
 </svg>
