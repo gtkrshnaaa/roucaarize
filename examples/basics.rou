@@ -1,0 +1,147 @@
+// Roucaarize - Basics Example (Clean Design)
+// All functions declared first, then invoked in orchestration block.
+// Demonstrates variables, functions, control flow, arrays, and loops.
+
+// ============================================================================
+// Section 1: Utility Functions
+// ============================================================================
+
+function add(x, y) {
+    return x + y
+}
+
+function greet(who) {
+    return "Hello, " + who + "!"
+}
+
+function factorial(n) {
+    if (n <= 1) {
+        return 1
+    }
+    return n * factorial(n - 1)
+}
+
+// ============================================================================
+// Section 2: Demonstration Functions
+// ============================================================================
+
+function showArithmetic(a, b) {
+    print("Add: " + toString(a + b))
+    print("Sub: " + toString(a - b))
+    print("Mul: " + toString(a * b))
+    print("Div: " + toString(a / b))
+    print("Mod: " + toString(a % b))
+}
+
+function showBooleans(a, b) {
+    print(toString(a) + " > " + toString(b) + ": " + toString(a > b))
+    print(toString(a) + " == " + toString(b) + ": " + toString(a == b))
+}
+
+function showArrayIteration(items, label) {
+    print(label + ": " + toString(items))
+    print("First: " + items[0])
+    print("Length: " + toString(len(items)))
+    for (item in items) {
+        print("  - " + item)
+    }
+}
+
+function showCountdown(limit) {
+    counter = 0
+    while (counter < limit) {
+        print("Counter: " + toString(counter))
+        counter = counter + 1
+    }
+}
+
+function evaluateGrade(score) {
+    if (score >= 90) {
+        return "A"
+    } else if (score >= 80) {
+        return "B"
+    } else if (score >= 70) {
+        return "C"
+    } else {
+        return "F"
+    }
+}
+
+function makeCounter() {
+    count = 0
+    function increment() {
+        count = count + 1
+        return count
+    }
+    return increment
+}
+
+function showTypeInfo(label, value) {
+    print("typeof " + label + ": " + typeof(value))
+}
+
+// ============================================================================
+// Section 3: Orchestration Entry Point
+// ============================================================================
+
+print("== Roucaarize Basics Demo ==")
+print("")
+
+// Variables
+name = "Roucaarize"
+version = 1
+pi = 3.14159
+print("Language: " + name)
+print("Version: " + toString(version))
+print("Pi: " + toString(pi))
+print("")
+
+// Arithmetic
+print("== Arithmetic ==")
+showArithmetic(10, 3)
+print("")
+
+// Booleans
+print("== Booleans ==")
+showBooleans(10, 3)
+print("")
+
+// String concatenation
+greeting = "Hello" + " " + "World"
+print(greeting)
+print("")
+
+// Functions
+print("== Functions ==")
+print(greet("Roucaarize"))
+print("add(5, 7) = " + toString(add(5, 7)))
+print("5! = " + toString(factorial(5)))
+print("")
+
+// Arrays and iteration
+print("== Arrays ==")
+fruits = ["apple", "banana", "cherry"]
+showArrayIteration(fruits, "Fruits")
+print("")
+
+// While loop
+print("== While Loop ==")
+showCountdown(3)
+print("")
+
+// Conditionals
+print("== Grades ==")
+score = 85
+grade = evaluateGrade(score)
+print("Score " + toString(score) + " = Grade: " + grade)
+print("")
+
+// Type checking
+print("== Type Info ==")
+showTypeInfo("42", 42)
+showTypeInfo("'hello'", "hello")
+showTypeInfo("true", true)
+showTypeInfo("nil", nil)
+
+print("")
+print("Basics example completed successfully.")
