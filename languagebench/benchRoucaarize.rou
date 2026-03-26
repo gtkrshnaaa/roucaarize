@@ -1,0 +1,103 @@
+import stdlib time as t
+
+struct Obj {
+    val
+}
+
+function printHeader() {
+    print("  -------------------------------------------------------------")
+    print("  Benchmark       |     Performance | Time")
+    print("  -------------------------------------------------------------")
+}
+
+function printResult(name, ops, sec) {
+    print("  " + name + " | " + toString(ops) + " OPS/sec | " + toString(sec) + "s")
+}
+
+function benchInt() {
+    limit = 10000
+    start = t.millis()
+    i = 0
+    while (i < limit) {
+        i = i + 1
+    }
+    end = t.millis()
+    sec = (end - start) / 1000.0
+    if (sec == 0) { sec = 0.0001 }
+    ops = limit / sec
+    printResult("Integer Add    ", ops, sec)
+}
+
+function benchDouble() {
+    limit = 100000
+    val = 0.0
+    start = t.millis()
+    i = 0
+    while (i < limit) {
+        val = val + 1.1
+        i = i + 1
+    }
+    end = t.millis()
+    sec = (end - start) / 1000.0
+    if (sec == 0) { sec = 0.0001 }
+    ops = limit / sec
+    printResult("Double Arith   ", ops, sec)
+}
+
+function benchString() {
+    limit = 5000
+    start = t.millis()
+    s = ""
+    i = 0
+    while (i < limit) {
+        s = s + "a"
+        i = i + 1
+    }
+    end = t.millis()
+    sec = (end - start) / 1000.0
+    if (sec == 0) { sec = 0.0001 }
+    ops = limit / sec
+    printResult("String Concat  ", ops, sec)
+}
+
+function benchArray() {
+    limit = 10000
+    start = t.millis()
+    arr = []
+    i = 0
+    while (i < limit) {
+        push(arr, i)
+        i = i + 1
+    }
+    end = t.millis()
+    sec = (end - start) / 1000.0
+    if (sec == 0) { sec = 0.0001 }
+    ops = limit / sec
+    printResult("Array Push     ", ops, sec)
+}
+
+function benchStruct() {
+    limit = 500000
+    o = Obj(0)
+    start = t.millis()
+    i = 0
+    while (i < limit) {
+        o.val = i
+        x = o.val
+        i = i + 1
+    }
+    end = t.millis()
+    sec = (end - start) / 1000.0
+    if (sec == 0) { sec = 0.0001 }
+    ops = limit / sec
+    printResult("Struct Access  ", ops, sec)
+}
+
+print(">>> Roucaarize Benchmark Suite <<<")
+printHeader()
+benchInt()
+benchDouble()
+benchString()
+benchArray()
+benchStruct()
+print("  -------------------------------------------------------------")
