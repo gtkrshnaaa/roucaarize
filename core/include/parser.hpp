@@ -8,6 +8,8 @@
 
 namespace roucaarize {
 
+static constexpr size_t MAX_PARSE_ERRORS = 50;
+
 class Parser {
 public:
     explicit Parser(const std::vector<Token>& tokens, std::string_view source);
@@ -22,6 +24,7 @@ private:
     size_t current = 0;
     AST ast;
     std::vector<std::string> errorMessages;
+    bool panicMode_ = false;
 
     bool isAtEnd() const;
     const Token& peek() const;
@@ -31,7 +34,8 @@ private:
     bool match(TokenType type);
     Token consume(TokenType type, const std::string& message);
     void synchronize();
-    
+    bool tooManyErrors() const;
+
     // Grammar rules
     NodeIndex program();
     NodeIndex declaration();
@@ -47,7 +51,7 @@ private:
     NodeIndex throwStatement();
     NodeIndex block();
     NodeIndex expressionStatement();
-    
+
     NodeIndex expression();
     NodeIndex assignment();
     NodeIndex orExpr();
@@ -59,7 +63,7 @@ private:
     NodeIndex unary();
     NodeIndex postfix();
     NodeIndex primary();
-    
+
     std::vector<NodeIndex> argumentList();
     void error(const Token& token, const std::string& message);
 };
