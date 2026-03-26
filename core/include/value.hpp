@@ -38,15 +38,15 @@ enum class ValueType : uint8_t {
 using NativeFunction = std::function<Value(Evaluator&, const std::vector<Value>&)>;
 
 struct FunctionDef {
-    std::string name;
-    std::vector<std::string> params;
+    uint32_t nameIdx;
+    std::vector<uint32_t> params;
     uint32_t bodyIndex;
     std::shared_ptr<class Environment> closure;
 };
 
 struct StructInstance {
-    std::string typeName;
-    std::unordered_map<std::string, Value> fields;
+    uint32_t typeNameIdx;
+    std::unordered_map<uint32_t, Value> fields;
 };
 
 struct Value {

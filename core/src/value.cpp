@@ -6,6 +6,7 @@
  */
 
 #include "value.hpp"
+#include "symbolTable.hpp"
 #include <sstream>
 #include <iomanip>
 
@@ -37,8 +38,8 @@ std::string Value::toString() const {
             return res;
         }
         case ValueType::MAP: return "<map>";
-        case ValueType::STRUCT_INSTANCE: return "<struct " + getStruct()->typeName + ">";
-        case ValueType::FUNCTION: return "<function " + getFunction()->name + ">";
+        case ValueType::STRUCT_INSTANCE: return "<struct " + SymbolTable::get().getString(getStruct()->typeNameIdx) + ">";
+        case ValueType::FUNCTION: return "<function " + SymbolTable::get().getString(getFunction()->nameIdx) + ">";
         case ValueType::NATIVE_FUNCTION: return "<native function>";
 
         default: return "unknown";

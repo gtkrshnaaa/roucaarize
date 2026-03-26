@@ -20,32 +20,32 @@ public:
     explicit Environment(std::shared_ptr<Environment> outer = nullptr)
         : outer(std::move(outer)) {}
 
-    void define(const std::string& name, Value value) {
-        values[name] = std::move(value);
+    void define(uint32_t nameIdx, Value value) {
+        values[nameIdx] = std::move(value);
     }
 
-    bool assign(const std::string& name, Value value) {
-        if (values.find(name) != values.end()) {
-            values[name] = std::move(value);
+    bool assign(uint32_t nameIdx, Value value) {
+        if (values.find(nameIdx) != values.end()) {
+            values[nameIdx] = std::move(value);
             return true;
         }
-        if (outer) return outer->assign(name, std::move(value));
+        if (outer) return outer->assign(nameIdx, std::move(value));
         return false;
     }
 
-    bool get(const std::string& name, Value& outValue) {
-        auto it = values.find(name);
+    bool get(uint32_t nameIdx, Value& outValue) {
+        auto it = values.find(nameIdx);
         if (it != values.end()) {
             outValue = it->second;
             return true;
         }
-        if (outer) return outer->get(name, outValue);
+        if (outer) return outer->get(nameIdx, outValue);
         return false;
     }
 
 private:
     std::shared_ptr<Environment> outer;
-    std::unordered_map<std::string, Value> values;
+    std::unordered_map<uint32_t, Value> values;
 };
 
 } // namespace roucaarize

@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 #include <variant>
+#include "symbolTable.hpp"
 
 namespace roucaarize {
 
@@ -101,21 +102,8 @@ public:
     NodeIndex root() const { return rootIndex; }
     void setRoot(NodeIndex idx) { rootIndex = idx; }
 
-    uint32_t addString(std::string s) {
-        for (uint32_t i = 0; i < stringPool.size(); ++i) {
-            if (stringPool[i] == s) return i;
-        }
-        uint32_t idx = stringPool.size();
-        stringPool.push_back(std::move(s));
-        return idx;
-    }
-    const std::string& getString(uint32_t idx) const {
-        if (idx == INVALID_NODE || idx >= stringPool.size()) {
-            static const std::string empty_str = "";
-            return empty_str;
-        }
-        return stringPool[idx];
-    }
+    uint32_t addString(const std::string& s) { return SymbolTable::get().intern(s); }
+    const std::string& getString(uint32_t idx) const { return SymbolTable::get().getString(idx); }
     
     uint32_t addChildren(std::vector<NodeIndex> c) {
         uint32_t idx = childrenPool.size();
@@ -145,7 +133,7 @@ public:
 
 private:
     std::vector<ASTNode> nodes;
-    std::vector<std::string> stringPool;
+    
     std::vector<std::vector<NodeIndex>> childrenPool;
     std::vector<std::vector<uint32_t>> paramsPool;
     NodeIndex rootIndex = INVALID_NODE;

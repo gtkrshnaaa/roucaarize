@@ -6,6 +6,7 @@
  */
 
 #include "evaluator.hpp"
+#include "symbolTable.hpp"
 #include "error.hpp"
 #include "runtimeGuard.hpp"
 #include <iostream>
@@ -94,7 +95,7 @@ Evaluator::Evaluator() {
 }
 
 void Evaluator::defineNative(const std::string& name, NativeFunction fn) {
-    globals->define(name, Value::fromNative(std::move(fn)));
+    globals->define(SymbolTable::get().intern(name), Value::fromNative(std::move(fn)));
 }
 
 void Evaluator::registerStdlib(const std::string& moduleName,
@@ -150,11 +151,11 @@ Value Evaluator::evalNode(NodeIndex idx) {
         case NodeType::TRY_STMT:       return executeTryCatch(node);
         case NodeType::FUNC_DECL: {
             FunctionDef fd;
-            fd.name = currentAST->getString(node.nameIdx);
-            for(auto p : currentAST->getParams(node.paramsIdx)) fd.params.push_back(currentAST->getString(p));
+            fd.nameIdx = node.nameIdx;
+            for(auto p : currentAST->getParams(node.paramsIdx)) fd.params.push_back(p);
             fd.bodyIndex = node.left;
             fd.closure = environment;
-            environment->define(currentAST->getString(node.nameIdx), Value::fromFunction(std::move(fd)));
+            environment->define(node.nameIdx, Value::fromFunction(std::move(fd)));
             return Value::nil();
         }
         case NodeType::STRUCT_DECL:    return executeStructDecl(node);
@@ -178,7 +179,7 @@ Value Evaluator::evalNode(NodeIndex idx) {
 
 Value Evaluator::evalIdentifier(const ASTNode& node) {
     Value val;
-    if (environment->get(currentAST->getString(node.nameIdx), val)) return val;
+    if (environment->get(node.nameIdx, val)) return val;
     throw RuntimeError(node, "Undefined variable: " + currentAST->getString(node.nameIdx));
 }
 
@@ -270,9 +271,9 @@ Value Evaluator::evalMemberAccess(const ASTNode& node) {
 
     // Struct instance field access
     if (left.type == ValueType::STRUCT_INSTANCE) {
-        auto it = left.getStruct()->fields.find(currentAST->getString(node.nameIdx));
+        auto it = left.getStruct()->fields.find(node.nameIdx);
         if (it != left.getStruct()->fields.end()) return it->second;
-        throw RuntimeError(node, "Undefined field '" + currentAST->getString(node.nameIdx) + "' on struct '" + left.getStruct()->typeName + "'");
+        throw RuntimeError(node, "Undefined field '" + currentAST->getString(node.nameIdx) + "' on struct '" + SymbolTable::get().getString(left.getStruct()->typeNameIdx) + "'");
     }
 
     // Stdlib module member access (module stored as MAP with native functions)
@@ -382,7 +383,7 @@ Value Evaluator::executeStatement(NodeIndex idx) { return evalNode(idx); }
 
 Value Evaluator::executeVarAssign(const ASTNode& node) {
     Value val = evalNode(node.left);
-    if (!environment->assign(currentAST->getString(node.nameIdx), val)) environment->define(currentAST->getString(node.nameIdx), val);
+    if (!environment->assign(node.nameIdx, val)) environment->define(node.nameIdx, val);
     return val;
 }
 
@@ -390,7 +391,7 @@ Value Evaluator::executeMemberAssign(const ASTNode& node) {
     Value obj = evalNode(node.left);
     Value val = evalNode(node.right);
     if (obj.type == ValueType::STRUCT_INSTANCE) {
-        obj.getStruct()->fields[currentAST->getString(node.nameIdx)] = val;
+        obj.getStruct()->fields[node.nameIdx] = val;
         return val;
     }
     if (obj.type == ValueType::MAP) {
@@ -449,7 +450,7 @@ Value Evaluator::executeFor(const ASTNode& node) {
     uint32_t iterCount = 0;
     for (const auto& item : *iterable.getArray()) {
         auto loopEnv = std::make_shared<Environment>(environment);
-        loopEnv->define(currentAST->getString(node.nameIdx), item);
+        loopEnv->define(node.nameIdx, item);
         evalBlock(node.right, loopEnv);
         if (++iterCount % GUARD_LOOP_CHECK_INTERVAL == 0) {
             if (runtime_guard::checkTimeout()) {
@@ -467,11 +468,11 @@ Value Evaluator::executeTryCatch(const ASTNode& node) {
     } catch (const RuntimeException& e) {
         if (e.isReturn) throw;
         auto catchEnv = std::make_shared<Environment>(environment);
-        if (!currentAST->getString(node.nameIdx).empty()) catchEnv->define(currentAST->getString(node.nameIdx), e.value);
+        if (!currentAST->getString(node.nameIdx).empty()) catchEnv->define(node.nameIdx, e.value);
         evalBlock(node.right, catchEnv);
     } catch (const std::exception& e) {
         auto catchEnv = std::make_shared<Environment>(environment);
-        if (!currentAST->getString(node.nameIdx).empty()) catchEnv->define(currentAST->getString(node.nameIdx), Value::fromString(e.what()));
+        if (!currentAST->getString(node.nameIdx).empty()) catchEnv->define(node.nameIdx, Value::fromString(e.what()));
         evalBlock(node.right, catchEnv);
     }
     // Execute finally block if present
@@ -486,28 +487,28 @@ Value Evaluator::executeThrow(const ASTNode& node) {
 
 Value Evaluator::executeStructDecl(const ASTNode& node) {
     // Register a struct constructor as a native function
-    std::string structName = currentAST->getString(node.nameIdx);
-    std::vector<std::string> fieldNames;
-    for(auto p : currentAST->getParams(node.paramsIdx)) fieldNames.push_back(currentAST->getString(p));
+    uint32_t structNameIdx = node.nameIdx; std::string structNameStr = currentAST->getString(node.nameIdx);
+    std::vector<uint32_t> fieldNames;
+    for(auto p : currentAST->getParams(node.paramsIdx)) fieldNames.push_back(p);
 
     auto constructor = Value::fromNative(
-        [structName, fieldNames](Evaluator&, const std::vector<Value>& args) -> Value {
+        [structNameIdx, structNameStr, fieldNames](Evaluator&, const std::vector<Value>& args) -> Value {
             if (args.size() != fieldNames.size())
-                throw std::runtime_error("Struct '" + structName + "' expects " +
+                throw std::runtime_error("Struct '" + structNameStr + "' expects " +
                     std::to_string(fieldNames.size()) + " fields");
             auto inst = std::make_shared<StructInstance>();
-            inst->typeName = structName;
+            inst->typeNameIdx = structNameIdx;
             for (size_t i = 0; i < fieldNames.size(); ++i)
                 inst->fields[fieldNames[i]] = args[i];
             return Value::fromStruct(std::move(inst));
         });
-    environment->define(structName, constructor);
+    environment->define(structNameIdx, constructor);
     return Value::nil();
 }
 
 Value Evaluator::executeImportStdlib(const ASTNode& node) {
     std::string moduleName = currentAST->getString(node.nameIdx);
-    std::string alias = currentAST->getParams(node.paramsIdx).empty() ? moduleName : currentAST->getString(currentAST->getParams(node.paramsIdx)[0]);
+    uint32_t aliasIdx = currentAST->getParams(node.paramsIdx).empty() ? SymbolTable::get().intern(moduleName) : currentAST->getParams(node.paramsIdx)[0];
 
     auto it = stdlibRegistry.find(moduleName);
     if (it == stdlibRegistry.end())
@@ -518,7 +519,7 @@ Value Evaluator::executeImportStdlib(const ASTNode& node) {
     for (auto& [funcName, fn] : it->second) {
         moduleMap->entries[Value::fromString(funcName)] = Value::fromNative(fn);
     }
-    environment->define(alias, Value::fromMap(std::move(moduleMap)));
+    environment->define(aliasIdx, Value::fromMap(std::move(moduleMap)));
     return Value::nil();
 }
 
