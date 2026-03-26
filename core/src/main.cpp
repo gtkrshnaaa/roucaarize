@@ -23,6 +23,7 @@
 #include "proc.hpp"
 #include "string.hpp"
 #include "time.hpp"
+#include "runtimeGuard.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -47,6 +48,8 @@ void printUsage(const char* prog) {
 }
 
 int main(int argc, char* argv[]) {
+    runtime_guard::initialize();
+
     if (argc < 2) { printUsage(argv[0]); return 1; }
 
     std::string arg1 = argv[1];
