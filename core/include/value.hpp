@@ -62,6 +62,27 @@ struct Value {
     static Value fromString(std::string s) { Value v; v.type = ValueType::STRING; v.stringVal = std::make_shared<std::string>(std::move(s)); return v; }
     static Value fromArray(std::vector<Value> a) { Value v; v.type = ValueType::ARRAY; v.arrayVal = std::make_shared<std::vector<Value>>(std::move(a)); return v; }
     
+    static Value fromNative(NativeFunction fn) { Value v; v.type = ValueType::NATIVE_FUNCTION; v.nativeVal = std::make_shared<NativeFunction>(std::move(fn)); return v; }
+    static Value fromFunction(FunctionDef fd) { Value v; v.type = ValueType::FUNCTION; v.funcVal = std::make_shared<FunctionDef>(std::move(fd)); return v; }
+    
+    double asDouble() const {
+        if (type == ValueType::INT) return static_cast<double>(intVal);
+        if (type == ValueType::FLOAT) return floatVal;
+        return 0.0;
+    }
+
+    bool operator==(const Value& other) const {
+        if (type != other.type) return false;
+        switch (type) {
+            case ValueType::NIL: return true;
+            case ValueType::BOOL: return boolVal == other.boolVal;
+            case ValueType::INT: return intVal == other.intVal;
+            case ValueType::FLOAT: return floatVal == other.floatVal;
+            case ValueType::STRING: return *stringVal == *other.stringVal;
+            default: return false;
+        }
+    }
+
     bool isTruthy() const {
         switch (type) {
             case ValueType::NIL: return false;

@@ -82,6 +82,7 @@ Token Lexer::identifier() {
 }
 
 Token Lexer::number() {
+    double val = 0.0;
     while (isdigit(peek())) advance();
     bool isFloat = false;
     if (peek() == '.' && isdigit(peekNext())) {
@@ -91,16 +92,15 @@ Token Lexer::number() {
     }
     std::string_view text = source.substr(start, current - start);
     if (isFloat) {
-        double val;
         std::from_chars(text.data(), text.data() + text.size(), val);
         Token t = makeToken(TokenType::FLOAT);
         t.floatValue = val;
         return t;
     } else {
-        int64_t val;
-        std::from_chars(text.data(), text.data() + text.size(), val);
+        int64_t iVal = 0;
+        std::from_chars(text.data(), text.data() + text.size(), iVal);
         Token t = makeToken(TokenType::INTEGER);
-        t.intValue = val;
+        t.intValue = iVal;
         return t;
     }
 }

@@ -80,6 +80,10 @@ private:
     bool isLowerCamelCase(const std::string& name) const;
     bool isUpperCamelCase(const std::string& name) const;
 
+    void walkBlock(const AST& ast, NodeIndex idx,
+                   void (GrammarChecker::*visitor)(const AST&, NodeIndex));
+    void walkChildren(const AST& ast, NodeIndex idx,
+                      void (GrammarChecker::*visitor)(const AST&, NodeIndex));
     void walkExpression(const AST& ast, NodeIndex idx,
                         void (GrammarChecker::*visitor)(const AST&, NodeIndex));
 };
