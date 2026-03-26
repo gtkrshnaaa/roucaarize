@@ -1,4 +1,5 @@
 #include "evaluator.hpp"
+#include "runtimeGuard.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <sstream>
@@ -108,6 +109,7 @@ Value Evaluator::evaluate(const AST& ast, NodeIndex root) {
 // ============================================================================
 
 Value Evaluator::evalNode(NodeIndex idx) {
+    runtime_guard::RecursionGuard depthGuard;
     if (idx == INVALID_NODE) return Value::nil();
     const ASTNode& node = currentAST->get(idx);
 
@@ -413,7 +415,17 @@ Value Evaluator::executeIf(const ASTNode& node) {
 }
 
 Value Evaluator::executeWhile(const ASTNode& node) {
-    while (evalNode(node.left).isTruthy()) evalNode(node.right);
+    uint32_t iterCount = 0;
+    while (evalNode(node.left).isTruthy()) {
+        evalNode(node.right);
+        if (++iterCount % GUARD_LOOP_CHECK_INTERVAL == 0) {
+            if (runtime_guard::checkTimeout()) {
+                throw std::runtime_error(
+                    "Execution timeout: while loop exceeded "
+                    + std::to_string(GUARD_TIMEOUT_SECONDS) + "s limit");
+            }
+        }
+    }
     return Value::nil();
 }
 
@@ -421,10 +433,18 @@ Value Evaluator::executeFor(const ASTNode& node) {
     Value iterable = evalNode(node.left);
     if (iterable.type != ValueType::ARRAY)
         throw std::runtime_error("Can only iterate over arrays");
+    uint32_t iterCount = 0;
     for (const auto& item : *iterable.arrayVal) {
         auto loopEnv = std::make_shared<Environment>(environment);
         loopEnv->define(node.name, item);
         evalBlock(node.right, loopEnv);
+        if (++iterCount % GUARD_LOOP_CHECK_INTERVAL == 0) {
+            if (runtime_guard::checkTimeout()) {
+                throw std::runtime_error(
+                    "Execution timeout: for loop exceeded "
+                    + std::to_string(GUARD_TIMEOUT_SECONDS) + "s limit");
+            }
+        }
     }
     return Value::nil();
 }
