@@ -1,7 +1,7 @@
 ================================================================================
                    ULTIMATE LANGUAGE BENCHMARK BATTLE
 ================================================================================
-Execution Date: Thu Mar 26 11:05:36 PM WIB 2026
+Execution Date: Thu Mar 26 11:11:56 PM WIB 2026
 
 SYSTEM SPECIFICATIONS:
   OS:  Ubuntu 24.04.4 LTS
@@ -12,92 +12,119 @@ SYSTEM SPECIFICATIONS:
 ================================================================================
 --- Roucaarize ---
 Arch: AST-Walking Interpreter (C++20 Native)
-Starting benchmarks...
-Fib(23): 28657
-Loop Sum: 44999850000
-Array Size: 20000
-Map Entries: 10000
-Done!
+>>> Roucaarize Benchmark Suite <<<
+  -------------------------------------------------------------
+  Benchmark       |     Performance | Time
+  -------------------------------------------------------------
+  Integer Add     | 10000000.0 OPS/sec | 0.001s
+  Double Arith    | 5000000.0 OPS/sec | 0.02s
+  String Concat   | 2500000.0 OPS/sec | 0.002s
+  Array Push      | 2500000.0 OPS/sec | 0.004s
+  Struct Access   | 3875968.992248 OPS/sec | 0.129s
+  -------------------------------------------------------------
 
 [System Resources]
-  Peak RAM : 7872 KB
-  CPU Load : 99%
-  Total Time: 0.63 s
+  Peak RAM : 6160 KB
+  CPU Load : 98%
+  Total Time: 0.15 s
 
 ================================================================================
 --- PHP 8 (Standard) ---
 Arch: Bytecode (Stack-based) - Zend (OpCache Only)
-Starting benchmarks...
-Fib(23): 28657
-Loop Sum: 44999850000
-Array Size: 20000
-Map Entries: 10000
-Done!
+>>> PHP 8 Benchmark Suite <<<
+  -------------------------------------------------------------
+  Benchmark       |     Performance | Time
+  -------------------------------------------------------------
+  Integer Add     |    455902608.70 OPS/sec | 0.0000s
+  Double Arith    |    149476265.15 OPS/sec | 0.0007s
+  String Concat   |     46707171.49 OPS/sec | 0.0001s
+  Array Push      |     55553695.36 OPS/sec | 0.0002s
+  Struct Access   |     94910934.11 OPS/sec | 0.0053s
+  -------------------------------------------------------------
 
 [System Resources]
-  Peak RAM : 27108 KB
-  CPU Load : 100%
+  Peak RAM : 26184 KB
+  CPU Load : 90%
   Total Time: 0.02 s
 
 ================================================================================
 --- PHP 8 (JIT) ---
 Arch: Zend Engine + JIT Enabled (Max Power)
-Starting benchmarks...
-Fib(23): 28657
-Loop Sum: 44999850000
-Array Size: 20000
-Map Entries: 10000
-Done!
+>>> PHP 8 Benchmark Suite <<<
+  -------------------------------------------------------------
+  Benchmark       |     Performance | Time
+  -------------------------------------------------------------
+  Integer Add     |    126716132.93 OPS/sec | 0.0001s
+  Double Arith    |    699050666.67 OPS/sec | 0.0001s
+  String Concat   |     47233153.15 OPS/sec | 0.0001s
+  Array Push      |     85423706.72 OPS/sec | 0.0001s
+  Struct Access   |    410803525.95 OPS/sec | 0.0012s
+  -------------------------------------------------------------
 
 [System Resources]
-  Peak RAM : 29404 KB
-  CPU Load : 100%
+  Peak RAM : 29528 KB
+  CPU Load : 94%
   Total Time: 0.01 s
 
 ================================================================================
 --- Lua 5.4 ---
 Arch: Bytecode (Register-based) - Standard Interpreter
-Starting benchmarks...
-Fib(23): 28657
-Loop Sum: 44999850000
-Array Size: 20000
-Map Entries: 10000
-Done!
+>>> Lua Benchmark Suite <<<
+  -------------------------------------------------------------
+  Benchmark       |     Performance | Time
+  -------------------------------------------------------------
+  Integer Add     |    192307692.31 OPS/sec | 0.0001s
+  Double Arith    |    131061598.95 OPS/sec | 0.0008s
+  String Concat   |      6067961.17 OPS/sec | 0.0008s
+  Array Push      |     18148820.33 OPS/sec | 0.0006s
+  Struct Access   |     92250922.51 OPS/sec | 0.0054s
+  -------------------------------------------------------------
 
 [System Resources]
-  Peak RAM : 3740 KB
-  CPU Load : 90%
-  Total Time: 0.01 s
+  Peak RAM : 3460 KB
+  CPU Load : 100%
+  Total Time: 0.00 s
 
 ================================================================================
 --- LuaJIT ---
 Arch: JIT Compiled - Trace-based Compiler
-Starting benchmarks...
-Fib(23): 28657
-Loop Sum: 44999850000
-Array Size: 20000
-Map Entries: 10000
-Done!
+>>> Lua Benchmark Suite <<<
+  -------------------------------------------------------------
+  Benchmark       |     Performance | Time
+  -------------------------------------------------------------
+  Integer Add     |    243902439.02 OPS/sec | 0.0000s
+  Double Arith    |    813008130.08 OPS/sec | 0.0001s
+  String Concat   |      2834467.12 OPS/sec | 0.0018s
+  Array Push      |    106382978.72 OPS/sec | 0.0001s
+  Struct Access   |    912408759.12 OPS/sec | 0.0005s
+  -------------------------------------------------------------
 
 [System Resources]
-  Peak RAM : 3604 KB
+  Peak RAM : 2824 KB
   CPU Load : 100%
   Total Time: 0.00 s
 
 ================================================================================
 --- Python 3 ---
 Arch: Bytecode (Stack-based) - CPython Interpreter
-Starting benchmarks...
-Fib(23): 28657
-Loop Sum: 44999850000
-Array Size: 20000
-Map Entries: 10000
-Done!
+>>> Python 3 Benchmark Suite <<<
+  -------------------------------------------------------------
+  Benchmark       |     Performance | Time
+  -------------------------------------------------------------
+  Integer Add     |   44,858,866.31 OPS/sec | 0.0002s
+  Double Arith    |   33,140,834.39 OPS/sec | 0.0030s
+  String Concat   |   21,845,333.33 OPS/sec | 0.0002s
+  Array Push      |   24,556,814.99 OPS/sec | 0.0004s
+  Struct Access   |   32,576,612.40 OPS/sec | 0.0153s
+  -------------------------------------------------------------
+
 
 [System Resources]
-  Peak RAM : 10676 KB
-  CPU Load : 96%
+  Peak RAM : 10280 KB
+  CPU Load : 100%
   Total Time: 0.02 s
 
 ================================================================================
 Benchmark Complete.
+
+Detailed report saved to: battleReport.txt

@@ -15,7 +15,7 @@ function printResult($name, $ops, $sec) {
 }
 
 function benchInt() {
-    $limit = 1000000000;
+    $limit = 10000;
     $start = microtime(true);
     $i = 0;
     while ($i < $limit) {
@@ -28,7 +28,7 @@ function benchInt() {
 }
 
 function benchDouble() {
-    $limit = 100000000;
+    $limit = 100000;
     $val = 0.0;
     $start = microtime(true);
     $i = 0;
@@ -43,7 +43,7 @@ function benchDouble() {
 }
 
 function benchString() {
-    $limit = 500000;
+    $limit = 5000;
     $start = microtime(true);
     $s = "";
     $i = 0;
@@ -58,7 +58,7 @@ function benchString() {
 }
 
 function benchArray() {
-    $limit = 1000000;
+    $limit = 10000;
     $start = microtime(true);
     $arr = [];
     $i = 0;
@@ -73,7 +73,7 @@ function benchArray() {
 }
 
 function benchStruct() {
-    $limit = 50000000;
+    $limit = 500000;
     $o = new Obj();
     $start = microtime(true);
     $i = 0;

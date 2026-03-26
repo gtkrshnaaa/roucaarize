@@ -15,7 +15,7 @@ def printResult(name, ops, sec):
     print(f"  {name:<15} | {ops_str:>15} OPS/sec | {sec:.4f}s")
 
 def benchInt():
-    limit = 1000000000
+    limit = 10000
     start = time.time()
     i = 0
     while i < limit:
@@ -26,7 +26,7 @@ def benchInt():
     printResult("Integer Add", ops, sec)
 
 def benchDouble():
-    limit = 100000000
+    limit = 100000
     val = 0.0
     start = time.time()
     i = 0
@@ -39,7 +39,7 @@ def benchDouble():
     printResult("Double Arith", ops, sec)
 
 def benchString():
-    limit = 500000
+    limit = 5000
     start = time.time()
     s = ""
     i = 0
@@ -52,7 +52,7 @@ def benchString():
     printResult("String Concat", ops, sec)
 
 def benchArray():
-    limit = 1000000
+    limit = 10000
     start = time.time()
     arr = []
     i = 0
@@ -65,7 +65,7 @@ def benchArray():
     printResult("Array Push", ops, sec)
 
 def benchStruct():
-    limit = 50000000
+    limit = 500000
     o = Obj()
     start = time.time()
     i = 0

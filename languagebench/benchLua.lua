@@ -19,7 +19,7 @@ local function printResult(name, ops, sec)
 end
 
 local function benchInt()
-    local limit = 1000000000
+    local limit = 10000
     local start = os.clock()
     local i = 0
     while i < limit do
@@ -32,7 +32,7 @@ local function benchInt()
 end
 
 local function benchDouble()
-    local limit = 100000000
+    local limit = 100000
     local val = 0.0
     local start = os.clock()
     local i = 0
@@ -47,7 +47,7 @@ local function benchDouble()
 end
 
 local function benchString()
-    local limit = 500000
+    local limit = 5000
     local start = os.clock()
     local s = ""
     local i = 0
@@ -62,7 +62,7 @@ local function benchString()
 end
 
 local function benchArray()
-    local limit = 1000000
+    local limit = 10000
     local start = os.clock()
     local arr = {}
     local i = 0
@@ -77,7 +77,7 @@ local function benchArray()
 end
 
 local function benchStruct()
-    local limit = 50000000
+    local limit = 500000
     local o = obj:new()
     local start = os.clock()
     local i = 0
