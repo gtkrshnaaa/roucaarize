@@ -21,31 +21,48 @@ public:
         : outer(std::move(outer)) {}
 
     void define(uint32_t nameIdx, Value value) {
-        values[nameIdx] = std::move(value);
+        for (auto& pair : entries) {
+            if (pair.first == nameIdx) {
+                pair.second = std::move(value);
+                return;
+            }
+        }
+        entries.emplace_back(nameIdx, std::move(value));
     }
 
     bool assign(uint32_t nameIdx, Value value) {
-        if (values.find(nameIdx) != values.end()) {
-            values[nameIdx] = std::move(value);
-            return true;
+        for (auto& pair : entries) {
+            if (pair.first == nameIdx) {
+                pair.second = std::move(value);
+                return true;
+            }
         }
         if (outer) return outer->assign(nameIdx, std::move(value));
         return false;
     }
 
     bool get(uint32_t nameIdx, Value& outValue) {
-        auto it = values.find(nameIdx);
-        if (it != values.end()) {
-            outValue = it->second;
-            return true;
+        for (auto& pair : entries) {
+            if (pair.first == nameIdx) {
+                outValue = pair.second;
+                return true;
+            }
         }
         if (outer) return outer->get(nameIdx, outValue);
         return false;
     }
 
+    Value* getReference(uint32_t nameIdx) {
+        for (auto& pair : entries) {
+            if (pair.first == nameIdx) return &pair.second;
+        }
+        if (outer) return outer->getReference(nameIdx);
+        return nullptr;
+    }
+
 private:
     std::shared_ptr<Environment> outer;
-    std::unordered_map<uint32_t, Value> values;
+    std::vector<std::pair<uint32_t, Value>> entries;
 };
 
 } // namespace roucaarize

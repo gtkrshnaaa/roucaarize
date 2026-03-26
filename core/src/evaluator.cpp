@@ -118,7 +118,6 @@ Value Evaluator::evaluate(const AST& ast, NodeIndex root) {
 // ============================================================================
 
 Value Evaluator::evalNode(NodeIndex idx) {
-    runtime_guard::RecursionGuard depthGuard;
     if (idx == INVALID_NODE) return Value::nil();
     const ASTNode& node = currentAST->get(idx);
 
@@ -237,6 +236,30 @@ Value Evaluator::evalUnary(const ASTNode& node) {
 }
 
 Value Evaluator::evalCall(const ASTNode& node) {
+    runtime_guard::RecursionGuard depthGuard;
+    // FAST-PATH: Direct Member Access Calls (Array methods, String methods)
+    if (node.left != INVALID_NODE && currentAST->get(node.left).type == NodeType::MEMBER_ACCESS) {
+        const ASTNode& memberNode = currentAST->get(node.left);
+        Value leftObj = evalNode(memberNode.left);
+        const std::string& memberName = SymbolTable::get().getString(memberNode.nameIdx);
+        
+        if (leftObj.type == ValueType::ARRAY) {
+            if (memberName == "push") {
+                if (!currentAST->getChildren(node.childrenIdx).empty()) {
+                    leftObj.getArray()->push_back(evalNode(currentAST->getChildren(node.childrenIdx)[0]));
+                }
+                return Value::nil();
+            }
+            if (memberName == "pop") {
+                if (leftObj.getArray()->empty()) return Value::nil();
+                Value v = std::move(leftObj.getArray()->back());
+                leftObj.getArray()->pop_back();
+                return v;
+            }
+            if (memberName == "length") return Value::fromInt(leftObj.getArray()->size());
+        }
+    }
+
     Value callee = evalNode(node.left);
     std::vector<Value> args;
     for (NodeIndex argIdx : currentAST->getChildren(node.childrenIdx)) args.push_back(evalNode(argIdx));
@@ -255,7 +278,7 @@ Value Evaluator::evalCall(const ASTNode& node) {
             throw RuntimeError(node, "Expected " + std::to_string(fd.params.size()) +
                                      " arguments but got " + std::to_string(args.size()));
         auto callEnv = std::make_shared<Environment>(fd.closure);
-        for (size_t i = 0; i < args.size(); ++i) callEnv->define(fd.params[i], args[i]);
+        for (size_t i = 0; i < args.size(); ++i) callEnv->define(fd.params[i], std::move(args[i]));
         try {
             return evalBlock(fd.bodyIndex, callEnv);
         } catch (const RuntimeException& e) {
@@ -382,8 +405,43 @@ Value Evaluator::evalBlock(NodeIndex idx, std::shared_ptr<Environment> env) {
 Value Evaluator::executeStatement(NodeIndex idx) { return evalNode(idx); }
 
 Value Evaluator::executeVarAssign(const ASTNode& node) {
+    if (node.left != INVALID_NODE && currentAST->get(node.left).type == NodeType::BINARY_OP) {
+        const ASTNode& binNode = currentAST->get(node.left);
+        if (binNode.left != INVALID_NODE && currentAST->get(binNode.left).type == NodeType::IDENTIFIER 
+            && binNode.right != INVALID_NODE && currentAST->get(binNode.right).type == NodeType::LITERAL_INT
+            && currentAST->get(binNode.left).nameIdx == node.nameIdx) 
+        {
+            Value* vPtr = environment->getReference(node.nameIdx);
+            if (vPtr && vPtr->type == ValueType::INT) {
+                int64_t val = std::get<int64_t>(currentAST->get(binNode.right).literal.data);
+                switch (binNode.binaryOp) {
+                    case BinaryOp::ADD: vPtr->intVal += val; return *vPtr;
+                    case BinaryOp::SUB: vPtr->intVal -= val; return *vPtr;
+                    case BinaryOp::MUL: vPtr->intVal *= val; return *vPtr;
+                    default: break;
+                }
+            }
+        }
+        else if (binNode.left != INVALID_NODE && currentAST->get(binNode.left).type == NodeType::IDENTIFIER 
+            && binNode.right != INVALID_NODE && currentAST->get(binNode.right).type == NodeType::LITERAL_FLOAT
+            && currentAST->get(binNode.left).nameIdx == node.nameIdx) 
+        {
+            Value* vPtr = environment->getReference(node.nameIdx);
+            if (vPtr && vPtr->type == ValueType::FLOAT) {
+                double val = std::get<double>(currentAST->get(binNode.right).literal.data);
+                switch (binNode.binaryOp) {
+                    case BinaryOp::ADD: vPtr->floatVal += val; return *vPtr;
+                    case BinaryOp::SUB: vPtr->floatVal -= val; return *vPtr;
+                    default: break;
+                }
+            }
+        }
+    }
+
     Value val = evalNode(node.left);
-    if (!environment->assign(node.nameIdx, val)) environment->define(node.nameIdx, val);
+    if (!environment->assign(node.nameIdx, val)) {
+        environment->define(node.nameIdx, val);
+    }
     return val;
 }
 
@@ -430,7 +488,25 @@ Value Evaluator::executeIf(const ASTNode& node) {
 
 Value Evaluator::executeWhile(const ASTNode& node) {
     uint32_t iterCount = 0;
-    while (evalNode(node.left).isTruthy()) {
+    while (true) {
+        if (node.left != INVALID_NODE && currentAST->get(node.left).type == NodeType::BINARY_OP) {
+            const ASTNode& binNode = currentAST->get(node.left);
+            if (binNode.binaryOp == BinaryOp::LT && 
+                binNode.left != INVALID_NODE && currentAST->get(binNode.left).type == NodeType::IDENTIFIER &&
+                binNode.right != INVALID_NODE && currentAST->get(binNode.right).type == NodeType::IDENTIFIER) 
+            {
+                Value* leftV = environment->getReference(currentAST->get(binNode.left).nameIdx);
+                Value* rightV = environment->getReference(currentAST->get(binNode.right).nameIdx);
+                if (leftV && rightV && leftV->type == ValueType::INT && rightV->type == ValueType::INT) {
+                    if (!(leftV->intVal < rightV->intVal)) break;
+                    goto execute_body;
+                }
+            }
+        }
+        
+        if (!evalNode(node.left).isTruthy()) break;
+        
+    execute_body:
         evalNode(node.right);
         if (++iterCount % GUARD_LOOP_CHECK_INTERVAL == 0) {
             if (runtime_guard::checkTimeout()) {

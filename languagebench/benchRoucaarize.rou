@@ -15,7 +15,7 @@ function printResult(name, ops, sec) {
 }
 
 function benchInt() {
-    limit = 10000
+    limit = 5000000
     start = t.millis()
     i = 0
     while (i < limit) {
@@ -24,12 +24,13 @@ function benchInt() {
     end = t.millis()
     sec = (end - start) / 1000.0
     if (sec == 0) { sec = 0.0001 }
-    ops = limit / sec
+    ops = 0
+    if (sec > 0) { ops = limit / sec; } else { ops = limit / 0.0001; }
     printResult("Integer Add    ", ops, sec)
 }
 
 function benchDouble() {
-    limit = 100000
+    limit = 5000000
     val = 0.0
     start = t.millis()
     i = 0
@@ -40,12 +41,13 @@ function benchDouble() {
     end = t.millis()
     sec = (end - start) / 1000.0
     if (sec == 0) { sec = 0.0001 }
-    ops = limit / sec
+    ops = 0
+    if (sec > 0) { ops = limit / sec; } else { ops = limit / 0.0001; }
     printResult("Double Arith   ", ops, sec)
 }
 
 function benchString() {
-    limit = 5000
+    limit = 50000
     start = t.millis()
     s = ""
     i = 0
@@ -56,12 +58,13 @@ function benchString() {
     end = t.millis()
     sec = (end - start) / 1000.0
     if (sec == 0) { sec = 0.0001 }
-    ops = limit / sec
+    ops = 0
+    if (sec > 0) { ops = limit / sec; } else { ops = limit / 0.0001; }
     printResult("String Concat  ", ops, sec)
 }
 
 function benchArray() {
-    limit = 10000
+    limit = 1000000
     start = t.millis()
     arr = []
     i = 0
@@ -72,12 +75,13 @@ function benchArray() {
     end = t.millis()
     sec = (end - start) / 1000.0
     if (sec == 0) { sec = 0.0001 }
-    ops = limit / sec
+    ops = 0
+    if (sec > 0) { ops = limit / sec; } else { ops = limit / 0.0001; }
     printResult("Array Push     ", ops, sec)
 }
 
 function benchStruct() {
-    limit = 500000
+    limit = 2500000
     o = Obj(0)
     start = t.millis()
     i = 0
@@ -89,7 +93,8 @@ function benchStruct() {
     end = t.millis()
     sec = (end - start) / 1000.0
     if (sec == 0) { sec = 0.0001 }
-    ops = limit / sec
+    ops = 0
+    if (sec > 0) { ops = limit / sec; } else { ops = limit / 0.0001; }
     printResult("Struct Access  ", ops, sec)
 }
 
