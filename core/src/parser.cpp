@@ -156,7 +156,6 @@ NodeIndex Parser::ifStatement() {
     consume(TokenType::LPAREN, "Expected '(' after 'if'");
     NodeIndex cond = expression();
     consume(TokenType::RPAREN, "Expected ')' after condition");
-    consume(TokenType::LBRACE, "Expected '{' before if body");
     NodeIndex thenBranch = block();
     ASTNode node(NodeType::IF_STMT, first.line, first.column);
     node.left = cond;
@@ -178,7 +177,6 @@ NodeIndex Parser::forStatement() {
     consume(TokenType::IN, "Expected 'in' after iterator variable");
     NodeIndex iterable = expression();
     consume(TokenType::RPAREN, "Expected ')' after for clause");
-    consume(TokenType::LBRACE, "Expected '{' before for body");
     NodeIndex body = block();
     ASTNode node(NodeType::FOR_STMT, first.line, first.column);
     node.name = std::string(iter.lexeme);
@@ -192,7 +190,6 @@ NodeIndex Parser::whileStatement() {
     consume(TokenType::LPAREN, "Expected '(' after 'while'");
     NodeIndex cond = expression();
     consume(TokenType::RPAREN, "Expected ')' after condition");
-    consume(TokenType::LBRACE, "Expected '{' before while body");
     NodeIndex body = block();
     ASTNode node(NodeType::WHILE_STMT, first.line, first.column);
     node.left = cond;
@@ -211,7 +208,6 @@ NodeIndex Parser::returnStatement() {
 
 NodeIndex Parser::tryStatement() {
     Token first = previous();
-    consume(TokenType::LBRACE, "Expected '{' before try body");
     NodeIndex tryBody = block();
     consume(TokenType::CATCH, "Expected 'catch' after 'try' block");
     std::string errVar = "";
@@ -220,14 +216,12 @@ NodeIndex Parser::tryStatement() {
         errVar = std::string(e.lexeme);
         consume(TokenType::RPAREN, "Expected ')' after catch variable");
     }
-    consume(TokenType::LBRACE, "Expected '{' before catch body");
     NodeIndex catchBody = block();
     ASTNode node(NodeType::TRY_STMT, first.line, first.column);
     node.left = tryBody;
     node.right = catchBody;
     node.name = errVar;
     if (match(TokenType::FINALLY)) {
-        consume(TokenType::LBRACE, "Expected '{' before finally body");
         node.extra = block();
     }
     return ast.addNode(std::move(node));
