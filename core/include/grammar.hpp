@@ -9,6 +9,15 @@
 
 namespace roucaarize {
 
+// ============================================================================
+// Analysis Resource Limits
+// ============================================================================
+
+static constexpr uint32_t MAX_ANALYSIS_DEPTH = 256;
+static constexpr uint32_t MAX_NODE_BUDGET    = 50000;
+static constexpr uint32_t MAX_AST_NODES      = 100000;
+static constexpr uint32_t MAX_DIAGNOSTICS    = 200;
+
 enum class DiagLevel {
     ERROR,
     WARNING,
@@ -29,6 +38,7 @@ struct AnalysisResult {
     size_t errorCount = 0;
     size_t warningCount = 0;
     size_t perfCount = 0;
+    bool budgetExceeded = false;
 };
 
 class GrammarChecker {
@@ -54,21 +64,29 @@ private:
     std::vector<Scope> scopeStack;
     std::map<std::string, std::vector<std::string>> structFields;
     std::set<std::string> importAliases;
-    
+
     std::set<std::string> builtinFunctions;
     std::set<std::string> knownStdlibModules;
     std::map<std::string, std::set<std::string>> stdlibMethods;
 
+    // Resource tracking
+    uint32_t nodeVisitCount_;
+    uint32_t currentDepth_;
+
     void initBuiltins();
-    void addDiag(DiagLevel level, int32_t line, int32_t col,
+    bool addDiag(DiagLevel level, int32_t line, int32_t col,
                  const std::string& message, const std::string& ruleId);
 
-    // Passes
-    void passNaming(const AST& ast, NodeIndex idx);
-    void passSemantics(const AST& ast, NodeIndex idx);
-    void passPerformance(const AST& ast, NodeIndex idx);
+    // Single-pass analysis with depth tracking
+    void analyze(const AST& ast, NodeIndex idx, uint32_t depth);
 
-    // Helpers
+    // Pre-scan: register top-level declarations before deep analysis
+    void registerTopLevel(const AST& ast, NodeIndex idx);
+
+    // Budget check
+    bool withinBudget() const;
+
+    // Scope helpers
     void pushScope(bool isFunction);
     void popScope();
     void declareVariable(const std::string& name);
@@ -77,15 +95,9 @@ private:
     bool isFunctionDeclared(const std::string& name) const;
     void markVariableRead(const std::string& name);
 
+    // Naming helpers
     bool isLowerCamelCase(const std::string& name) const;
     bool isUpperCamelCase(const std::string& name) const;
-
-    void walkBlock(const AST& ast, NodeIndex idx,
-                   void (GrammarChecker::*visitor)(const AST&, NodeIndex));
-    void walkChildren(const AST& ast, NodeIndex idx,
-                      void (GrammarChecker::*visitor)(const AST&, NodeIndex));
-    void walkExpression(const AST& ast, NodeIndex idx,
-                        void (GrammarChecker::*visitor)(const AST&, NodeIndex));
 };
 
 } // namespace roucaarize
