@@ -145,8 +145,6 @@ NodeIndex Parser::ifStatement() {
             consume(TokenType::LBRACE, "Expected '{' after 'else'");
             node.extra = block();
         }
-    } else if (match(TokenType::ELIF)) {
-        node.extra = ifStatement();
     }
     return ast.addNode(std::move(node));
 }
