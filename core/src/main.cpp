@@ -48,8 +48,6 @@ void printUsage(const char* prog) {
 }
 
 int main(int argc, char* argv[]) {
-    runtime_guard::initialize();
-
     if (argc < 2) { printUsage(argv[0]); return 1; }
 
     std::string arg1 = argv[1];
@@ -72,6 +70,9 @@ int main(int argc, char* argv[]) {
             auto result = checker.analyzeSource(source, filename);
             return GrammarChecker::printResult(result);
         }
+
+        // Runtime guard only needed for interpreter execution, not static analysis
+        runtime_guard::initialize();
 
         Lexer lexer(source);
         auto tokens = lexer.tokenize();
