@@ -36,26 +36,26 @@ std::unordered_map<std::string, NativeFunction> getSysLibrary() {
 
     funcs["exec"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.empty() || !args[0].isString()) return Value::nil();
-        std::string output = execCommand(*args[0].stringVal);
+        std::string output = execCommand(*args[0].getString());
         return Value::fromString(output);
     };
 
     funcs["spawn"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.empty() || !args[0].isString()) return Value::fromInt(-1);
-        int ret = std::system(args[0].stringVal->c_str());
+        int ret = std::system(args[0].getString()->c_str());
         return Value::fromInt(static_cast<int64_t>(WEXITSTATUS(ret)));
     };
 
     funcs["getEnv"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.empty() || !args[0].isString()) return Value::nil();
-        const char* val = std::getenv(args[0].stringVal->c_str());
+        const char* val = std::getenv(args[0].getString()->c_str());
         return val ? Value::fromString(val) : Value::nil();
     };
 
     funcs["setEnv"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.size() < 2 || !args[0].isString() || !args[1].isString())
             return Value::fromBool(false);
-        int ret = setenv(args[0].stringVal->c_str(), args[1].stringVal->c_str(), 1);
+        int ret = setenv(args[0].getString()->c_str(), args[1].getString()->c_str(), 1);
         return Value::fromBool(ret == 0);
     };
 

@@ -41,8 +41,8 @@ Evaluator::Evaluator() {
 
     defineNative("len", [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.empty()) return Value::fromInt(0);
-        if (args[0].isString()) return Value::fromInt(static_cast<int64_t>(args[0].stringVal->size()));
-        if (args[0].isArray()) return Value::fromInt(static_cast<int64_t>(args[0].arrayVal->size()));
+        if (args[0].isString()) return Value::fromInt(static_cast<int64_t>(args[0].getString()->size()));
+        if (args[0].isArray()) return Value::fromInt(static_cast<int64_t>(args[0].getArray()->size()));
         return Value::fromInt(0);
     });
 
@@ -56,7 +56,7 @@ Evaluator::Evaluator() {
         if (args[0].isInt()) return args[0];
         if (args[0].isNumber()) return Value::fromInt(static_cast<int64_t>(args[0].floatVal));
         if (args[0].isString()) {
-            try { return Value::fromInt(std::stoll(*args[0].stringVal)); }
+            try { return Value::fromInt(std::stoll(*args[0].getString())); }
             catch (...) { return Value::fromInt(0); }
         }
         return Value::fromInt(0);
@@ -81,14 +81,14 @@ Evaluator::Evaluator() {
 
     defineNative("push", [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.size() < 2 || !args[0].isArray()) return Value::nil();
-        args[0].arrayVal->push_back(args[1]);
+        args[0].getArray()->push_back(args[1]);
         return Value::nil();
     });
 
     defineNative("pop", [](Evaluator&, const std::vector<Value>& args) -> Value {
-        if (args.empty() || !args[0].isArray() || args[0].arrayVal->empty()) return Value::nil();
-        Value val = args[0].arrayVal->back();
-        args[0].arrayVal->pop_back();
+        if (args.empty() || !args[0].isArray() || args[0].getArray()->empty()) return Value::nil();
+        Value val = args[0].getArray()->back();
+        args[0].getArray()->pop_back();
         return val;
     });
 }
@@ -242,14 +242,14 @@ Value Evaluator::evalCall(const ASTNode& node) {
 
     if (callee.type == ValueType::NATIVE_FUNCTION) {
         try {
-            return (*callee.nativeVal)(*this, args);
+            return (*callee.getNative())(*this, args);
         } catch (const std::exception& e) {
             throw RuntimeError(node, e.what());
         }
     }
 
     if (callee.type == ValueType::FUNCTION) {
-        const auto& fd = *callee.funcVal;
+        const auto& fd = *callee.getFunction();
         if (args.size() != fd.params.size())
             throw RuntimeError(node, "Expected " + std::to_string(fd.params.size()) +
                                      " arguments but got " + std::to_string(args.size()));
@@ -270,32 +270,32 @@ Value Evaluator::evalMemberAccess(const ASTNode& node) {
 
     // Struct instance field access
     if (left.type == ValueType::STRUCT_INSTANCE) {
-        auto it = left.structVal->fields.find(node.name);
-        if (it != left.structVal->fields.end()) return it->second;
-        throw RuntimeError(node, "Undefined field '" + node.name + "' on struct '" + left.structVal->typeName + "'");
+        auto it = left.getStruct()->fields.find(node.name);
+        if (it != left.getStruct()->fields.end()) return it->second;
+        throw RuntimeError(node, "Undefined field '" + node.name + "' on struct '" + left.getStruct()->typeName + "'");
     }
 
     // Stdlib module member access (module stored as MAP with native functions)
-    if (left.type == ValueType::MAP && left.mapVal) {
+    if (left.type == ValueType::MAP && left.getMap()) {
         // Module methods stored as entries in the map
         Value key = Value::fromString(node.name);
-        auto it = left.mapVal->entries.find(key);
-        if (it != left.mapVal->entries.end()) return it->second;
+        auto it = left.getMap()->entries.find(key);
+        if (it != left.getMap()->entries.end()) return it->second;
         throw RuntimeError(node, "Undefined method '" + node.name + "' on module");
     }
 
     // Array built-in methods
     if (left.type == ValueType::ARRAY) {
-        if (node.name == "length") return Value::fromInt(static_cast<int64_t>(left.arrayVal->size()));
+        if (node.name == "length") return Value::fromInt(static_cast<int64_t>(left.getArray()->size()));
         if (node.name == "push") {
-            auto captured = left.arrayVal;
+            auto captured = left.getArray();
             return Value::fromNative([captured](Evaluator&, const std::vector<Value>& args) -> Value {
                 if (!args.empty()) captured->push_back(args[0]);
                 return Value::nil();
             });
         }
         if (node.name == "pop") {
-            auto captured = left.arrayVal;
+            auto captured = left.getArray();
             return Value::fromNative([captured](Evaluator&, const std::vector<Value>&) -> Value {
                 if (captured->empty()) return Value::nil();
                 Value v = captured->back();
@@ -307,7 +307,7 @@ Value Evaluator::evalMemberAccess(const ASTNode& node) {
 
     // String built-in methods
     if (left.type == ValueType::STRING) {
-        if (node.name == "length") return Value::fromInt(static_cast<int64_t>(left.stringVal->size()));
+        if (node.name == "length") return Value::fromInt(static_cast<int64_t>(left.getString()->size()));
     }
 
     throw RuntimeError(node, "Cannot access member '" + node.name + "' on " + left.toString());
@@ -319,7 +319,7 @@ Value Evaluator::evalIndexAccess(const ASTNode& node) {
 
     if (left.type == ValueType::ARRAY && index.type == ValueType::INT) {
         int64_t i = index.intVal;
-        auto& arr = *left.arrayVal;
+        auto& arr = *left.getArray();
         if (i < 0) i += static_cast<int64_t>(arr.size());
         if (i < 0 || i >= static_cast<int64_t>(arr.size()))
             throw RuntimeError(node, "Array index out of bounds: " + std::to_string(index.intVal));
@@ -327,14 +327,14 @@ Value Evaluator::evalIndexAccess(const ASTNode& node) {
     }
 
     if (left.type == ValueType::MAP) {
-        auto it = left.mapVal->entries.find(index);
-        if (it != left.mapVal->entries.end()) return it->second;
+        auto it = left.getMap()->entries.find(index);
+        if (it != left.getMap()->entries.end()) return it->second;
         return Value::nil();
     }
 
     if (left.type == ValueType::STRING && index.type == ValueType::INT) {
         int64_t i = index.intVal;
-        auto& str = *left.stringVal;
+        auto& str = *left.getString();
         if (i < 0) i += static_cast<int64_t>(str.size());
         if (i < 0 || i >= static_cast<int64_t>(str.size()))
             throw RuntimeError(node, "String index out of bounds");
@@ -390,11 +390,11 @@ Value Evaluator::executeMemberAssign(const ASTNode& node) {
     Value obj = evalNode(node.left);
     Value val = evalNode(node.right);
     if (obj.type == ValueType::STRUCT_INSTANCE) {
-        obj.structVal->fields[node.name] = val;
+        obj.getStruct()->fields[node.name] = val;
         return val;
     }
     if (obj.type == ValueType::MAP) {
-        obj.mapVal->entries[Value::fromString(node.name)] = val;
+        obj.getMap()->entries[Value::fromString(node.name)] = val;
         return val;
     }
     throw RuntimeError(node, "Cannot assign member on non-struct/map value");
@@ -406,7 +406,7 @@ Value Evaluator::executeIndexAssign(const ASTNode& node) {
     Value val = evalNode(node.extra);
 
     if (obj.type == ValueType::ARRAY && index.type == ValueType::INT) {
-        auto& arr = *obj.arrayVal;
+        auto& arr = *obj.getArray();
         int64_t i = index.intVal;
         if (i < 0) i += static_cast<int64_t>(arr.size());
         if (i < 0 || i >= static_cast<int64_t>(arr.size()))
@@ -415,7 +415,7 @@ Value Evaluator::executeIndexAssign(const ASTNode& node) {
         return val;
     }
     if (obj.type == ValueType::MAP) {
-        obj.mapVal->entries[index] = val;
+        obj.getMap()->entries[index] = val;
         return val;
     }
     throw RuntimeError(node, "Cannot index-assign on this type");
@@ -447,7 +447,7 @@ Value Evaluator::executeFor(const ASTNode& node) {
     if (iterable.type != ValueType::ARRAY)
         throw RuntimeError(node, "Can only iterate over arrays");
     uint32_t iterCount = 0;
-    for (const auto& item : *iterable.arrayVal) {
+    for (const auto& item : *iterable.getArray()) {
         auto loopEnv = std::make_shared<Environment>(environment);
         loopEnv->define(node.name, item);
         evalBlock(node.right, loopEnv);

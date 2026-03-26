@@ -44,7 +44,7 @@ std::unordered_map<std::string, NativeFunction> getProcLibrary() {
             return Value::fromBool(ret == 0);
         }
         if (args[0].isString()) {
-            std::string cmd = "pgrep -x " + *args[0].stringVal + " > /dev/null 2>&1";
+            std::string cmd = "pgrep -x " + *args[0].getString() + " > /dev/null 2>&1";
             return Value::fromBool(std::system(cmd.c_str()) == 0);
         }
         return Value::fromBool(false);
@@ -52,7 +52,7 @@ std::unordered_map<std::string, NativeFunction> getProcLibrary() {
 
     funcs["pkill"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.empty() || !args[0].isString()) return Value::fromBool(false);
-        std::string cmd = "pkill " + *args[0].stringVal;
+        std::string cmd = "pkill " + *args[0].getString();
         return Value::fromBool(std::system(cmd.c_str()) == 0);
     };
 

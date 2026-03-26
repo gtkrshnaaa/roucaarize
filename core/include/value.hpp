@@ -19,6 +19,8 @@ namespace roucaarize {
 
 class Evaluator;
 struct Value;
+struct MapInstance;
+
 
 enum class ValueType : uint8_t {
     NIL,

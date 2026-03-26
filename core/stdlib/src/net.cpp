@@ -34,14 +34,14 @@ std::unordered_map<std::string, NativeFunction> getNetLibrary() {
 
     funcs["ping"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.empty() || !args[0].isString()) return Value::fromBool(false);
-        std::string cmd = "ping -c 1 -W 2 " + *args[0].stringVal + " > /dev/null 2>&1";
+        std::string cmd = "ping -c 1 -W 2 " + *args[0].getString() + " > /dev/null 2>&1";
         int ret = std::system(cmd.c_str());
         return Value::fromBool(ret == 0);
     };
 
     funcs["fetch"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.empty() || !args[0].isString()) return Value::nil();
-        std::string cmd = "curl -s " + *args[0].stringVal;
+        std::string cmd = "curl -s " + *args[0].getString();
         return Value::fromString(runCmd(cmd));
     };
 

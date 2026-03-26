@@ -23,7 +23,7 @@ std::unordered_map<std::string, NativeFunction> getFsLibrary() {
 
     funcs["read"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.empty() || !args[0].isString()) return Value::nil();
-        std::ifstream file(*args[0].stringVal);
+        std::ifstream file(*args[0].getString());
         if (!file) return Value::nil();
         std::stringstream buf;
         buf << file.rdbuf();
@@ -33,37 +33,37 @@ std::unordered_map<std::string, NativeFunction> getFsLibrary() {
     funcs["write"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.size() < 2 || !args[0].isString() || !args[1].isString())
             return Value::fromBool(false);
-        std::ofstream file(*args[0].stringVal);
+        std::ofstream file(*args[0].getString());
         if (!file) return Value::fromBool(false);
-        file << *args[1].stringVal;
+        file << *args[1].getString();
         return Value::fromBool(true);
     };
 
     funcs["append"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.size() < 2 || !args[0].isString() || !args[1].isString())
             return Value::fromBool(false);
-        std::ofstream file(*args[0].stringVal, std::ios::app);
+        std::ofstream file(*args[0].getString(), std::ios::app);
         if (!file) return Value::fromBool(false);
-        file << *args[1].stringVal;
+        file << *args[1].getString();
         return Value::fromBool(true);
     };
 
     funcs["exists"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.empty() || !args[0].isString()) return Value::fromBool(false);
-        return Value::fromBool(stdfs::exists(*args[0].stringVal));
+        return Value::fromBool(stdfs::exists(*args[0].getString()));
     };
 
     funcs["mkdir"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.empty() || !args[0].isString()) return Value::fromBool(false);
         std::error_code ec;
-        bool ok = stdfs::create_directories(*args[0].stringVal, ec);
+        bool ok = stdfs::create_directories(*args[0].getString(), ec);
         return Value::fromBool(ok || !ec);
     };
 
     funcs["remove"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.empty() || !args[0].isString()) return Value::fromBool(false);
         std::error_code ec;
-        auto count = stdfs::remove_all(*args[0].stringVal, ec);
+        auto count = stdfs::remove_all(*args[0].getString(), ec);
         return Value::fromBool(count > 0 && !ec);
     };
 
@@ -71,7 +71,7 @@ std::unordered_map<std::string, NativeFunction> getFsLibrary() {
         if (args.size() < 2 || !args[0].isString() || !args[1].isString())
             return Value::fromBool(false);
         std::error_code ec;
-        stdfs::copy(*args[0].stringVal, *args[1].stringVal,
+        stdfs::copy(*args[0].getString(), *args[1].getString(),
                     stdfs::copy_options::recursive | stdfs::copy_options::overwrite_existing, ec);
         return Value::fromBool(!ec);
     };
@@ -80,20 +80,20 @@ std::unordered_map<std::string, NativeFunction> getFsLibrary() {
         if (args.size() < 2 || !args[0].isString() || !args[1].isString())
             return Value::fromBool(false);
         std::error_code ec;
-        stdfs::rename(*args[0].stringVal, *args[1].stringVal, ec);
+        stdfs::rename(*args[0].getString(), *args[1].getString(), ec);
         return Value::fromBool(!ec);
     };
 
     funcs["isDir"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.empty() || !args[0].isString()) return Value::fromBool(false);
-        return Value::fromBool(stdfs::is_directory(*args[0].stringVal));
+        return Value::fromBool(stdfs::is_directory(*args[0].getString()));
     };
 
     funcs["chmod"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.size() < 2 || !args[0].isString() || !args[1].isInt())
             return Value::fromBool(false);
         std::error_code ec;
-        stdfs::permissions(*args[0].stringVal,
+        stdfs::permissions(*args[0].getString(),
                            static_cast<stdfs::perms>(args[1].intVal),
                            stdfs::perm_options::replace, ec);
         return Value::fromBool(!ec);

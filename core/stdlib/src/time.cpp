@@ -57,7 +57,7 @@ std::unordered_map<std::string, NativeFunction> getTimeLibrary() {
 
     funcs["format"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         std::string format = "%Y-%m-%d %H:%M:%S";
-        if (!args.empty() && args[0].isString()) format = *args[0].stringVal;
+        if (!args.empty() && args[0].isString()) format = *args[0].getString();
         auto now = std::chrono::system_clock::now();
         auto time = std::chrono::system_clock::to_time_t(now);
         auto tm = std::localtime(&time);

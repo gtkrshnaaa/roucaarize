@@ -40,25 +40,25 @@ std::unordered_map<std::string, NativeFunction> getStringLibrary() {
 
     funcs["toUpperCase"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.empty() || !args[0].isString()) return Value::nil();
-        return Value::fromString(strToUpper(*args[0].stringVal));
+        return Value::fromString(strToUpper(*args[0].getString()));
     };
 
     funcs["toLowerCase"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.empty() || !args[0].isString()) return Value::nil();
-        return Value::fromString(strToLower(*args[0].stringVal));
+        return Value::fromString(strToLower(*args[0].getString()));
     };
 
     funcs["trim"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.empty() || !args[0].isString()) return Value::nil();
-        return Value::fromString(strTrim(*args[0].stringVal));
+        return Value::fromString(strTrim(*args[0].getString()));
     };
 
     funcs["split"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.size() < 2 || !args[0].isString() || !args[1].isString()) {
             return Value::fromArray({});
         }
-        std::string text = *args[0].stringVal;
-        std::string delim = *args[1].stringVal;
+        std::string text = *args[0].getString();
+        std::string delim = *args[1].getString();
         std::vector<Value> arr;
         size_t pos = 0;
         while ((pos = text.find(delim)) != std::string::npos) {
@@ -72,9 +72,9 @@ std::unordered_map<std::string, NativeFunction> getStringLibrary() {
     funcs["replace"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.size() < 3 || !args[0].isString() || !args[1].isString() || !args[2].isString())
             return args.empty() ? Value::nil() : args[0];
-        std::string text = *args[0].stringVal;
-        std::string from = *args[1].stringVal;
-        std::string to = *args[2].stringVal;
+        std::string text = *args[0].getString();
+        std::string from = *args[1].getString();
+        std::string to = *args[2].getString();
         if (from.empty()) return Value::fromString(text);
         size_t start = 0;
         while ((start = text.find(from, start)) != std::string::npos) {
@@ -87,7 +87,7 @@ std::unordered_map<std::string, NativeFunction> getStringLibrary() {
     funcs["substring"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.size() < 3 || !args[0].isString() || !args[1].isInt() || !args[2].isInt())
             return Value::fromString("");
-        std::string text = *args[0].stringVal;
+        std::string text = *args[0].getString();
         int64_t start = args[1].intVal;
         int64_t length = args[2].intVal;
         if (start < 0) start = 0;
@@ -99,21 +99,21 @@ std::unordered_map<std::string, NativeFunction> getStringLibrary() {
     funcs["contains"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.size() < 2 || !args[0].isString() || !args[1].isString())
             return Value::fromBool(false);
-        return Value::fromBool(args[0].stringVal->find(*args[1].stringVal) != std::string::npos);
+        return Value::fromBool(args[0].getString()->find(*args[1].getString()) != std::string::npos);
     };
 
     funcs["indexOf"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.size() < 2 || !args[0].isString() || !args[1].isString())
             return Value::fromInt(-1);
-        size_t pos = args[0].stringVal->find(*args[1].stringVal);
+        size_t pos = args[0].getString()->find(*args[1].getString());
         return Value::fromInt(pos == std::string::npos ? -1 : static_cast<int64_t>(pos));
     };
 
     funcs["startsWith"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.size() < 2 || !args[0].isString() || !args[1].isString())
             return Value::fromBool(false);
-        const auto& text = *args[0].stringVal;
-        const auto& prefix = *args[1].stringVal;
+        const auto& text = *args[0].getString();
+        const auto& prefix = *args[1].getString();
         if (prefix.length() > text.length()) return Value::fromBool(false);
         return Value::fromBool(std::equal(prefix.begin(), prefix.end(), text.begin()));
     };
@@ -121,15 +121,15 @@ std::unordered_map<std::string, NativeFunction> getStringLibrary() {
     funcs["endsWith"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.size() < 2 || !args[0].isString() || !args[1].isString())
             return Value::fromBool(false);
-        const auto& text = *args[0].stringVal;
-        const auto& suffix = *args[1].stringVal;
+        const auto& text = *args[0].getString();
+        const auto& suffix = *args[1].getString();
         if (suffix.length() > text.length()) return Value::fromBool(false);
         return Value::fromBool(std::equal(suffix.rbegin(), suffix.rend(), text.rbegin()));
     };
 
     funcs["length"] = [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.empty() || !args[0].isString()) return Value::fromInt(0);
-        return Value::fromInt(static_cast<int64_t>(args[0].stringVal->size()));
+        return Value::fromInt(static_cast<int64_t>(args[0].getString()->size()));
     };
 
     return funcs;
