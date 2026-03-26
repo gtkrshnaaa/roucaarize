@@ -6,7 +6,7 @@
  */
 
 #include "lexer.hpp"
-#include "error_formatter.hpp"
+#include "errorFormatter.hpp"
 #include <charconv>
 #include <array>
 

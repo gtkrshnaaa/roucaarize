@@ -25,7 +25,7 @@
 #include "time.hpp"
 #include "runtimeGuard.hpp"
 #include "error.hpp"
-#include "error_formatter.hpp"
+#include "errorFormatter.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>

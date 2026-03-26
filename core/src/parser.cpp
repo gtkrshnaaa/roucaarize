@@ -6,7 +6,7 @@
  */
 
 #include "parser.hpp"
-#include "error_formatter.hpp"
+#include "errorFormatter.hpp"
 #include <iostream>
 
 namespace roucaarize {
