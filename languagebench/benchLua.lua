@@ -1,41 +1,102 @@
-local function fib(n)
-    if n <= 1 then return n end
-    return fib(n - 1) + fib(n - 2)
+local obj = {}
+obj.__index = obj
+
+function obj:new()
+    local o = {val = 0}
+    setmetatable(o, obj)
+    return o
 end
 
-local function runLoop()
-    local sum = 0
+local function printHeader()
+    print("  -------------------------------------------------------------")
+    print(string.format("  %-15s | %15s | Time", "Benchmark", "Performance"))
+    print("  -------------------------------------------------------------")
+end
+
+local function printResult(name, ops, sec)
+    if sec == 0 then sec = 0.0001 end
+    print(string.format("  %-15s | %15.2f OPS/sec | %.4fs", name, ops, sec))
+end
+
+local function benchInt()
+    local limit = 1000000000
+    local start = os.clock()
     local i = 0
-    while i < 300000 do
-        sum = sum + i
+    while i < limit do
         i = i + 1
     end
-    return sum
+    local sec = os.clock() - start
+    if sec == 0 then sec = 0.0001 end
+    local ops = limit / sec
+    printResult("Integer Add", ops, sec)
 end
 
-local function runArray()
+local function benchDouble()
+    local limit = 100000000
+    local val = 0.0
+    local start = os.clock()
+    local i = 0
+    while i < limit do
+        val = val + 1.1
+        i = i + 1
+    end
+    local sec = os.clock() - start
+    if sec == 0 then sec = 0.0001 end
+    local ops = limit / sec
+    printResult("Double Arith", ops, sec)
+end
+
+local function benchString()
+    local limit = 500000
+    local start = os.clock()
+    local s = ""
+    local i = 0
+    while i < limit do
+        s = s .. "a"
+        i = i + 1
+    end
+    local sec = os.clock() - start
+    if sec == 0 then sec = 0.0001 end
+    local ops = limit / sec
+    printResult("String Concat", ops, sec)
+end
+
+local function benchArray()
+    local limit = 1000000
+    local start = os.clock()
     local arr = {}
     local i = 0
-    while i < 20000 do
+    while i < limit do
         table.insert(arr, i)
         i = i + 1
     end
-    return #arr
+    local sec = os.clock() - start
+    if sec == 0 then sec = 0.0001 end
+    local ops = limit / sec
+    printResult("Array Push", ops, sec)
 end
 
-local function runMap()
-    local m = {}
+local function benchStruct()
+    local limit = 50000000
+    local o = obj:new()
+    local start = os.clock()
     local i = 0
-    while i < 10000 do
-        m["k" .. tostring(i)] = i
+    while i < limit do
+        o.val = i
+        local x = o.val
         i = i + 1
     end
-    return i
+    local sec = os.clock() - start
+    if sec == 0 then sec = 0.0001 end
+    local ops = limit / sec
+    printResult("Struct Access", ops, sec)
 end
 
-print("Starting benchmarks...")
-print("Fib(23): " .. tostring(fib(23)))
-print("Loop Sum: " .. tostring(runLoop()))
-print("Array Size: " .. tostring(runArray()))
-print("Map Entries: " .. tostring(runMap()))
-print("Done!")
+print(">>> Lua Benchmark Suite <<<")
+printHeader()
+benchInt()
+benchDouble()
+benchString()
+benchArray()
+benchStruct()
+print("  -------------------------------------------------------------")

@@ -1,34 +1,90 @@
-def fib(n):
-    if n <= 1: return n
-    return fib(n - 1) + fib(n - 2)
+import time
 
-def runLoop():
-    sum_val = 0
+class Obj:
+    def __init__(self):
+        self.val = 0
+
+def printHeader():
+    print("  -------------------------------------------------------------")
+    print(f"  {'Benchmark':<15} | {'Performance':>15} | Time")
+    print("  -------------------------------------------------------------")
+
+def printResult(name, ops, sec):
+    if sec == 0: sec = 0.0001
+    ops_str = f"{ops:,.2f}"
+    print(f"  {name:<15} | {ops_str:>15} OPS/sec | {sec:.4f}s")
+
+def benchInt():
+    limit = 1000000000
+    start = time.time()
     i = 0
-    while i < 300000:
-        sum_val += i
+    while i < limit:
         i += 1
-    return sum_val
+    end = time.time()
+    sec = end - start
+    ops = limit / sec if sec > 0 else limit / 0.0001
+    printResult("Integer Add", ops, sec)
 
-def runArray():
+def benchDouble():
+    limit = 100000000
+    val = 0.0
+    start = time.time()
+    i = 0
+    while i < limit:
+        val += 1.1
+        i += 1
+    end = time.time()
+    sec = end - start
+    ops = limit / sec if sec > 0 else limit / 0.0001
+    printResult("Double Arith", ops, sec)
+
+def benchString():
+    limit = 500000
+    start = time.time()
+    s = ""
+    i = 0
+    while i < limit:
+        s += "a"
+        i += 1
+    end = time.time()
+    sec = end - start
+    ops = limit / sec if sec > 0 else limit / 0.0001
+    printResult("String Concat", ops, sec)
+
+def benchArray():
+    limit = 1000000
+    start = time.time()
     arr = []
     i = 0
-    while i < 20000:
+    while i < limit:
         arr.append(i)
         i += 1
-    return len(arr)
+    end = time.time()
+    sec = end - start
+    ops = limit / sec if sec > 0 else limit / 0.0001
+    printResult("Array Push", ops, sec)
 
-def runMap():
-    m = {}
+def benchStruct():
+    limit = 50000000
+    o = Obj()
+    start = time.time()
     i = 0
-    while i < 10000:
-        m["k" + str(i)] = i
+    while i < limit:
+        o.val = i
+        x = o.val
         i += 1
-    return i
+    end = time.time()
+    sec = end - start
+    ops = limit / sec if sec > 0 else limit / 0.0001
+    printResult("Struct Access", ops, sec)
 
-print("Starting benchmarks...")
-print("Fib(23): " + str(fib(23)))
-print("Loop Sum: " + str(runLoop()))
-print("Array Size: " + str(runArray()))
-print("Map Entries: " + str(runMap()))
-print("Done!")
+if __name__ == "__main__":
+    print(">>> Python 3 Benchmark Suite <<<")
+    printHeader()
+    benchInt()
+    benchDouble()
+    benchString()
+    benchArray()
+    benchStruct()
+    print("  -------------------------------------------------------------")
+    print("")
