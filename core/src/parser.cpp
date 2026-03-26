@@ -73,15 +73,17 @@ NodeIndex Parser::parse() {
 
 NodeIndex Parser::program() {
     ASTNode node(NodeType::PROGRAM, 1, 1);
+    std::vector<NodeIndex> children;
     while (!isAtEnd() && !tooManyErrors()) {
         if (match(TokenType::NEWLINE) || match(TokenType::SEMICOLON)) continue;
         size_t before = current;
-        node.children.push_back(declaration());
+        children.push_back(declaration());
         // Stall detection: if no token was consumed, force advance
         if (current == before && !isAtEnd()) {
             advance();
         }
     }
+    node.childrenIdx = ast.addChildren(std::move(children));
     return ast.addNode(std::move(node));
 }
 
@@ -97,14 +99,16 @@ NodeIndex Parser::funcDeclaration() {
     Token name = consume(TokenType::IDENTIFIER, "Expected function name");
     consume(TokenType::LPAREN, "Expected '(' after function name");
     ASTNode node(NodeType::FUNC_DECL, name.line, name.column);
-    node.name = std::string(name.lexeme);
+    node.nameIdx = ast.addString(std::string(name.lexeme));
+    std::vector<uint32_t> params;
     if (!check(TokenType::RPAREN) && !isAtEnd()) {
         do {
             if (tooManyErrors()) break;
             Token p = consume(TokenType::IDENTIFIER, "Expected parameter name");
-            node.paramNames.push_back(std::string(p.lexeme));
+            params.push_back(ast.addString(std::string(p.lexeme)));
         } while (match(TokenType::COMMA));
     }
+    node.paramsIdx = ast.addParams(std::move(params));
     consume(TokenType::RPAREN, "Expected ')' after parameters");
     consume(TokenType::LBRACE, "Expected '{' before function body");
     node.left = block();
@@ -114,15 +118,17 @@ NodeIndex Parser::funcDeclaration() {
 NodeIndex Parser::structDeclaration() {
     Token name = consume(TokenType::IDENTIFIER, "Expected struct name");
     ASTNode node(NodeType::STRUCT_DECL, name.line, name.column);
-    node.name = std::string(name.lexeme);
+    node.nameIdx = ast.addString(std::string(name.lexeme));
     consume(TokenType::LBRACE, "Expected '{' before struct fields");
+    std::vector<uint32_t> params;
     while (!check(TokenType::RBRACE) && !isAtEnd() && !tooManyErrors()) {
         while (match(TokenType::NEWLINE)) {}
         if (check(TokenType::RBRACE)) break;
         Token f = consume(TokenType::IDENTIFIER, "Expected field name");
-        node.paramNames.push_back(std::string(f.lexeme));
+        params.push_back(ast.addString(std::string(f.lexeme)));
         if (!check(TokenType::RBRACE)) match(TokenType::COMMA);
     }
+    node.paramsIdx = ast.addParams(std::move(params));
     consume(TokenType::RBRACE, "Expected '}' after struct fields");
     return ast.addNode(std::move(node));
 }
@@ -134,16 +140,20 @@ NodeIndex Parser::importStatement() {
         consume(TokenType::AS, "Expected 'as' after library name");
         Token alias = consume(TokenType::IDENTIFIER, "Expected alias name");
         ASTNode node(NodeType::IMPORT_STDLIB, first.line, first.column);
-        node.name = std::string(lib.lexeme);
-        node.paramNames.push_back(std::string(alias.lexeme));
+        node.nameIdx = ast.addString(std::string(lib.lexeme));
+        std::vector<uint32_t> params;
+        params.push_back(ast.addString(std::string(alias.lexeme)));
+        node.paramsIdx = ast.addParams(std::move(params));
         return ast.addNode(std::move(node));
     } else if (match(TokenType::STRING)) {
         Token path = previous();
         consume(TokenType::AS, "Expected 'as' after import path");
         Token alias = consume(TokenType::IDENTIFIER, "Expected alias name");
         ASTNode node(NodeType::IMPORT_FILE, first.line, first.column);
-        node.name = std::string(path.lexeme.substr(1, path.lexeme.size() - 2));
-        node.paramNames.push_back(std::string(alias.lexeme));
+        node.nameIdx = ast.addString(std::string(path.lexeme.substr(1, path.lexeme.size() - 2)));
+        std::vector<uint32_t> params;
+        params.push_back(ast.addString(std::string(alias.lexeme)));
+        node.paramsIdx = ast.addParams(std::move(params));
         return ast.addNode(std::move(node));
     }
     error(first, "Expected 'stdlib' or file path after 'import'");
@@ -190,7 +200,7 @@ NodeIndex Parser::forStatement() {
     consume(TokenType::RPAREN, "Expected ')' after for clause");
     NodeIndex body = block();
     ASTNode node(NodeType::FOR_STMT, first.line, first.column);
-    node.name = std::string(iter.lexeme);
+    node.nameIdx = ast.addString(std::string(iter.lexeme));
     node.left = iterable;
     node.right = body;
     return ast.addNode(std::move(node));
@@ -231,7 +241,9 @@ NodeIndex Parser::tryStatement() {
     ASTNode node(NodeType::TRY_STMT, first.line, first.column);
     node.left = tryBody;
     node.right = catchBody;
-    node.name = errVar;
+    if (!errVar.empty()) {
+        node.nameIdx = ast.addString(errVar);
+    }
     if (match(TokenType::FINALLY)) {
         node.extra = block();
     }
@@ -248,11 +260,12 @@ NodeIndex Parser::throwStatement() {
 NodeIndex Parser::block() {
     Token first = previous();
     ASTNode node(NodeType::BLOCK, first.line, first.column);
+    std::vector<NodeIndex> children;
     if (first.type == TokenType::LBRACE) {
         while (!check(TokenType::RBRACE) && !isAtEnd() && !tooManyErrors()) {
             if (match(TokenType::NEWLINE) || match(TokenType::SEMICOLON)) continue;
             size_t before = current;
-            node.children.push_back(declaration());
+            children.push_back(declaration());
             // Stall detection: break if no token was consumed
             if (current == before && !isAtEnd()) {
                 advance();
@@ -260,8 +273,9 @@ NodeIndex Parser::block() {
         }
         consume(TokenType::RBRACE, "Expected '}' after block");
     } else {
-        node.children.push_back(declaration());
+        children.push_back(declaration());
     }
+    node.childrenIdx = ast.addChildren(std::move(children));
     return ast.addNode(std::move(node));
 }
 
@@ -287,13 +301,13 @@ NodeIndex Parser::assignment() {
         const ASTNode& target = ast.get(expr);
         if (target.type == NodeType::IDENTIFIER) {
             ASTNode node(NodeType::VAR_ASSIGN, target.line, target.column);
-            node.name = target.name;
+            node.nameIdx = target.nameIdx;
             node.left = val;
             return ast.addNode(std::move(node));
         } else if (target.type == NodeType::MEMBER_ACCESS) {
             ASTNode node(NodeType::MEMBER_ASSIGN, target.line, target.column);
             node.left = target.left;
-            node.name = target.name;
+            node.nameIdx = target.nameIdx;
             node.right = val;
             return ast.addNode(std::move(node));
         } else if (target.type == NodeType::INDEX_ACCESS) {
@@ -422,14 +436,14 @@ NodeIndex Parser::postfix() {
             Token t = previous();
             ASTNode node(NodeType::CALL, t.line, t.column);
             node.left = expr;
-            node.children = argumentList();
+            node.childrenIdx = ast.addChildren(argumentList());
             consume(TokenType::RPAREN, "Expected ')' after arguments");
             expr = ast.addNode(std::move(node));
         } else if (match(TokenType::DOT)) {
             Token name = consume(TokenType::IDENTIFIER, "Expected member name");
             ASTNode node(NodeType::MEMBER_ACCESS, name.line, name.column);
             node.left = expr;
-            node.name = std::string(name.lexeme);
+            node.nameIdx = ast.addString(std::string(name.lexeme));
             expr = ast.addNode(std::move(node));
         } else if (match(TokenType::LBRACKET)) {
             Token t = previous();
@@ -464,13 +478,12 @@ NodeIndex Parser::primary() {
     }
     if (match(TokenType::STRING)) {
         ASTNode n(NodeType::LITERAL_STRING, previous().line, previous().column);
-        n.name = std::string(previous().lexeme.substr(1, previous().lexeme.size() - 2));
-        n.literal = LiteralValue(n.name);
+        n.nameIdx = ast.addString(std::string(previous().lexeme.substr(1, previous().lexeme.size() - 2)));
         return ast.addNode(std::move(n));
     }
     if (match(TokenType::IDENTIFIER)) {
         ASTNode n(NodeType::IDENTIFIER, previous().line, previous().column);
-        n.name = std::string(previous().lexeme);
+        n.nameIdx = ast.addString(std::string(previous().lexeme));
         return ast.addNode(std::move(n));
     }
     if (match(TokenType::LPAREN)) {
@@ -481,35 +494,39 @@ NodeIndex Parser::primary() {
     if (match(TokenType::LBRACKET)) {
         Token first = previous();
         ASTNode node(NodeType::ARRAY_LITERAL, first.line, first.column);
+        std::vector<NodeIndex> children;
         while (match(TokenType::NEWLINE)) {}
         if (!check(TokenType::RBRACKET)) {
             do {
                 while (match(TokenType::NEWLINE)) {}
                 if (check(TokenType::RBRACKET)) break;
-                node.children.push_back(expression());
+                children.push_back(expression());
                 while (match(TokenType::NEWLINE)) {}
             } while (match(TokenType::COMMA));
         }
         while (match(TokenType::NEWLINE)) {}
         consume(TokenType::RBRACKET, "Expected ']' after array elements");
+        node.childrenIdx = ast.addChildren(std::move(children));
         return ast.addNode(std::move(node));
     }
     if (match(TokenType::LBRACE)) {
         Token first = previous();
         ASTNode node(NodeType::MAP_LITERAL, first.line, first.column);
+        std::vector<NodeIndex> children;
         while (match(TokenType::NEWLINE)) {}
         if (!check(TokenType::RBRACE)) {
             do {
                 while (match(TokenType::NEWLINE)) {}
                 if (check(TokenType::RBRACE)) break;
-                node.children.push_back(expression());
+                children.push_back(expression());
                 consume(TokenType::COLON, "Expected ':' after key");
-                node.children.push_back(expression());
+                children.push_back(expression());
                 while (match(TokenType::NEWLINE)) {}
             } while (match(TokenType::COMMA));
         }
         while (match(TokenType::NEWLINE)) {}
         consume(TokenType::RBRACE, "Expected '}' after map elements");
+        node.childrenIdx = ast.addChildren(std::move(children));
         return ast.addNode(std::move(node));
     }
 
