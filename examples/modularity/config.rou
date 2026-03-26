@@ -1,0 +1,11 @@
+// config.rou
+// Global configuration settings
+
+struct Config {
+    debug,
+    precision
+}
+
+function getConfig() {
+    return Config(true, 2)
+}

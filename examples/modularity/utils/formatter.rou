@@ -1,6 +1,15 @@
 // utils/formatter.rou
 // Formatting utility functions
 
+import "../config.rou" as config
+
 function formatResult(operation, a, b, result) {
-    return operation + " of " + toString(a) + " and " + toString(b) + " is: " + toString(result)
+    prefix = ""
+    cfg = config.getConfig()
+    
+    if (cfg.debug) {
+        prefix = "[DEBUG] "
+    }
+    
+    return prefix + operation + " of " + toString(a) + " and " + toString(b) + " is: " + toString(result)
 }
