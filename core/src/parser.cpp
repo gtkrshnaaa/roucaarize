@@ -88,6 +88,8 @@ NodeIndex Parser::structDeclaration() {
     node.name = std::string(name.lexeme);
     consume(TokenType::LBRACE, "Expected '{' before struct fields");
     while (!check(TokenType::RBRACE) && !isAtEnd()) {
+        while (match(TokenType::NEWLINE)) {}
+        if (check(TokenType::RBRACE)) break;
         Token f = consume(TokenType::IDENTIFIER, "Expected field name");
         node.paramNames.push_back(std::string(f.lexeme));
         if (!check(TokenType::RBRACE)) match(TokenType::COMMA);
@@ -95,6 +97,7 @@ NodeIndex Parser::structDeclaration() {
     consume(TokenType::RBRACE, "Expected '}' after struct fields");
     return ast.addNode(std::move(node));
 }
+
 
 NodeIndex Parser::importStatement() {
     Token first = previous();
