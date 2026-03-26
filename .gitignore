@@ -1,4 +1,4 @@
 bin/
 *.o
 *.rou
-/test.rou
+/examples/*.rou
