@@ -64,9 +64,9 @@ Evaluator::Evaluator() {
     });
 
     defineNative("typeof", [](Evaluator&, const std::vector<Value>& args) -> Value {
-        if (args.empty()) return Value::fromString("nil");
+        if (args.empty()) return Value::fromString("null");
         switch (args[0].type) {
-            case ValueType::NIL: return Value::fromString("nil");
+            case ValueType::NIL: return Value::fromString("null");
             case ValueType::BOOL: return Value::fromString("bool");
             case ValueType::INT: return Value::fromString("int");
             case ValueType::FLOAT: return Value::fromString("float");

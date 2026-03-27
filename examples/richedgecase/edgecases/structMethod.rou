@@ -9,7 +9,7 @@ function tempFunction(x) {
 }
 
 function testStructCall() {
-    runner = ActionRunner("Hero", nil)
+    runner = ActionRunner("Hero", null)
     runner.execute = tempFunction
 
     result = runner.execute(5)

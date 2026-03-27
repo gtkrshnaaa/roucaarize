@@ -5,10 +5,10 @@ struct Node {
 }
 
 function testStructChaining() {
-    root = Node("root", nil, nil)
-    root.left = Node("left", nil, nil)
-    root.left.left = Node("left.left", nil, nil)
-    root.left.left.right = Node("deep target", nil, nil)
+    root = Node("root", null, null)
+    root.left = Node("left", null, null)
+    root.left.left = Node("left.left", null, null)
+    root.left.left.right = Node("deep target", null, null)
 
     print("Deep Struct Evaluation: " + root.left.left.right.val)
     if (root.left.left.right.val != "deep target") { print("FATAL: Struct depth evaluation failed!") }

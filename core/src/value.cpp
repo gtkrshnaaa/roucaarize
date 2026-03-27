@@ -14,7 +14,7 @@ namespace roucaarize {
 
 std::string Value::toString() const {
     switch (type) {
-        case ValueType::NIL: return "nil";
+        case ValueType::NIL: return "null";
         case ValueType::BOOL: return boolVal ? "true" : "false";
         case ValueType::INT: return std::to_string(intVal);
         case ValueType::FLOAT: {

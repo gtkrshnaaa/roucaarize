@@ -32,7 +32,7 @@ constexpr std::array<KeywordEntry, 21> keywords = {{
     {"stdlib", TokenType::STDLIB},
     {"true", TokenType::TRUE},
     {"false", TokenType::FALSE},
-    {"nil", TokenType::NIL},
+    {"null", TokenType::NIL},
     {"and", TokenType::AND},
     {"or", TokenType::OR},
     {"not", TokenType::NOT},

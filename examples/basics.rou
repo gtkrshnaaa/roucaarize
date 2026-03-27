@@ -141,7 +141,7 @@ print("== Type Info ==")
 showTypeInfo("42", 42)
 showTypeInfo("'hello'", "hello")
 showTypeInfo("true", true)
-showTypeInfo("nil", nil)
+showTypeInfo("null", null)
 
 print("")
 print("Basics example completed successfully.")
