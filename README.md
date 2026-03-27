@@ -75,4 +75,4 @@ we don't do anything too fancy. it's just a quiet pipeline:
 
 ## license
 
-mit. just take it. it's for the community, fr. 🧸
+mit. just for u, my developer, fr. 🧸
