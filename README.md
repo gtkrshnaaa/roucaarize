@@ -15,9 +15,9 @@
 
 ---
 
-### why roucaarize? (she's just a girl...)
+### why roucaarize? (just a smol thing...)
 
-- **tiny ram vibes:** she only needs like ~5mb to exist. perfect for your tiny containers. 
+- **tiny ram vibes:** only needs like ~5mb to exist. perfect for your tiny containers. 
 - **soft orchestration:** no more scary shell errors. it's all dynamic and chill, we use `try-catch` because we like being safe and comfy.
 - **cute syntax:** we only use `camelCase`. no underscores allowed, they're too loud. 
 - **honest speed:** we're not winning any races. we're just walking through the tree, one step at a time. it's peaceful.
@@ -27,7 +27,7 @@
 ### how to play
 
 - `roucaarize script.rou` (just run it, fr)
-- `roucaarize -g .` (she will check every `.rou` file recursively. so thorough 🧸)
+- `roucaarize -g .` (it checks every `.rou` file recursively. so thorough 🧸)
 
 
 ---
@@ -72,7 +72,7 @@ we don't do anything too fancy. it's just a quiet pipeline:
 
 ### standard library (smol but helpful)
 
-| module | import | what she does |
+| module | import | what it does |
 |--------|--------|-----------|
 | **sys** | `as sys` | talks to linux, gently |
 | **fs** | `as fs` | touches files with care |
