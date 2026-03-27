@@ -8,8 +8,8 @@ import stdlib string as str
 
 struct Node { name, size, children }
 
-function File(n, s) { return Node(n, s, []) }
-function Directory(n, childs) { return Node(n, 0, childs) }
+function createFile(n, s) { return Node(n, s, []) }
+function createDirectory(n, childs) { return Node(n, 0, childs) }
 
 function calculateDFSSize(node) {
     if (arr.length(node.children) == 0) {
@@ -30,14 +30,14 @@ function calculateDFSSize(node) {
 function testDFSFileSystem() {
     io.print("--- Testing DFS Virtual File System ---")
     
-    img1 = File("img1.png", 2000)
-    img2 = File("img2.png", 3500)
-    doc1 = File("readme.txt", 150)
+    img1 = createFile("img1.png", 2000)
+    img2 = createFile("img2.png", 3500)
+    doc1 = createFile("readme.txt", 150)
     
-    photosDir = Directory("Photos", [img1, img2])
-    textsDir = Directory("Text", [doc1])
+    photosDir = createDirectory("Photos", [img1, img2])
+    textsDir = createDirectory("Text", [doc1])
     
-    rootDir = Directory("Root", [photosDir, textsDir, File("sys.bin", 50000)])
+    rootDir = createDirectory("Root", [photosDir, textsDir, createFile("sys.bin", 50000)])
     
     totalSpace = calculateDFSSize(rootDir)
     io.print("Total virtual drive size: " + toString(totalSpace) + " bytes")
