@@ -68,7 +68,7 @@ private:
     std::vector<Diagnostic> diagnostics;
     std::vector<Scope> scopeStack;
     std::map<std::string, std::vector<std::string>> structFields;
-    std::set<std::string> importAliases;
+    std::map<std::string, std::string> importAliases;
 
     std::set<std::string> builtinFunctions;
     std::set<std::string> knownStdlibModules;

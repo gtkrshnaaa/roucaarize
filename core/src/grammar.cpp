@@ -110,7 +110,7 @@ void GrammarChecker::initBuiltins() {
     };
 
     knownStdlibModules = {
-        "sys", "fs", "net", "proc", "string", "io", "core", "array"
+        "sys", "fs", "net", "proc", "string", "io", "core", "array", "time"
     };
 
     stdlibMethods["sys"] = {
@@ -134,6 +134,19 @@ void GrammarChecker::initBuiltins() {
     stdlibMethods["string"] = {
         "toUpperCase", "toLowerCase", "trim", "split", "replace",
         "substring", "contains", "indexOf", "startsWith", "endsWith", "length"
+    };
+
+    stdlibMethods["time"] = {
+        "clock", "sleep", "millis", "nanos", "timestamp", "format",
+        "year", "month", "day", "hour", "minute", "second"
+    };
+
+    stdlibMethods["io"] = {
+        "print", "readln", "write", "printf"
+    };
+
+    stdlibMethods["array"] = {
+        "push", "pop", "length", "slice", "join", "contains"
     };
 }
 
@@ -454,11 +467,16 @@ void GrammarChecker::registerTopLevel(const AST& ast, NodeIndex idx) {
             std::vector<std::string> p; for(auto id : ast.getParams(childNode.paramsIdx)) p.push_back(ast.getString(id)); structFields[ast.getString(childNode.nameIdx)] = p;
             declareFunction(ast.getString(childNode.nameIdx));
         } else if (childNode.type == NodeType::IMPORT_STDLIB || childNode.type == NodeType::IMPORT_FILE) {
+            std::string modName = ast.getString(childNode.nameIdx);
             if (!ast.getParams(childNode.paramsIdx).empty()) {
-                importAliases.insert(ast.getString(ast.getParams(childNode.paramsIdx)[0]));
-                declareVariable(ast.getString(ast.getParams(childNode.paramsIdx)[0]));
+                std::string alias = ast.getString(ast.getParams(childNode.paramsIdx)[0]);
+                importAliases[alias] = modName;
+                declareVariable(alias);
+            } else {
+                importAliases[modName] = modName;
+                declareVariable(modName);
             }
-            if (childNode.type == NodeType::IMPORT_STDLIB && knownStdlibModules.find(ast.getString(childNode.nameIdx)) == knownStdlibModules.end()) {
+            if (childNode.type == NodeType::IMPORT_STDLIB && knownStdlibModules.find(modName) == knownStdlibModules.end()) {
                 addDiag(DiagLevel::ERROR, childNode.line, childNode.column,
                         "Unknown stdlib module '" + ast.getString(childNode.nameIdx) +
                         "' — known modules for orchestration: sys, fs, net, proc, string",
@@ -631,10 +649,10 @@ void GrammarChecker::analyze(const AST& ast, NodeIndex startIdx, uint32_t startD
 
             case NodeType::IDENTIFIER: {
                 std::string varName = ast.getString(node.nameIdx);
-                if (!varName.empty() &&
+                if (!varName.empty() && 
                     !isVariableDeclared(varName) &&
                     !isFunctionDeclared(varName) &&
-                    !importAliases.count(varName) &&
+                    importAliases.find(varName) == importAliases.end() &&
                     structFields.find(varName) == structFields.end()) {
                     
                     // Specific whitelist for grammar checkers to allow basic primitives
@@ -645,6 +663,26 @@ void GrammarChecker::analyze(const AST& ast, NodeIndex startIdx, uint32_t startD
                     }
                 } else {
                     markVariableRead(varName);
+                }
+                break;
+            }
+
+            case NodeType::MEMBER_ACCESS: {
+                if (node.left != INVALID_NODE) {
+                    const ASTNode& receiver = ast.get(node.left);
+                    if (receiver.type == NodeType::IDENTIFIER) {
+                        std::string alias = ast.getString(receiver.nameIdx);
+                        if (importAliases.count(alias)) {
+                            std::string modName = importAliases[alias];
+                            std::string member = ast.getString(node.nameIdx);
+                            if (stdlibMethods.count(modName) && stdlibMethods[modName].find(member) == stdlibMethods[modName].end()) {
+                                addDiag(DiagLevel::ERROR, node.line, node.column,
+                                        "Module '" + modName + "' (as " + alias + ") does not have a member named '" + member + "'",
+                                        "semantic.unknownMember");
+                            }
+                        }
+                    }
+                    stack.push_back({0, node.left, depth + 1, {}, "", 0, 0, false});
                 }
                 break;
             }
