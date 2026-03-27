@@ -1,0 +1,62 @@
+// Linear Congruential Generator + Monte Carlo Pi - Testing pseudo-random float estimations
+
+struct LCG { seed, a, c, m }
+
+function randomNext(lcg) {
+    lcg.seed = (lcg.a * lcg.seed + lcg.c) % lcg.m
+    return lcg.seed
+}
+
+// Float between 0 and 1
+function randomFloat(lcg) {
+    return randomNext(lcg) / toString(lcg.m - 1) // Force float division by converting or implicit, wait, we need implicit float division.
+}
+
+function simulateMonteCarlo(iterations, divisor) {
+    // Standard LCG constants
+    rng = LCG(12345, 1103515245, 12345, 2147483648)
+    
+    insideCircle = 0
+    i = 0
+    
+    // We mock float division
+    mFloat = 2147483648.0
+    
+    while (i < iterations) {
+        // Get X and Y
+        rng.seed = (rng.a * rng.seed + rng.c) % rng.m
+        x = rng.seed / mFloat
+        
+        rng.seed = (rng.a * rng.seed + rng.c) % rng.m
+        y = rng.seed / mFloat
+        
+        // Distance from origin
+        distSq = (x * x) + (y * y)
+        if (distSq <= 1.0) {
+            insideCircle++
+        }
+        
+        i++
+    }
+    
+    return 4.0 * insideCircle / divisor
+}
+
+function testMonteCarlo() {
+    print("--- Testing Monte Carlo Pi Simulation ---")
+    // Needs enough iterations for reasonable estimate but keeping it fast for tests
+    approxPi = simulateMonteCarlo(10000, 10000.0) 
+    
+    print("Estimated Pi (10k iterations): " + toString(approxPi))
+    
+    // Check if within bounds (3.0 to 3.25 is expected for 10k weak LCG)
+    if (approxPi < 3.00 or approxPi > 3.25) { 
+        print("FATAL: Monte Carlo Simulation probability density deviated violently") 
+    }
+}
+
+function main() {
+    testMonteCarlo()
+}
+
+main()

@@ -1,0 +1,84 @@
+// A* Pathfinding Algorithm Mock - Testing 2D grids, heuristics, and graph searching
+
+struct Point { x, y }
+
+function heuristic(a, b) {
+    // Manhattan distance
+    dx = a.x - b.x
+    if (dx < 0) { dx = -dx }
+    dy = a.y - b.y
+    if (dy < 0) { dy = -dy }
+    return dx + dy
+}
+
+// Very simplified A* evaluating a tiny 5x5 grid logic
+// Uses an Array queue acting as an unoptimized Priority Queue
+function testAStarPathfind() {
+    print("--- Testing A* Pathfinding logic ---")
+    
+    // 0 is open, 1 is wall
+    grid = [
+        [0, 0, 0, 0, 0],
+        [1, 1, 0, 1, 0],
+        [0, 0, 0, 1, 0],
+        [0, 1, 1, 1, 0],
+        [0, 0, 0, 0, 0]
+    ]
+    
+    start = Point(0, 0)
+    goal = Point(4, 4)
+    
+    // We only verify reachability via BFS for the test limitations (since we lack advanced custom objects sorting)
+    // A BFS mock representation:
+    queue = [start]
+    visited = {}
+    visited["0,0"] = true
+    
+    found = false
+    steps = 0
+    
+    keepSearching = true
+    while (queue.length > 0 and keepSearching) {
+        // Shift mock
+        curr = queue[0]
+        shiftQueue = []
+        si = 1
+        while (si < queue.length) { shiftQueue.push(queue[si]); si++ }
+        queue = shiftQueue
+        
+        if (curr.x == goal.x and curr.y == goal.y) {
+            found = true
+            keepSearching = false
+        } else {
+        
+        // Explore 4 directions
+        dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]]
+        di = 0
+        while (di < 4) {
+            nx = curr.x + dirs[di][0]
+            ny = curr.y + dirs[di][1]
+            key = toString(nx) + "," + toString(ny)
+            
+            if (nx >= 0 and nx < 5 and ny >= 0 and ny < 5) {
+                if (grid[ny][nx] == 0 and visited[key] == null) {
+                    visited[key] = true
+                    queue.push(Point(nx, ny))
+                }
+            }
+            di++
+        }
+        steps++
+        }
+    }
+    
+    print("A* Target Found: " + toString(found))
+    print("Nodes Explored: " + toString(steps))
+    
+    if (!found) { print("FATAL: Pathfinding algorithm failed to navigate maze") }
+}
+
+function main() {
+    testAStarPathfind()
+}
+
+main()

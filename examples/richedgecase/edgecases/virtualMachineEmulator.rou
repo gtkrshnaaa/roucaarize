@@ -1,0 +1,59 @@
+// Virtual Machine Bytecode Emulator - Computing instructions inside the Language
+
+// Opcodes
+// 0: PUSH
+// 1: ADD
+// 2: MULT
+// 3: PRINT
+// 4: HALT
+
+struct VM { pc, stack, program, running }
+
+function executeOp(vm) {
+    op = vm.program[vm.pc]
+    
+    if (op == 0) {
+        vm.pc++
+        val = vm.program[vm.pc]
+        vm.stack.push(val)
+    } else if (op == 1) {
+        b = vm.stack.pop()
+        a = vm.stack.pop()
+        vm.stack.push(a + b)
+    } else if (op == 2) {
+        b = vm.stack.pop()
+        a = vm.stack.pop()
+        vm.stack.push(a * b)
+    } else if (op == 3) {
+        print("VM Emulation Output: " + toString(vm.stack.pop())) // Pop and Print
+    } else if (op == 4) {
+        vm.running = false
+    }
+    
+    vm.pc++
+}
+
+function testVirtualMachine() {
+    print("--- Testing VM Emulator ---")
+    // Program: PUSH 10, PUSH 20, ADD, PUSH 3, MULT, PRINT, HALT
+    // Expects: (10 + 20) * 3 = 90
+    prog = [0, 10, 0, 20, 1, 0, 3, 2, 3, 4]
+    
+    machine = VM(0, [], prog, true)
+    
+    safety = 0
+    while (machine.running and safety < 100) {
+        executeOp(machine)
+        safety++
+    }
+    
+    if (safety >= 100) { print("FATAL: VM Emulator infinite loop") }
+    // The print op will consume 90 from stack, stack should be empty if clean
+    if (machine.stack.length != 0) { print("FATAL: VM Memory Leaked or Evaluated improperly") }
+}
+
+function main() {
+    testVirtualMachine()
+}
+
+main()

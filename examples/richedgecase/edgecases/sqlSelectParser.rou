@@ -1,0 +1,72 @@
+// SQL Parser Mock - String Slicer evaluating linear string into AST objects
+
+struct ASTQuery { type, columns, table, condition }
+
+function extractSubstring(str, from, lengthConstraint) {
+    res = ""
+    i = from
+    safeLen = from + lengthConstraint
+    if (safeLen > str.length) { safeLen = str.length }
+    
+    while (i < safeLen) {
+        res += str[i]
+        i++
+    }
+    return res
+}
+
+function parseSQL(query) {
+    // Expected basic format: "SELECT a FROM b WHERE c"
+    // Since we don't have .indexOf(), we scan manually until space
+    ast = ASTQuery("UNKNOWN", [], "", "")
+    
+    i = 0
+    word = ""
+    words = []
+    
+    while (i < query.length) {
+        c = query[i]
+        if (c == " ") {
+            if (word != "") { words.push(word); word = "" }
+        } else {
+            word += c
+        }
+        i++
+    }
+    if (word != "") { words.push(word) } // push last
+    
+    // [SELECT, id, FROM, users, WHERE, age=12]
+    if (words[0] == "SELECT") {
+        ast.type = "QUERY"
+        ast.columns.push(words[1]) // assume single column for simplicity
+        if (words[2] == "FROM") {
+            ast.table = words[3]
+            if (words[4] == "WHERE") {
+                ast.condition = words[5]
+            }
+        }
+    }
+    
+    return ast
+}
+
+function testSQLParser() {
+    print("--- Testing SQL String AST Parser ---")
+    
+    sql = "SELECT uuid FROM players WHERE active=1"
+    
+    res = parseSQL(sql)
+    
+    print("Parsed Table: " + toString(res.table))
+    print("Parsed Column: " + toString(res.columns[0]))
+    print("Parsed Condition: " + toString(res.condition))
+    
+    valid = (res.table == "players" and res.columns[0] == "uuid" and res.condition == "active=1")
+    if (!valid) { print("FATAL: SQL parser string logic decoupled!") }
+}
+
+function main() {
+    testSQLParser()
+}
+
+main()

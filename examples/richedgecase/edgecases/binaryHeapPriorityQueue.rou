@@ -1,0 +1,94 @@
+// Priority Queue (Min Heap) - Testing array index tree manipulations
+
+struct MinHeap { array }
+
+function getParent(i) { return (i - 1) / 2 }
+function getLeft(i) { return (2 * i) + 1 }
+function getRight(i) { return (2 * i) + 2 }
+
+function swap(heap, i, j) {
+    temp = heap.array[i]
+    heap.array[i] = heap.array[j]
+    heap.array[j] = temp
+}
+
+function insertHeap(heap, value) {
+    heap.array.push(value)
+    
+    // Heapify up
+    curr = heap.array.length - 1
+    while (curr > 0 and heap.array[curr] < heap.array[getParent(curr)]) {
+        swap(heap, curr, getParent(curr))
+        curr = getParent(curr)
+    }
+}
+
+function extractMin(heap) {
+    if (heap.array.length == 0) { return null }
+    if (heap.array.length == 1) { return heap.array.pop() }
+    
+    minVal = heap.array[0]
+    
+    // Move last leaf to root
+    heap.array[0] = heap.array.pop()
+    
+    // Heapify down
+    curr = 0
+    keepGoing = true
+    while (keepGoing) {
+        l = getLeft(curr)
+        r = getRight(curr)
+        smallest = curr
+        
+        if (l < heap.array.length) {
+            if (heap.array[l] < heap.array[smallest]) {
+                smallest = l
+            }
+        }
+        if (r < heap.array.length) {
+            if (heap.array[r] < heap.array[smallest]) {
+                smallest = r
+            }
+        }
+        
+        if (smallest != curr) {
+            swap(heap, curr, smallest)
+            curr = smallest
+        } else {
+            keepGoing = false
+        }
+    }
+    
+    return minVal
+}
+
+function testMinHeap() {
+    print("--- Testing Min Heap Data Structure ---")
+    h = MinHeap([])
+    
+    insertHeap(h, 50)
+    insertHeap(h, 20)
+    insertHeap(h, 80)
+    insertHeap(h, 10)
+    insertHeap(h, 30)
+    insertHeap(h, 5)
+    
+    output = []
+    i = 0
+    while (i < 6) {
+        output.push(extractMin(h))
+        i++
+    }
+    
+    print("Heap Sorted Extraction:")
+    j = 0
+    while (j < 6) { print(toString(output[j])); j++ }
+    
+    if (output[0] != 5 or output[5] != 80) { print("FATAL: Min Heap tree rotation corrupted sorting") }
+}
+
+function main() {
+    testMinHeap()
+}
+
+main()

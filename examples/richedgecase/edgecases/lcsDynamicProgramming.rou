@@ -1,0 +1,58 @@
+// Longest Common Subsequence (LCS) - Testing Dynamic Programming with 2D Arrays
+
+function calculateLCS(str1, str2) {
+    // We mock building a 2D Array DP table
+    len1 = str1.length
+    len2 = str2.length
+    
+    dp = []
+    i = 0
+    while (i <= len1) {
+        row = []
+        j = 0
+        while (j <= len2) { row.push(0); j++ }
+        dp.push(row)
+        i++
+    }
+    
+    // Fill table
+    i = 1
+    while (i <= len1) {
+        j = 1
+        while (j <= len2) {
+            if (str1[i-1] == str2[j-1]) {
+                dp[i][j] = dp[i-1][j-1] + 1
+            } else {
+                optA = dp[i-1][j]
+                optB = dp[i][j-1]
+                if (optA > optB) {
+                    dp[i][j] = optA
+                } else {
+                    dp[i][j] = optB
+                }
+            }
+            j++
+        }
+        i++
+    }
+    
+    return dp[len1][len2]
+}
+
+function testLCS() {
+    print("--- Testing LCS Dynamic Programming ---")
+    s1 = "AGGTAB"
+    s2 = "GXTXAYB"
+    
+    lcsLen = calculateLCS(s1, s2)
+    print("LCS Length of " + s1 + " and " + s2 + " is: " + toString(lcsLen))
+    
+    // The LCS is "GTAB", length 4.
+    if (lcsLen != 4) { print("FATAL: Dynamic Programming 2D Table logic evaluates incorrectly") }
+}
+
+function main() {
+    testLCS()
+}
+
+main()

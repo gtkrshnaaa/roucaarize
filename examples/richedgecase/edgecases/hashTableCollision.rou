@@ -1,0 +1,89 @@
+// Hash Table Collision resolution - Testing Linked List inside Arrays
+
+struct HashNode { key, value, next }
+
+struct HashTable {
+    buckets, size
+}
+
+function initHashTable(size) {
+    b = []
+    i = 0
+    while (i < size) { b.push(null); i++ }
+    return HashTable(b, size)
+}
+
+function getSimpleHash(str, mapSize) {
+    hash = 0
+    i = 0
+    while (i < str.length) {
+        // Pseudo string hash using naive char index summation (cannot get char code natively)
+        // We will just sum length to simulate deterministic collision.
+        // Wait, different strings same length = collision! Exactly what we want to test!
+        hash += str.length
+        i++
+    }
+    return hash % mapSize
+}
+
+function hashPut(map, key, val) {
+    idx = getSimpleHash(key, map.size)
+    head = map.buckets[idx]
+    
+    if (head == null) {
+        map.buckets[idx] = HashNode(key, val, null)
+        return null
+    }
+    
+    curr = head
+    while (curr.next != null) {
+        if (curr.key == key) {
+            curr.value = val
+            return null
+        }
+        curr = curr.next
+    }
+    
+    // Check last node
+    if (curr.key == key) {
+        curr.value = val
+    } else {
+        curr.next = HashNode(key, val, null)
+    }
+}
+
+function hashGet(map, key) {
+    idx = getSimpleHash(key, map.size)
+    curr = map.buckets[idx]
+    
+    while (curr != null) {
+        if (curr.key == key) { return curr.value }
+        curr = curr.next
+    }
+    return null
+}
+
+function testHashTable() {
+    print("--- Testing Hash Table Collisions ---")
+    table = initHashTable(5)
+    
+    // "Dog" and "Cat" will both have key.length == 3, their hash is 3*3 = 9 % 5 = 4
+    // They will COLLIDE in bucket 4!
+    hashPut(table, "Dog", "Woof")
+    hashPut(table, "Cat", "Meow")
+    hashPut(table, "Bird", "Tweet")
+    
+    val1 = hashGet(table, "Dog")
+    val2 = hashGet(table, "Cat")
+    
+    print("Dog says: " + toString(val1))
+    print("Cat says: " + toString(val2))
+    
+    if (val1 != "Woof" or val2 != "Meow") { print("FATAL: Hash layout or LL chaining dropped collided properties") }
+}
+
+function main() {
+    testHashTable()
+}
+
+main()
