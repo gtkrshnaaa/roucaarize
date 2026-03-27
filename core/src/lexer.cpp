@@ -18,7 +18,7 @@ struct KeywordEntry {
     TokenType type;
 };
 
-constexpr std::array<KeywordEntry, 23> keywords = {{
+constexpr std::array<KeywordEntry, 24> keywords = {{
     {"function", TokenType::FUNCTION},
     {"return", TokenType::RETURN},
     {"if", TokenType::IF},
@@ -26,6 +26,7 @@ constexpr std::array<KeywordEntry, 23> keywords = {{
     {"for", TokenType::FOR},
     {"while", TokenType::WHILE},
     {"in", TokenType::IN},
+    {"break", TokenType::BREAK},
     {"struct", TokenType::STRUCT},
     {"import", TokenType::IMPORT},
     {"as", TokenType::AS},

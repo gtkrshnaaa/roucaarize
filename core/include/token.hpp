@@ -34,7 +34,7 @@ enum class TokenType {
 
     // Keywords
     AND, OR, NOT,
-    IF, ELSE, FOR, WHILE, IN,
+    IF, ELSE, FOR, WHILE, IN, BREAK,
     FUNCTION, RETURN, STRUCT,
     TRY, CATCH, THROW, FINALLY,
     IMPORT, AS, STDLIB,
