@@ -1,9 +1,9 @@
 // Modifying Outer Environment from Inner Scope - Roucaarize
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
@@ -24,11 +24,11 @@ function testGenerators() {
     v2 = gen1()
     v3 = gen2()
 
-    ioLib.print("Generator1: " + coreLib.toString(v1) + ", " + coreLib.toString(v2))
-    ioLib.print("Generator2: " + coreLib.toString(v3))
+    io.print("Generator1: " + core.toString(v1) + ", " + core.toString(v2))
+    io.print("Generator2: " + core.toString(v3))
 
-    if (v2 != 2) { ioLib.print("FATAL: Outer lexical scope failed to maintain state!") }
-    if (v3 != 1) { ioLib.print("FATAL: Generator instances leaked cross-scope state!") }
+    if (v2 != 2) { io.print("FATAL: Outer lexical scope failed to maintain state!") }
+    if (v3 != 1) { io.print("FATAL: Generator instances leaked cross-scope state!") }
 }
 
 function main() {

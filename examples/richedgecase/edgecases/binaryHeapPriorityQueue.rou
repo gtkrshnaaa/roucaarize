@@ -1,9 +1,9 @@
 // Priority Queue (Min Heap) - Testing array index tree manipulations
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
@@ -20,10 +20,10 @@ function swap(heap, i, j) {
 }
 
 function insertHeap(heap, value) {
-    arrLib.push(heap.array, value)
+    arr.push(heap.array, value)
     
     // Heapify up
-    curr = coreLib.len(heap.array) - 1
+    curr = core.len(heap.array) - 1
     while (curr > 0 and heap.array[curr] < heap.array[getParent(curr)]) {
         swap(heap, curr, getParent(curr))
         curr = getParent(curr)
@@ -31,13 +31,13 @@ function insertHeap(heap, value) {
 }
 
 function extractMin(heap) {
-    if (coreLib.len(heap.array) == 0) { return null }
-    if (coreLib.len(heap.array) == 1) { return arrLib.pop(heap.array) }
+    if (core.len(heap.array) == 0) { return null }
+    if (core.len(heap.array) == 1) { return arr.pop(heap.array) }
     
     minVal = heap.array[0]
     
     // Move last leaf to root
-    heap.array[0] = arrLib.pop(heap.array)
+    heap.array[0] = arr.pop(heap.array)
     
     // Heapify down
     curr = 0
@@ -47,12 +47,12 @@ function extractMin(heap) {
         r = getRight(curr)
         smallest = curr
         
-        if (l < coreLib.len(heap.array)) {
+        if (l < core.len(heap.array)) {
             if (heap.array[l] < heap.array[smallest]) {
                 smallest = l
             }
         }
-        if (r < coreLib.len(heap.array)) {
+        if (r < core.len(heap.array)) {
             if (heap.array[r] < heap.array[smallest]) {
                 smallest = r
             }
@@ -70,7 +70,7 @@ function extractMin(heap) {
 }
 
 function testMinHeap() {
-    ioLib.print("--- Testing Min Heap Data Structure ---")
+    io.print("--- Testing Min Heap Data Structure ---")
     h = MinHeap([])
     
     insertHeap(h, 50)
@@ -83,15 +83,15 @@ function testMinHeap() {
     output = []
     i = 0
     while (i < 6) {
-        arrLib.push(output, extractMin(h))
+        arr.push(output, extractMin(h))
         i++
     }
     
-    ioLib.print("Heap Sorted Extraction:")
+    io.print("Heap Sorted Extraction:")
     j = 0
-    while (j < 6) { ioLib.print(coreLib.toString(output[j])); j++ }
+    while (j < 6) { io.print(core.toString(output[j])); j++ }
     
-    if (output[0] != 5 or output[5] != 80) { ioLib.print("FATAL: Min Heap tree rotation corrupted sorting") }
+    if (output[0] != 5 or output[5] != 80) { io.print("FATAL: Min Heap tree rotation corrupted sorting") }
 }
 
 function main() {

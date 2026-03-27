@@ -1,46 +1,46 @@
 // Higher Order Array Operations: Custom Map, Filter, and Reduce
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
-function arrayMap(arr, transform) {
+function arrayMap(targetList, transform) {
     res = []
     i = 0
-    while (i < coreLib.len(arr)) {
-        arrLib.push(res, transform(arr[i]))
+    while (i < core.len(targetList)) {
+        arr.push(res, transform(targetList[i]))
         i++
     }
     return res
 }
 
-function arrayFilter(arr, predicate) {
+function arrayFilter(targetList, predicate) {
     res = []
     i = 0
-    while (i < coreLib.len(arr)) {
-        if (predicate(arr[i])) {
-            arrLib.push(res, arr[i])
+    while (i < core.len(targetList)) {
+        if (predicate(targetList[i])) {
+            arr.push(res, targetList[i])
         }
         i++
     }
     return res
 }
 
-function arrayReduce(arr, reducer, initialAccumulator) {
+function arrayReduce(targetList, reducer, initialAccumulator) {
     acc = initialAccumulator
     i = 0
-    while (i < coreLib.len(arr)) {
-        acc = reducer(acc, arr[i])
+    while (i < core.len(targetList)) {
+        acc = reducer(acc, targetList[i])
         i++
     }
     return acc
 }
 
 function testHOFArrays() {
-    ioLib.print("--- Testing HOF Map/Filter/Reduce ---")
+    io.print("--- Testing HOF Map/Filter/Reduce ---")
     nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     
     function isEven(n) { return n % 2 == 0 }
@@ -48,16 +48,16 @@ function testHOFArrays() {
     function sumAccum(acc, curr) { return acc + curr }
     
     evens = arrayFilter(nums, isEven)
-    ioLib.print("Evens: " + coreLib.toString(evens[0]) + ", " + coreLib.toString(evens[1])) // 2, 4
-    if (coreLib.len(evens) != 5) { ioLib.print("FATAL: Filter failed") }
+    io.print("Evens: " + core.toString(evens[0]) + ", " + core.toString(evens[1])) // 2, 4
+    if (core.len(evens) != 5) { io.print("FATAL: Filter failed") }
     
     doubles = arrayMap(evens, doubleVal)
-    ioLib.print("Doubles: " + coreLib.toString(doubles[0])) // 4
-    if (doubles[0] != 4) { ioLib.print("FATAL: Map failed") }
+    io.print("Doubles: " + core.toString(doubles[0])) // 4
+    if (doubles[0] != 4) { io.print("FATAL: Map failed") }
     
     sum = arrayReduce(doubles, sumAccum, 0)
-    ioLib.print("Sum of doubled evens: " + coreLib.toString(sum)) // 4+8+12+16+20 = 60
-    if (sum != 60) { ioLib.print("FATAL: Reduce failed") }
+    io.print("Sum of doubled evens: " + core.toString(sum)) // 4+8+12+16+20 = 60
+    if (sum != 60) { io.print("FATAL: Reduce failed") }
 }
 
 function main() {

@@ -1,9 +1,9 @@
 // Promise.all Aggregation Simulator - Array Closures mock simulating parallel resolving structures
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
@@ -13,7 +13,7 @@ function simulatePromiseAll(futureArray) {
     results = []
     
     i = 0
-    while (i < coreLib.len(futureArray)) {
+    while (i < core.len(futureArray)) {
         p = futureArray[i]
         
         // Mocking event resolution polling loops
@@ -26,7 +26,7 @@ function simulatePromiseAll(futureArray) {
             return Future(true, null, "Aggregation Rejection: " + p.error)
         }
         
-        arrLib.push(results, p.data)
+        arr.push(results, p.data)
         i++
     }
     
@@ -34,7 +34,7 @@ function simulatePromiseAll(futureArray) {
 }
 
 function testPromiseAggregation() {
-    ioLib.print("--- Testing Promise Aggregation States ---")
+    io.print("--- Testing Promise Aggregation States ---")
     
     f1 = Future(true, "Data 1 API", null)
     f2 = Future(true, "Data 2 API", null)
@@ -42,14 +42,14 @@ function testPromiseAggregation() {
     
     // Valid batch
     aggValid = simulatePromiseAll([f1, f2, f3])
-    ioLib.print("Agg Valid Data items: " + coreLib.toString(coreLib.len(aggValid.data)))
-    if (coreLib.len(aggValid.data) != 3 or aggValid.error != null) { ioLib.print("FATAL: Valid task aggregation structure decoupled") }
+    io.print("Agg Valid Data items: " + core.toString(core.len(aggValid.data)))
+    if (core.len(aggValid.data) != 3 or aggValid.error != null) { io.print("FATAL: Valid task aggregation structure decoupled") }
     
     // Rejected batch
     fErr = Future(true, null, "Node Timeout")
     aggFailed = simulatePromiseAll([f1, fErr, f3])
-    ioLib.print("Agg Error Trace: " + aggFailed.error)
-    if (aggFailed.data != null or aggFailed.error == null) { ioLib.print("FATAL: Faulty aggregation leaked data payload over rejection sequence") }
+    io.print("Agg Error Trace: " + aggFailed.error)
+    if (aggFailed.data != null or aggFailed.error == null) { io.print("FATAL: Faulty aggregation leaked data payload over rejection sequence") }
 }
 
 function main() {

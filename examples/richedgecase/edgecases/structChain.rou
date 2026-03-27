@@ -1,9 +1,9 @@
 // Struct Chaining & References - Roucaarize
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
@@ -17,8 +17,8 @@ function testStructChaining() {
     root.left.left = Node("left.left", null, null)
     root.left.left.right = Node("deep target", null, null)
 
-    ioLib.print("Deep Struct Evaluation: " + root.left.left.right.val)
-    if (root.left.left.right.val != "deep target") { ioLib.print("FATAL: Struct depth evaluation failed!") }
+    io.print("Deep Struct Evaluation: " + root.left.left.right.val)
+    if (root.left.left.right.val != "deep target") { io.print("FATAL: Struct depth evaluation failed!") }
 }
 
 function main() {

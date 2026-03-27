@@ -1,11 +1,11 @@
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 function run() {
-    ioLib.print("Testing infinite loop (Target: Watchdog Timeout Guard, no freeze)...")
+    io.print("Testing infinite loop (Target: Watchdog Timeout Guard, no freeze)...")
     while (true) {
         // Do nothing. This loop will run forever unless the runtimeGuard kills it.
     }
@@ -14,5 +14,5 @@ function run() {
 try {
     run()
 } catch (err) {
-    ioLib.print("Intercepted: " + coreLib.toString(err))
+    io.print("Intercepted: " + core.toString(err))
 }

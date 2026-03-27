@@ -1,9 +1,9 @@
 // Variable Lexical Shadowing - Roucaarize
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
@@ -17,9 +17,9 @@ function testShadowTricks() {
         return levelScope
     }
     
-    if (levelScope != "inner (shadowed)") { ioLib.print("FATAL: Captured lexical scope was not mutated!") }
+    if (levelScope != "inner (shadowed)") { io.print("FATAL: Captured lexical scope was not mutated!") }
     
-    ioLib.print("Post-Mutation Outer Value: " + levelScope)
+    io.print("Post-Mutation Outer Value: " + levelScope)
 }
 
 function main() {

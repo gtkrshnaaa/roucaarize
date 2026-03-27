@@ -1,28 +1,28 @@
 // main.rou 
 // Entry point for the calculator simulation
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
 import "calculator.rou" as calc
 
-ioLib.print("== Roucaarize Modular Calculator ==")
+io.print("== Roucaarize Modular Calculator ==")
 
 try {
-    ioLib.print(calc.calculateAndFormat("add", 10, 5))
-    ioLib.print(calc.calculateAndFormat("sub", 10, 5))
-    ioLib.print(calc.calculateAndFormat("mul", 10, 5))
-    ioLib.print(calc.calculateAndFormat("div", 10, 5))
+    io.print(calc.calculateAndFormat("add", 10, 5))
+    io.print(calc.calculateAndFormat("sub", 10, 5))
+    io.print(calc.calculateAndFormat("mul", 10, 5))
+    io.print(calc.calculateAndFormat("div", 10, 5))
     
     // Simulate error constraint
-    ioLib.print("Testing error handling:")
-    ioLib.print(calc.calculateAndFormat("div", 10, 0))
+    io.print("Testing error handling:")
+    io.print(calc.calculateAndFormat("div", 10, 0))
 } catch (err) {
-    ioLib.print("Calculator Error: " + coreLib.toString(err))
+    io.print("Calculator Error: " + core.toString(err))
 }
 
-ioLib.print("== Calculator Session Ended ==")
+io.print("== Calculator Session Ended ==")

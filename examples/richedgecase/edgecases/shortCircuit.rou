@@ -1,22 +1,22 @@
 // Short-circuit Booleans - Roucaarize
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
 function trapFlag() {
-    ioLib.print("FATAL: Short circuit failed, trap executed!")
+    io.print("FATAL: Short circuit failed, trap executed!")
     return true
 }
 
 function testShortCircuit() {
     scBool = false
     result = scBool and trapFlag()
-    if (result) { ioLib.print("FATAL: Short-circuit evaluations failed!") }
-    ioLib.print("Short circuit guarded successfully.")
+    if (result) { io.print("FATAL: Short-circuit evaluations failed!") }
+    io.print("Short circuit guarded successfully.")
 }
 
 function main() {

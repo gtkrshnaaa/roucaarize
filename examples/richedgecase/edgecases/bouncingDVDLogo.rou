@@ -1,9 +1,9 @@
 // Vector Bouncing Simulation - Testing state mutation and math edge constraints
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
@@ -30,7 +30,7 @@ function tickSimulation(entity, box) {
 }
 
 function testBouncingDVD() {
-    ioLib.print("--- Testing Vector Bouncing Simulation ---")
+    io.print("--- Testing Vector Bouncing Simulation ---")
     
     screen = BoundingBox(800, 600)
     logo = Entity(795, 595, 2, 2)
@@ -49,10 +49,10 @@ function testBouncingDVD() {
         }
     }
     
-    ioLib.print("Ticks performed: " + coreLib.toString(ticks))
-    ioLib.print("Logo Position at break: X=" + coreLib.toString(logo.x) + " Y=" + coreLib.toString(logo.y))
+    io.print("Ticks performed: " + core.toString(ticks))
+    io.print("Logo Position at break: X=" + core.toString(logo.x) + " Y=" + core.toString(logo.y))
     
-    if (!hitPerfectCorner) { ioLib.print("FATAL: DVD logo vector simulation missed mathematical corner trajectory!") }
+    if (!hitPerfectCorner) { io.print("FATAL: DVD logo vector simulation missed mathematical corner trajectory!") }
 }
 
 function main() {

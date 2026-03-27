@@ -2,10 +2,10 @@
 // All functions declared first, then invoked in orchestration block.
 // Demonstrates real-world orchestration using stdlib modules.
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
@@ -20,11 +20,11 @@ import stdlib string as str
 // ============================================================================
 
 function printHeader(title) {
-    ioLib.print("== " + title + " ==")
+    io.print("== " + title + " ==")
 }
 
 function printField(label, value) {
-    ioLib.print(label + ": " + value)
+    io.print(label + ": " + value)
 }
 
 // ============================================================================
@@ -34,23 +34,23 @@ function printField(label, value) {
 function showSystemInfo() {
     printHeader("System Information")
     printField("Hostname", s.hostname())
-    printField("Uptime", coreLib.toString(s.uptime()) + " seconds")
-    printField("User ID", coreLib.toString(s.getUid()))
+    printField("Uptime", core.toString(s.uptime()) + " seconds")
+    printField("User ID", core.toString(s.getUid()))
     printField("Home", s.getEnv("HOME"))
     printField("Date", t.format("%Y-%m-%d %H:%M:%S"))
-    ioLib.print("")
+    io.print("")
 }
 
 function showTimeInfo() {
     printHeader("Time Operations")
-    printField("Year", coreLib.toString(t.year()))
-    printField("Month", coreLib.toString(t.month()))
-    printField("Day", coreLib.toString(t.day()))
-    printField("Hour", coreLib.toString(t.hour()))
-    printField("Minute", coreLib.toString(t.minute()))
-    printField("Second", coreLib.toString(t.second()))
-    printField("Timestamp", coreLib.toString(t.timestamp()))
-    ioLib.print("")
+    printField("Year", core.toString(t.year()))
+    printField("Month", core.toString(t.month()))
+    printField("Day", core.toString(t.day()))
+    printField("Hour", core.toString(t.hour()))
+    printField("Minute", core.toString(t.minute()))
+    printField("Second", core.toString(t.second()))
+    printField("Timestamp", core.toString(t.timestamp()))
+    io.print("")
 }
 
 function showSystemCommands() {
@@ -59,13 +59,13 @@ function showSystemCommands() {
     printField("Kernel", kernelVersion)
     diskUsage = s.exec("df -h / | tail -1 | awk '{print $5}'")
     printField("Disk usage (/)", diskUsage)
-    ioLib.print("")
+    io.print("")
 }
 
 function showProcessInfo() {
     printHeader("Process Info")
     printField("Memory usage", p.memUsage())
-    ioLib.print("")
+    io.print("")
 }
 
 // ============================================================================
@@ -75,9 +75,9 @@ function showProcessInfo() {
 function healthCheck(serviceName) {
     running = p.isRunning(serviceName)
     if (running) {
-        ioLib.print("[OK] " + serviceName + " is running")
+        io.print("[OK] " + serviceName + " is running")
     } else {
-        ioLib.print("[WARN] " + serviceName + " is not running")
+        io.print("[WARN] " + serviceName + " is not running")
     }
     return running
 }
@@ -87,7 +87,7 @@ function runHealthChecks(services) {
     for (svc in services) {
         healthCheck(svc)
     }
-    ioLib.print("")
+    io.print("")
 }
 
 // ============================================================================
@@ -100,20 +100,20 @@ function demonstrateFileOps() {
     content = "Hello from Roucaarize!\nWritten at: " + t.format("%H:%M:%S")
 
     f.write(tempFile, content)
-    ioLib.print("Wrote to: " + tempFile)
+    io.print("Wrote to: " + tempFile)
 
     readBack = f.read(tempFile)
-    ioLib.print("Read back: " + readBack)
+    io.print("Read back: " + readBack)
 
-    printField("File exists", coreLib.toString(f.exists(tempFile)))
+    printField("File exists", core.toString(f.exists(tempFile)))
 
     f.append(tempFile, "\nAppended line")
-    ioLib.print("Content after append:")
-    ioLib.print(f.read(tempFile))
+    io.print("Content after append:")
+    io.print(f.read(tempFile))
 
     f.remove(tempFile)
-    ioLib.print("Cleaned up temp file")
-    ioLib.print("")
+    io.print("Cleaned up temp file")
+    io.print("")
 }
 
 // ============================================================================
@@ -123,21 +123,21 @@ function demonstrateFileOps() {
 function demonstrateStringOps() {
     printHeader("String Operations")
     message = "  Roucaarize Linux Orchestration  "
-    ioLib.print("Original: '" + message + "'")
-    ioLib.print("Trimmed: '" + str.trim(message) + "'")
-    ioLib.print("Upper: " + str.toUpperCase("roucaarize"))
-    ioLib.print("Lower: " + str.toLowerCase("ROUCAARIZE"))
-    printField("Contains 'Linux'", coreLib.toString(str.contains(message, "Linux")))
+    io.print("Original: '" + message + "'")
+    io.print("Trimmed: '" + str.trim(message) + "'")
+    io.print("Upper: " + str.toUpperCase("roucaarize"))
+    io.print("Lower: " + str.toLowerCase("ROUCAARIZE"))
+    printField("Contains 'Linux'", core.toString(str.contains(message, "Linux")))
 
     parts = str.split("one:two:three", ":")
-    ioLib.print("Split 'one:two:three':")
+    io.print("Split 'one:two:three':")
     for (part in parts) {
-        ioLib.print("  - " + part)
+        io.print("  - " + part)
     }
 
     replaced = str.replace("Hello World", "World", "Roucaarize")
     printField("Replace", replaced)
-    ioLib.print("")
+    io.print("")
 }
 
 // ============================================================================
@@ -155,9 +155,9 @@ function runPerformanceTest(limit) {
     }
     endTime = t.millis()
     elapsed = endTime - startTime
-    printField("Sum of 0.." + coreLib.toString(limit - 1), coreLib.toString(sum))
-    printField("Time elapsed", coreLib.toString(elapsed) + "ms")
-    ioLib.print("")
+    printField("Sum of 0.." + core.toString(limit - 1), core.toString(sum))
+    printField("Time elapsed", core.toString(elapsed) + "ms")
+    io.print("")
 }
 
 // ============================================================================
@@ -173,4 +173,4 @@ showSystemCommands()
 showProcessInfo()
 runPerformanceTest(10000)
 
-ioLib.print("Orchestration example completed successfully.")
+io.print("Orchestration example completed successfully.")

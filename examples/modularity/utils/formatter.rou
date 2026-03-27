@@ -1,10 +1,10 @@
 // utils/formatter.rou
 // Formatting utility functions
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
@@ -18,5 +18,5 @@ function formatResult(operation, a, b, result) {
         prefix = "[DEBUG] "
     }
     
-    return prefix + operation + " of " + coreLib.toString(a) + " and " + coreLib.toString(b) + " is: " + coreLib.toString(result)
+    return prefix + operation + " of " + core.toString(a) + " and " + core.toString(b) + " is: " + core.toString(result)
 }

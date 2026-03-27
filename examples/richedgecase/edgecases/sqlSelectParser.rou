@@ -1,22 +1,22 @@
 // SQL Parser Mock - String Slicer evaluating linear string into AST objects
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
 struct ASTQuery { type, columns, table, condition }
 
-function extractSubstring(str, from, lengthConstraint) {
+function extractSubstring(targetStr, from, lengthConstraint) {
     res = ""
     i = from
     safeLen = from + lengthConstraint
-    if (safeLen > coreLib.len(str)) { safeLen = coreLib.len(str) }
+    if (safeLen > core.len(targetStr)) { safeLen = core.len(targetStr) }
     
     while (i < safeLen) {
-        res += str[i]
+        res += targetStr[i]
         i++
     }
     return res
@@ -31,21 +31,21 @@ function parseSQL(query) {
     word = ""
     words = []
     
-    while (i < coreLib.len(query)) {
+    while (i < core.len(query)) {
         c = query[i]
         if (c == " ") {
-            if (word != "") { arrLib.push(words, word); word = "" }
+            if (word != "") { arr.push(words, word); word = "" }
         } else {
             word += c
         }
         i++
     }
-    if (word != "") { arrLib.push(words, word) } // push last
+    if (word != "") { arr.push(words, word) } // push last
     
     // [SELECT, id, FROM, users, WHERE, age=12]
     if (words[0] == "SELECT") {
         ast.type = "QUERY"
-        arrLib.push(ast.columns, words[1]) // assume single column for simplicity
+        arr.push(ast.columns, words[1]) // assume single column for simplicity
         if (words[2] == "FROM") {
             ast.table = words[3]
             if (words[4] == "WHERE") {
@@ -58,18 +58,18 @@ function parseSQL(query) {
 }
 
 function testSQLParser() {
-    ioLib.print("--- Testing SQL String AST Parser ---")
+    io.print("--- Testing SQL String AST Parser ---")
     
     sql = "SELECT uuid FROM players WHERE active=1"
     
     res = parseSQL(sql)
     
-    ioLib.print("Parsed Table: " + coreLib.toString(res.table))
-    ioLib.print("Parsed Column: " + coreLib.toString(res.columns[0]))
-    ioLib.print("Parsed Condition: " + coreLib.toString(res.condition))
+    io.print("Parsed Table: " + core.toString(res.table))
+    io.print("Parsed Column: " + core.toString(res.columns[0]))
+    io.print("Parsed Condition: " + core.toString(res.condition))
     
     valid = (res.table == "players" and res.columns[0] == "uuid" and res.condition == "active=1")
-    if (!valid) { ioLib.print("FATAL: SQL parser string logic decoupled!") }
+    if (!valid) { io.print("FATAL: SQL parser string logic decoupled!") }
 }
 
 function main() {

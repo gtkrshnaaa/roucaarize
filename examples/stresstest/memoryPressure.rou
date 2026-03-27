@@ -1,19 +1,19 @@
 // Heavy allocations to trigger GC or Memory Limits
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 function run() {
-    ioLib.print("Testing heavy memory pressure & allocations...")
+    io.print("Testing heavy memory pressure & allocations...")
     
     // Heavy Array allocation
-    arr = []
+    targetList = []
     i = 0
     while (i < 300000) { 
-        push(arr, i)
+        push(targetList, i)
         i = i + 1
     }
     
@@ -21,7 +21,7 @@ function run() {
     s = ""
     i = 0
     while (i < 10000) {
-        s = s + "stress_leak_" + coreLib.toString(i)
+        s = s + "stress_leak_" + core.toString(i)
         i = i + 1
     }
     
@@ -29,15 +29,15 @@ function run() {
     m = {}
     i = 0
     while (i < 50000) {
-        m["key" + coreLib.toString(i)] = i
+        m["key" + core.toString(i)] = i
         i = i + 1
     }
     
-    ioLib.print("Memory pressure survived! Array: " + coreLib.toString(len(arr)) + ", Map: " + coreLib.toString(len(m)))
+    io.print("Memory pressure survived! Array: " + core.toString(len(targetList)) + ", Map: " + core.toString(len(m)))
 }
 
 try {
     run()
 } catch (err) {
-    ioLib.print("Intercepted: " + coreLib.toString(err))
+    io.print("Intercepted: " + core.toString(err))
 }

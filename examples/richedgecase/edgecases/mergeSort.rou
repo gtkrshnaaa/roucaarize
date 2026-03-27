@@ -1,17 +1,17 @@
 // Merge Sort Recursive - Testing Array subdividing and deep recursive stack merging
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
-function sliceArray(arr, start, end) {
+function sliceArray(targetList, start, end) {
     res = []
     i = start
-    while (i < end and i < coreLib.len(arr)) {
-        arrLib.push(res, arr[i])
+    while (i < end and i < core.len(targetList)) {
+        arr.push(res, targetList[i])
         i++
     }
     return res
@@ -21,35 +21,35 @@ function mergeArrays(left, right) {
     res = []
     l = 0; r = 0
     
-    while (l < coreLib.len(left) and r < coreLib.len(right)) {
+    while (l < core.len(left) and r < core.len(right)) {
         if (left[l] < right[r]) {
-            arrLib.push(res, left[l])
+            arr.push(res, left[l])
             l++
         } else {
-            arrLib.push(res, right[r])
+            arr.push(res, right[r])
             r++
         }
     }
     
-    while (l < coreLib.len(left)) { arrLib.push(res, left[l]); l++ }
-    while (r < coreLib.len(right)) { arrLib.push(res, right[r]); r++ }
+    while (l < core.len(left)) { arr.push(res, left[l]); l++ }
+    while (r < core.len(right)) { arr.push(res, right[r]); r++ }
     
     return res
 }
 
-function mergeSort(arr) {
-    if (coreLib.len(arr) <= 1) { return arr }
+function mergeSort(targetList) {
+    if (core.len(targetList) <= 1) { return targetList }
     
-    mid = coreLib.len(arr) / 2 // Integer division automatically truncates in Roucaarize if treated directly, wait, floats? I'll use explicit int casting if needed. 
+    mid = core.len(targetList) / 2 // Integer division automatically truncates in Roucaarize if treated directly, wait, floats? I'll use explicit int casting if needed. 
     // Actually Roucaarize returns float if divided. Let's use custom integer floor wrapper:
-    midStr = coreLib.toString(mid)
+    midStr = core.toString(mid)
     midInt = 0 // In standard Roucaarize, division of ints might be float. We iterate to get int.
     // Hacky floor logic:
     m = 0
     while (m + 0.999 < mid) { m++ }
     
-    left = sliceArray(arr, 0, m)
-    right = sliceArray(arr, m, coreLib.len(arr))
+    left = sliceArray(targetList, 0, m)
+    right = sliceArray(targetList, m, core.len(targetList))
     
     sortedLeft = mergeSort(left)
     sortedRight = mergeSort(right)
@@ -58,21 +58,21 @@ function mergeSort(arr) {
 }
 
 function testMergeSort() {
-    ioLib.print("--- Testing Merge Sort Array ---")
+    io.print("--- Testing Merge Sort Array ---")
     data = [38, 27, 43, 3, 9, 82, 10]
     
     sorted = mergeSort(data)
     
-    ioLib.print("Sorted Output:")
+    io.print("Sorted Output:")
     i = 0
-    while (i < coreLib.len(sorted)) {
-        ioLib.print("> " + coreLib.toString(sorted[i]))
+    while (i < core.len(sorted)) {
+        io.print("> " + core.toString(sorted[i]))
         i++
     }
     
     // Verify order
     if (sorted[0] != 3 or sorted[6] != 82) {
-        ioLib.print("FATAL: Merge Sort array ordering failed")
+        io.print("FATAL: Merge Sort array ordering failed")
     }
 }
 

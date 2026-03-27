@@ -1,30 +1,30 @@
 // Recursive JSON Stringifier Mock - Testing deep Map/Array traversal to String output
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
 function stringify(value) {
     if (value == null) { return "null" }
     
-    t = coreLib.typeof(value)
+    t = core.typeof(value)
     
     if (t == "string") {
         return "'" + value + "'"
     }
     if (t == "int" or t == "float" or t == "bool") {
-        return coreLib.toString(value)
+        return core.toString(value)
     }
     
     if (t == "array") {
         res = "["
         i = 0
-        while (i < coreLib.len(value)) {
+        while (i < core.len(value)) {
             res += stringify(value[i])
-            if (i < coreLib.len(value) - 1) { res += "," }
+            if (i < core.len(value) - 1) { res += "," }
             i++
         }
         return res + "]"
@@ -40,7 +40,7 @@ function stringify(value) {
         if (value["active"] != null) { res += "'active':" + stringify(value["active"]) }
         
         // Trim last comma logic mocked
-        len = coreLib.len(res)
+        len = core.len(res)
         if (res[len-1] == ",") {
             // substring mock
             trim = ""
@@ -56,7 +56,7 @@ function stringify(value) {
 }
 
 function testStringify() {
-    ioLib.print("--- Testing JSON Stringifier ---")
+    io.print("--- Testing JSON Stringifier ---")
     data = {
         "name": "Roucaarize",
         "age": 1,
@@ -66,10 +66,10 @@ function testStringify() {
     nest = [1, data, "test", null]
     
     json = stringify(nest)
-    ioLib.print("Output: " + json)
+    io.print("Output: " + json)
     
     expected = "[1,{'name':'Roucaarize','age':1,'active':true},'test',null]"
-    if (json != expected) { ioLib.print("FATAL: JSON stringification logic failed") }
+    if (json != expected) { io.print("FATAL: JSON stringification logic failed") }
 }
 
 function main() {

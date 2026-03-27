@@ -2,10 +2,10 @@
 // All functions declared first, then invoked in orchestration block.
 // Demonstrates variables, functions, control flow, arrays, and loops.
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
@@ -33,31 +33,31 @@ function factorial(n) {
 // ============================================================================
 
 function showArithmetic(a, b) {
-    ioLib.print("Add: " + coreLib.toString(a + b))
-    ioLib.print("Sub: " + coreLib.toString(a - b))
-    ioLib.print("Mul: " + coreLib.toString(a * b))
-    ioLib.print("Div: " + coreLib.toString(a / b))
-    ioLib.print("Mod: " + coreLib.toString(a % b))
+    io.print("Add: " + core.toString(a + b))
+    io.print("Sub: " + core.toString(a - b))
+    io.print("Mul: " + core.toString(a * b))
+    io.print("Div: " + core.toString(a / b))
+    io.print("Mod: " + core.toString(a % b))
 }
 
 function showBooleans(a, b) {
-    ioLib.print(coreLib.toString(a) + " > " + coreLib.toString(b) + ": " + coreLib.toString(a > b))
-    ioLib.print(coreLib.toString(a) + " == " + coreLib.toString(b) + ": " + coreLib.toString(a == b))
+    io.print(core.toString(a) + " > " + core.toString(b) + ": " + core.toString(a > b))
+    io.print(core.toString(a) + " == " + core.toString(b) + ": " + core.toString(a == b))
 }
 
 function showArrayIteration(items, label) {
-    ioLib.print(label + ": " + coreLib.toString(items))
-    ioLib.print("First: " + items[0])
-    ioLib.print("Length: " + coreLib.toString(coreLib.len(items)))
+    io.print(label + ": " + core.toString(items))
+    io.print("First: " + items[0])
+    io.print("Length: " + core.toString(core.len(items)))
     for (item in items) {
-        ioLib.print("  - " + item)
+        io.print("  - " + item)
     }
 }
 
 function showCountdown(limit) {
     counter = 0
     while (counter < limit) {
-        ioLib.print("Counter: " + coreLib.toString(counter))
+        io.print("Counter: " + core.toString(counter))
         counter = counter + 1
     }
 }
@@ -84,71 +84,71 @@ function makeCounter() {
 }
 
 function showTypeInfo(label, value) {
-    ioLib.print("typeof " + label + ": " + coreLib.typeof(value))
+    io.print("typeof " + label + ": " + core.typeof(value))
 }
 
 // ============================================================================
 // Section 3: Orchestration Entry Point
 // ============================================================================
 
-ioLib.print("== Roucaarize Basics Demo ==")
-ioLib.print("")
+io.print("== Roucaarize Basics Demo ==")
+io.print("")
 
 // Variables
 name = "Roucaarize"
 version = 1
 pi = 3.14159
-ioLib.print("Language: " + name)
-ioLib.print("Version: " + coreLib.toString(version))
-ioLib.print("Pi: " + coreLib.toString(pi))
-ioLib.print("")
+io.print("Language: " + name)
+io.print("Version: " + core.toString(version))
+io.print("Pi: " + core.toString(pi))
+io.print("")
 
 // Arithmetic
-ioLib.print("== Arithmetic ==")
+io.print("== Arithmetic ==")
 showArithmetic(10, 3)
-ioLib.print("")
+io.print("")
 
 // Booleans
-ioLib.print("== Booleans ==")
+io.print("== Booleans ==")
 showBooleans(10, 3)
-ioLib.print("")
+io.print("")
 
 // String concatenation
 greeting = "Hello" + " " + "World"
-ioLib.print(greeting)
-ioLib.print("")
+io.print(greeting)
+io.print("")
 
 // Functions
-ioLib.print("== Functions ==")
-ioLib.print(greet("Roucaarize"))
-ioLib.print("add(5, 7) = " + coreLib.toString(add(5, 7)))
-ioLib.print("5! = " + coreLib.toString(factorial(5)))
-ioLib.print("")
+io.print("== Functions ==")
+io.print(greet("Roucaarize"))
+io.print("add(5, 7) = " + core.toString(add(5, 7)))
+io.print("5! = " + core.toString(factorial(5)))
+io.print("")
 
 // Arrays and iteration
-ioLib.print("== Arrays ==")
+io.print("== Arrays ==")
 fruits = ["apple", "banana", "cherry"]
 showArrayIteration(fruits, "Fruits")
-ioLib.print("")
+io.print("")
 
 // While loop
-ioLib.print("== While Loop ==")
+io.print("== While Loop ==")
 showCountdown(3)
-ioLib.print("")
+io.print("")
 
 // Conditionals
-ioLib.print("== Grades ==")
+io.print("== Grades ==")
 score = 85
 grade = evaluateGrade(score)
-ioLib.print("Score " + coreLib.toString(score) + " = Grade: " + grade)
-ioLib.print("")
+io.print("Score " + core.toString(score) + " = Grade: " + grade)
+io.print("")
 
 // Type checking
-ioLib.print("== Type Info ==")
+io.print("== Type Info ==")
 showTypeInfo("42", 42)
 showTypeInfo("'hello'", "hello")
 showTypeInfo("true", true)
 showTypeInfo("null", null)
 
-ioLib.print("")
-ioLib.print("Basics example completed successfully.")
+io.print("")
+io.print("Basics example completed successfully.")

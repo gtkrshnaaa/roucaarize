@@ -1,9 +1,9 @@
 // Regex Finite Automaton State Machine - Testing logical branching string evaluation without native Regex
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
@@ -14,7 +14,7 @@ function simulateNFA(stateMachineHead, testStr) {
     curr = stateMachineHead
     
     i = 0
-    while (i < coreLib.len(testStr)) {
+    while (i < core.len(testStr)) {
         c = testStr[i]
         if (c == null) { break }
         
@@ -37,7 +37,7 @@ function simulateNFA(stateMachineHead, testStr) {
 }
 
 function testNFALogic() {
-    ioLib.print("--- Testing NFA Regex Automaton Logic ---")
+    io.print("--- Testing NFA Regex Automaton Logic ---")
     
     // Build a state machine for regex: `^ab*c$`
     // S0 -'a'-> S1
@@ -54,10 +54,10 @@ function testNFALogic() {
     invalid1 = simulateNFA(s0, "abbbbcX")
     invalid2 = simulateNFA(s0, "Xbc")
     
-    ioLib.print("NFA valid1: " + coreLib.toString(valid1))
-    ioLib.print("NFA valid2: " + coreLib.toString(valid2))
-    if (!valid1 or !valid2) { ioLib.print("FATAL: NFA state rejected valid linear combinations") }
-    if (invalid1 or invalid2) { ioLib.print("FATAL: NFA state breached regex containment logic") }
+    io.print("NFA valid1: " + core.toString(valid1))
+    io.print("NFA valid2: " + core.toString(valid2))
+    if (!valid1 or !valid2) { io.print("FATAL: NFA state rejected valid linear combinations") }
+    if (invalid1 or invalid2) { io.print("FATAL: NFA state breached regex containment logic") }
 }
 
 function main() {

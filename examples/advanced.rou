@@ -2,10 +2,10 @@
 // All functions declared first, then invoked in orchestration block.
 // Demonstrates structs, maps, error handling, closures, and higher-order functions.
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
@@ -26,7 +26,7 @@ struct Server {
 
 function validatePort(p) {
     if (p < 1 or p > 65535) {
-        throw "Invalid port: " + coreLib.toString(p)
+        throw "Invalid port: " + core.toString(p)
     }
     return p
 }
@@ -59,29 +59,29 @@ function makeMultiplier(factor) {
 // ============================================================================
 
 function showServer(srv) {
-    ioLib.print("Server: " + srv.name + " at " + srv.ip + ":" + coreLib.toString(srv.port))
-    ioLib.print("Status: " + srv.status)
+    io.print("Server: " + srv.name + " at " + srv.ip + ":" + core.toString(srv.port))
+    io.print("Status: " + srv.status)
 }
 
 function showConfig(cfg, key) {
-    ioLib.print("Config " + key + ": " + coreLib.toString(cfg[key]))
+    io.print("Config " + key + ": " + core.toString(cfg[key]))
 }
 
 function showServerFleet(servers) {
-    ioLib.print("Server fleet:")
+    io.print("Server fleet:")
     for (s in servers) {
-        ioLib.print("  " + s.name + " [" + s.status + "] -> " + s.ip)
+        io.print("  " + s.name + " [" + s.status + "] -> " + s.ip)
     }
 }
 
 function showArrayOps(numbers) {
-    ioLib.print("Numbers: " + coreLib.toString(numbers))
-    ioLib.print("Length: " + coreLib.toString(coreLib.len(numbers)))
-    arrLib.push(numbers, 42)
-    ioLib.print("After push(42): " + coreLib.toString(numbers))
-    last = arrLib.pop(numbers)
-    ioLib.print("Popped: " + coreLib.toString(last))
-    ioLib.print("After pop: " + coreLib.toString(numbers))
+    io.print("Numbers: " + core.toString(numbers))
+    io.print("Length: " + core.toString(core.len(numbers)))
+    arr.push(numbers, 42)
+    io.print("After push(42): " + core.toString(numbers))
+    last = arr.pop(numbers)
+    io.print("Popped: " + core.toString(last))
+    io.print("After pop: " + core.toString(numbers))
 }
 
 function demonstrateErrorHandling() {
@@ -89,81 +89,81 @@ function demonstrateErrorHandling() {
     try {
         result = 10 / 0
     } catch (err) {
-        ioLib.print("Caught error: " + err)
+        io.print("Caught error: " + err)
     }
 
     // Port validation
     try {
         validatePort(99999)
     } catch (err) {
-        ioLib.print("Validation error: " + err)
+        io.print("Validation error: " + err)
     }
 
     // Try-catch-finally
     try {
-        ioLib.print("Opening resource...")
+        io.print("Opening resource...")
         throw "simulated failure"
     } catch (err) {
-        ioLib.print("Caught: " + err)
+        io.print("Caught: " + err)
     } finally {
-        ioLib.print("Cleanup: resource released")
+        io.print("Cleanup: resource released")
     }
 }
 
 function demonstrateHigherOrder() {
-    ioLib.print("double(5) = " + coreLib.toString(apply(double, 5)))
-    ioLib.print("square(5) = " + coreLib.toString(apply(square, 5)))
+    io.print("double(5) = " + core.toString(apply(double, 5)))
+    io.print("square(5) = " + core.toString(apply(square, 5)))
 
     triple = makeMultiplier(3)
-    ioLib.print("triple(4) = " + coreLib.toString(triple(4)))
-    ioLib.print("triple(10) = " + coreLib.toString(triple(10)))
+    io.print("triple(4) = " + core.toString(triple(4)))
+    io.print("triple(10) = " + core.toString(triple(10)))
 }
 
 // ============================================================================
 // Section 5: Orchestration Entry Point
 // ============================================================================
 
-ioLib.print("== Roucaarize Advanced Demo ==")
-ioLib.print("")
+io.print("== Roucaarize Advanced Demo ==")
+io.print("")
 
 // Structs
-ioLib.print("== Structs ==")
+io.print("== Structs ==")
 web = Server("web01", "192.168.1.10", 80, "running")
 db = Server("db01", "192.168.1.20", 5432, "running")
 showServer(web)
 web.status = "maintenance"
-ioLib.print("Updated status: " + web.status)
-ioLib.print("")
+io.print("Updated status: " + web.status)
+io.print("")
 
 // Maps
-ioLib.print("== Maps ==")
+io.print("== Maps ==")
 config = {"host": "localhost", "port": 8080, "debug": true}
 showConfig(config, "host")
 showConfig(config, "port")
 config["timeout"] = 30
 showConfig(config, "timeout")
-ioLib.print("")
+io.print("")
 
 // Error handling
-ioLib.print("== Error Handling ==")
+io.print("== Error Handling ==")
 demonstrateErrorHandling()
-ioLib.print("")
+io.print("")
 
 // Higher-order functions and closures
-ioLib.print("== Higher-Order Functions ==")
+io.print("== Higher-Order Functions ==")
 demonstrateHigherOrder()
-ioLib.print("")
+io.print("")
 
 // Array operations
-ioLib.print("== Array Operations ==")
+io.print("== Array Operations ==")
 numbers = [5, 2, 8, 1, 9]
 showArrayOps(numbers)
-ioLib.print("")
+io.print("")
 
 // Nested data structures
-ioLib.print("== Server Fleet ==")
+io.print("== Server Fleet ==")
 servers = [Server("web01", "10.0.0.1", 80, "active"), Server("web02", "10.0.0.2", 80, "active"), Server("db01", "10.0.0.3", 5432, "standby")]
 showServerFleet(servers)
 
-ioLib.print("")
-ioLib.print("Advanced example completed successfully.")
+io.print("")
+io.print("Advanced example completed successfully.")

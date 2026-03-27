@@ -18,80 +18,6 @@ namespace roucaarize {
 Evaluator::Evaluator() {
     globals = std::make_shared<Environment>();
     environment = globals;
-
-    defineNative("print", [](Evaluator&, const std::vector<Value>& args) -> Value {
-        for (size_t i = 0; i < args.size(); ++i) {
-            if (i > 0) std::cout << " ";
-            std::cout << args[i].toString();
-        }
-        std::cout << std::endl;
-        return Value::nil();
-    });
-
-    defineNative("log", [](Evaluator&, const std::vector<Value>& args) -> Value {
-        if (args.size() < 2) return Value::nil();
-        std::cerr << "[" << args[0].toString() << "] " << args[1].toString() << std::endl;
-        return Value::nil();
-    });
-
-    defineNative("panic", [](Evaluator&, const std::vector<Value>& args) -> Value {
-        std::string msg = args.empty() ? "Panic!" : args[0].toString();
-        throw std::runtime_error("Panic: " + msg);
-        return Value::nil();
-    });
-
-    defineNative("len", [](Evaluator&, const std::vector<Value>& args) -> Value {
-        if (args.empty()) return Value::fromInt(0);
-        if (args[0].isString()) return Value::fromInt(static_cast<int64_t>(args[0].getString()->size()));
-        if (args[0].isArray()) return Value::fromInt(static_cast<int64_t>(args[0].getArray()->size()));
-        return Value::fromInt(0);
-    });
-
-    defineNative("toString", [](Evaluator&, const std::vector<Value>& args) -> Value {
-        if (args.empty()) return Value::fromString("");
-        return Value::fromString(args[0].toString());
-    });
-
-    defineNative("toInt", [](Evaluator&, const std::vector<Value>& args) -> Value {
-        if (args.empty()) return Value::fromInt(0);
-        if (args[0].isInt()) return args[0];
-        if (args[0].isNumber()) return Value::fromInt(static_cast<int64_t>(args[0].floatVal));
-        if (args[0].isString()) {
-            try { return Value::fromInt(std::stoll(*args[0].getString())); }
-            catch (...) { return Value::fromInt(0); }
-        }
-        return Value::fromInt(0);
-    });
-
-    defineNative("typeof", [](Evaluator&, const std::vector<Value>& args) -> Value {
-        if (args.empty()) return Value::fromString("null");
-        switch (args[0].type) {
-            case ValueType::NIL: return Value::fromString("null");
-            case ValueType::BOOL: return Value::fromString("bool");
-            case ValueType::INT: return Value::fromString("int");
-            case ValueType::FLOAT: return Value::fromString("float");
-            case ValueType::STRING: return Value::fromString("string");
-            case ValueType::ARRAY: return Value::fromString("array");
-            case ValueType::MAP: return Value::fromString("map");
-            case ValueType::STRUCT_INSTANCE: return Value::fromString("struct");
-            case ValueType::FUNCTION: return Value::fromString("function");
-            case ValueType::NATIVE_FUNCTION: return Value::fromString("function");
-        }
-        return Value::fromString("unknown");
-    });
-
-    defineNative("push", [](Evaluator&, const std::vector<Value>& args) -> Value {
-        if (args.size() < 2 || !args[0].isArray()) return Value::nil();
-        args[0].getArray()->push_back(args[1]);
-        return Value::nil();
-    });
-
-    defineNative("pop", [](Evaluator&, const std::vector<Value>& args) -> Value {
-        if (args.empty() || !args[0].isArray() || args[0].getArray()->empty()) return Value::nil();
-        Value val = args[0].getArray()->back();
-        args[0].getArray()->pop_back();
-        return val;
-    });
 }
 
 void Evaluator::defineNative(const std::string& name, NativeFunction fn) {
@@ -237,28 +163,7 @@ Value Evaluator::evalUnary(const ASTNode& node) {
 
 Value Evaluator::evalCall(const ASTNode& node) {
     runtime_guard::RecursionGuard depthGuard;
-    // FAST-PATH: Direct Member Access Calls (Array methods, String methods)
-    if (node.left != INVALID_NODE && currentAST->get(node.left).type == NodeType::MEMBER_ACCESS) {
-        const ASTNode& memberNode = currentAST->get(node.left);
-        Value leftObj = evalNode(memberNode.left);
-        const std::string& memberName = SymbolTable::get().getString(memberNode.nameIdx);
-        
-        if (leftObj.type == ValueType::ARRAY) {
-            if (memberName == "push") {
-                if (!currentAST->getChildren(node.childrenIdx).empty()) {
-                    leftObj.getArray()->push_back(evalNode(currentAST->getChildren(node.childrenIdx)[0]));
-                }
-                return Value::nil();
-            }
-            if (memberName == "pop") {
-                if (leftObj.getArray()->empty()) return Value::nil();
-                Value v = std::move(leftObj.getArray()->back());
-                leftObj.getArray()->pop_back();
-                return v;
-            }
-            if (memberName == "length") return Value::fromInt(leftObj.getArray()->size());
-        }
-    }
+    // Member Property Shortcuts Removed Explicitly
 
     Value callee = evalNode(node.left);
     std::vector<Value> args;
@@ -308,31 +213,7 @@ Value Evaluator::evalMemberAccess(const ASTNode& node) {
         throw RuntimeError(node, "Undefined method '" + currentAST->getString(node.nameIdx) + "' on module");
     }
 
-    // Array built-in methods
-    if (left.type == ValueType::ARRAY) {
-        if (currentAST->getString(node.nameIdx) == "length") return Value::fromInt(static_cast<int64_t>(left.getArray()->size()));
-        if (currentAST->getString(node.nameIdx) == "push") {
-            auto captured = left.getArray();
-            return Value::fromNative([captured](Evaluator&, const std::vector<Value>& args) -> Value {
-                if (!args.empty()) captured->push_back(args[0]);
-                return Value::nil();
-            });
-        }
-        if (currentAST->getString(node.nameIdx) == "pop") {
-            auto captured = left.getArray();
-            return Value::fromNative([captured](Evaluator&, const std::vector<Value>&) -> Value {
-                if (captured->empty()) return Value::nil();
-                Value v = captured->back();
-                captured->pop_back();
-                return v;
-            });
-        }
-    }
-
-    // String built-in methods
-    if (left.type == ValueType::STRING) {
-        if (currentAST->getString(node.nameIdx) == "length") return Value::fromInt(static_cast<int64_t>(left.getString()->size()));
-    }
+    // Primitive properties bypass removed - strictly parsed via Structs/Maps
 
     throw RuntimeError(node, "Cannot access member '" + currentAST->getString(node.nameIdx) + "' on " + left.toString());
 }

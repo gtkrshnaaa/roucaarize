@@ -1,9 +1,9 @@
 // Text Justification algorithm - Testing heavy String aggregations
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
@@ -12,22 +12,22 @@ function justifyText(words, maxWidth) {
     currLine = ""
     
     i = 0
-    while (i < coreLib.len(words)) {
+    while (i < core.len(words)) {
         w = words[i]
         
         if (currLine == "") {
             currLine = w
         } else {
             // Check if adding space + word exceeds
-            if (coreLib.len(currLine) + 1 + coreLib.len(w) <= maxWidth) {
+            if (core.len(currLine) + 1 + core.len(w) <= maxWidth) {
                 currLine += " " + w
             } else {
                 // Must pad spaces to reach maxWidth
-                paddingNeeded = maxWidth - coreLib.len(currLine)
+                paddingNeeded = maxWidth - core.len(currLine)
                 pads = ""
                 p = 0
                 while (p < paddingNeeded) { pads += "-"; p++ } // use dash for visual test
-                arrLib.push(resArr, currLine + pads)
+                arr.push(resArr, currLine + pads)
                 currLine = w
             }
         }
@@ -36,31 +36,31 @@ function justifyText(words, maxWidth) {
     
     // push final
     if (currLine != "") {
-        paddingNeeded = maxWidth - coreLib.len(currLine)
+        paddingNeeded = maxWidth - core.len(currLine)
         pads = ""
         p = 0
         while (p < paddingNeeded) { pads += "-"; p++ }
-        arrLib.push(resArr, currLine + pads)
+        arr.push(resArr, currLine + pads)
     }
     
     return resArr
 }
 
 function testJustification() {
-    ioLib.print("--- Testing Text Justification Array Combinations ---")
+    io.print("--- Testing Text Justification Array Combinations ---")
     words = ["This", "is", "an", "example", "of", "text", "justification."]
     
     padded = justifyText(words, 16)
     
-    ioLib.print("Padding Array:")
+    io.print("Padding Array:")
     i = 0
-    while (i < coreLib.len(padded)) {
-        ioLib.print("[" + padded[i] + "]")
+    while (i < core.len(padded)) {
+        io.print("[" + padded[i] + "]")
         i++
     }
     
-    if (coreLib.len(padded) != 3) { ioLib.print("FATAL: Padded block counts mismatch") }
-    if (padded[0] != "This is an------") { ioLib.print("FATAL: Justification greedy logic failed text boundaries") }
+    if (core.len(padded) != 3) { io.print("FATAL: Padded block counts mismatch") }
+    if (padded[0] != "This is an------") { io.print("FATAL: Justification greedy logic failed text boundaries") }
 }
 
 function main() {

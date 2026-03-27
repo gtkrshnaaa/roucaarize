@@ -1,9 +1,9 @@
 // Depth First Search Directory Mock - Testing deep recursive structures and string concatenation
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
@@ -13,13 +13,13 @@ function File(n, s) { return Node(n, s, []) }
 function Directory(n, childs) { return Node(n, 0, childs) }
 
 function calculateDFSSize(node) {
-    if (coreLib.len(node.children) == 0) {
+    if (core.len(node.children) == 0) {
         return node.size
     }
     
     totalSize = node.size
     i = 0
-    while (i < coreLib.len(node.children)) {
+    while (i < core.len(node.children)) {
         child = node.children[i]
         totalSize += calculateDFSSize(child)
         i++
@@ -29,7 +29,7 @@ function calculateDFSSize(node) {
 }
 
 function testDFSFileSystem() {
-    ioLib.print("--- Testing DFS Virtual File System ---")
+    io.print("--- Testing DFS Virtual File System ---")
     
     img1 = File("img1.png", 2000)
     img2 = File("img2.png", 3500)
@@ -41,10 +41,10 @@ function testDFSFileSystem() {
     rootDir = Directory("Root", [photosDir, textsDir, File("sys.bin", 50000)])
     
     totalSpace = calculateDFSSize(rootDir)
-    ioLib.print("Total virtual drive size: " + coreLib.toString(totalSpace) + " bytes")
+    io.print("Total virtual drive size: " + core.toString(totalSpace) + " bytes")
     
     expected = 2000 + 3500 + 150 + 50000 // 55650
-    if (totalSpace != expected) { ioLib.print("FATAL: DFS tree size sum is incorrect: " + coreLib.toString(totalSpace)) }
+    if (totalSpace != expected) { io.print("FATAL: DFS tree size sum is incorrect: " + core.toString(totalSpace)) }
 }
 
 function main() {

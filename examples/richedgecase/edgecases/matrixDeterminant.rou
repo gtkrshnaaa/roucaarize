@@ -1,9 +1,9 @@
 // Matrix Determinant Calculator - Testing 2D Arrays and Math
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
@@ -17,7 +17,7 @@ function calculateDeterminant(matrix) {
 }
 
 function testMatrixDeterminant() {
-    ioLib.print("--- Testing Matrix Determinant ---")
+    io.print("--- Testing Matrix Determinant ---")
     
     mat = [
         [6, 1, 1],
@@ -26,9 +26,9 @@ function testMatrixDeterminant() {
     ]
     
     det = calculateDeterminant(mat)
-    ioLib.print("Determinant is: " + coreLib.toString(det))
+    io.print("Determinant is: " + core.toString(det))
     
-    if (det != -306) { ioLib.print("FATAL: Determinant calculation failed!") }
+    if (det != -306) { io.print("FATAL: Determinant calculation failed!") }
 }
 
 function main() {

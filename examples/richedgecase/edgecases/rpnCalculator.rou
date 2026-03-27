@@ -1,9 +1,9 @@
 // Reverse Polish Notation Evaluator - Testing Stacks and Native Number parsing
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
@@ -11,51 +11,51 @@ function evalRPN(tokens) {
     stack = []
     
     i = 0
-    while (i < coreLib.len(tokens)) {
+    while (i < core.len(tokens)) {
         tok = tokens[i]
         
         if (tok == "+") {
-            b = arrLib.pop(stack)
-            a = arrLib.pop(stack)
-            arrLib.push(stack, a + b)
+            b = arr.pop(stack)
+            a = arr.pop(stack)
+            arr.push(stack, a + b)
         } else if (tok == "-") {
-            b = arrLib.pop(stack)
-            a = arrLib.pop(stack)
-            arrLib.push(stack, a - b)
+            b = arr.pop(stack)
+            a = arr.pop(stack)
+            arr.push(stack, a - b)
         } else if (tok == "*") {
-            b = arrLib.pop(stack)
-            a = arrLib.pop(stack)
-            arrLib.push(stack, a * b)
+            b = arr.pop(stack)
+            a = arr.pop(stack)
+            arr.push(stack, a * b)
         } else if (tok == "/") {
-            b = arrLib.pop(stack)
-            a = arrLib.pop(stack)
-            arrLib.push(stack, a / b)
+            b = arr.pop(stack)
+            a = arr.pop(stack)
+            arr.push(stack, a / b)
         } else {
-            arrLib.push(stack, tok) // Assume numbers for this test
+            arr.push(stack, tok) // Assume numbers for this test
         }
         i++
     }
     
-    return arrLib.pop(stack)
+    return arr.pop(stack)
 }
 
 function testRPN() {
-    ioLib.print("--- Testing RPN Stack Evaluator ---")
+    io.print("--- Testing RPN Stack Evaluator ---")
     
     // Expression: ((2 + 1) * 3)
     // RPN: 2 1 + 3 *
     tokens = [2, 1, "+", 3, "*"]
     res = evalRPN(tokens)
     
-    ioLib.print("RPN Result: " + coreLib.toString(res))
-    if (res != 9) { ioLib.print("FATAL: RPN calculation failed") }
+    io.print("RPN Result: " + core.toString(res))
+    if (res != 9) { io.print("FATAL: RPN calculation failed") }
     
     // Advanced: 4 13 5 / +
     // (4 + (13 / 5)) -> 4 + 2.6
     tokens2 = [4.0, 13.0, 5.0, "/", "+"]
     res2 = evalRPN(tokens2)
-    ioLib.print("RPN 2 Result: " + coreLib.toString(res2))
-    if (res2 != 6.6) { ioLib.print("FATAL: RPN advanced calculation failed") }
+    io.print("RPN 2 Result: " + core.toString(res2))
+    if (res2 != 6.6) { io.print("FATAL: RPN advanced calculation failed") }
 }
 
 function main() {

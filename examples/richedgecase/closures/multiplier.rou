@@ -1,9 +1,9 @@
 // Higher Order Function (Generator) - Roucaarize
 
-import stdlib io as ioLib
-import stdlib core as coreLib
-import stdlib array as arrLib
-import stdlib string as strLib
+import stdlib io as io
+import stdlib core as core
+import stdlib array as arr
+import stdlib string as str
 
 
 
@@ -18,9 +18,9 @@ function testMultiplier() {
     t3 = createMultiplier(3)
     t5 = createMultiplier(5)
 
-    ioLib.print("t3(10) = " + coreLib.toString(t3(10)))
-    ioLib.print("t5(10) = " + coreLib.toString(t5(10)))
-    if (t3(10) != 30) { ioLib.print("FATAL: HOF multiplier failed!") }
+    io.print("t3(10) = " + core.toString(t3(10)))
+    io.print("t5(10) = " + core.toString(t5(10)))
+    if (t3(10) != 30) { io.print("FATAL: HOF multiplier failed!") }
 }
 
 function main() {
