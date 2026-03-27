@@ -79,4 +79,4 @@ we don't do anything too fancy. it's just a quiet pipeline:
 
 ## license
 
-mit. just for u, my developer, fr. 🧸
+mit. i just made this for myself to explore things... if u want to try it, go ahead. it's not that deep. 🧸
