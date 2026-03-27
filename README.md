@@ -18,7 +18,7 @@
 ### why roucaarize? (she's just a girl...)
 
 - **tiny ram vibes:** she only needs like ~5mb to exist. perfect for your tiny containers. 
-- **soft orchestration:** no more scary shell errors. we use `try-catch` because we like being safe and comfy.
+- **soft orchestration:** no more scary shell errors. it's all dynamic and chill, we use `try-catch` because we like being safe and comfy.
 - **cute syntax:** we only use `camelCase`. no underscores allowed, they're too loud. 
 - **honest speed:** we're not winning any races. we're just walking through the tree, one step at a time. it's peaceful.
 
