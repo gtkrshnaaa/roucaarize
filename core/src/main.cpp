@@ -48,6 +48,7 @@ void printUsage(const char* prog) {
     std::cout << "Usage: " << prog << " [options] <filename>\n"
               << "Options:\n"
               << "  -grammar, -g    Run static analysis only\n"
+              << "  -version, -v    Show version information\n"
               << "  -help, -h       Show this help message\n";
 }
 
@@ -56,6 +57,10 @@ int main(int argc, char* argv[]) {
 
     std::string arg1 = argv[1];
     if (arg1 == "-help" || arg1 == "-h") { printUsage(argv[0]); return 0; }
+    if (arg1 == "-version" || arg1 == "-v" || arg1 == "--version") {
+        std::cout << "v0.1.0" << std::endl;
+        return 0;
+    }
 
     bool grammarOnly = (arg1 == "-grammar" || arg1 == "-g");
     std::string filename = grammarOnly ? (argc > 2 ? argv[2] : "") : arg1;
