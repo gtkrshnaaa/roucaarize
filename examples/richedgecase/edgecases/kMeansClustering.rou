@@ -14,7 +14,7 @@ function getDistanceSq(p1, p2) {
     return (dx * dx) + (dy * dy)
 }
 
-function computeClustering(points, k) {
+function computeClustering(points) {
     cent1 = Point2D(10.0, 10.0) // Initial arbitrary centroids
     cent2 = Point2D(50.0, 50.0) 
     
@@ -63,7 +63,7 @@ function testKMeans() {
         Point2D(100.0, 100.0), Point2D(102.0, 102.0)
     ]
     
-    finalCent = computeClustering(data, 2)
+    finalCent = computeClustering(data)
     io.print("Centroid 1 bounded approximation successful!")
     // We only care if Engine survives floating math aggregations on arrays
 }
