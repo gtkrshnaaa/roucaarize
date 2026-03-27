@@ -1,10 +1,10 @@
-import stdlib time as time
+import stdlib time as t
 import stdlib io as io
-import stdlib string as string
+import stdlib string as str
 
 async function fetchUser(id) {
     io.print("Fetching user " + toString(id) + "...");
-    time.sleep(100); // simulate network latency
+    t.sleep(100); // simulate network latency
     return "User_" + toString(id);
 }
 

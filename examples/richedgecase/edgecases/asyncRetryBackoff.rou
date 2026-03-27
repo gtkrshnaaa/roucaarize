@@ -1,6 +1,6 @@
-import stdlib time as time
+import stdlib time as t
 import stdlib io as io
-import stdlib string as string
+import stdlib string as str
 
 async function flakyNetworkCall(attempt) {
     // Fails on attempt 1 and 2, succeeds on 3
@@ -21,7 +21,7 @@ async function fetchWithRetry(maxRetries) {
             return res;
         } catch (e) {
             io.print("Caught error: " + toString(e) + ". Retrying in " + toString(attempt * 100) + "ms...");
-            time.sleep(attempt * 100);
+            t.sleep(attempt * 100);
             attempt = attempt + 1;
         }
     }

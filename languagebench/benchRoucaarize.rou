@@ -1,6 +1,6 @@
 import stdlib time as t
 import stdlib io as io
-import stdlib array as arrayMod
+import stdlib array as arr
 
 struct Obj {
     val
@@ -71,7 +71,7 @@ function benchArray() {
     myArr = []
     i = 0
     while (i < limit) {
-        arrayMod.push(myArr, i)
+        arr.push(myArr, i)
         i = i + 1
     }
     end = t.nanos()

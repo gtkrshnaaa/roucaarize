@@ -1,11 +1,11 @@
-import stdlib time as time
+import stdlib time as t
 import stdlib io as io
 
 async function workerOne(id) {
     io.print("Worker " + id + " starting...");
     i = 0;
     while (i < 3) {
-        time.sleep(500);
+        t.sleep(500);
         i = i + 1;
         io.print("Worker " + id + " running... iter=" + toString(i));
     }
@@ -20,7 +20,7 @@ function main() {
     taskTwo = workerOne("B");
     
     io.print("Main Thread: Tasks spawned! Now doing other work...");
-    time.sleep(700);
+    t.sleep(700);
     io.print("Main Thread: Finished other work. Awaiting tasks...");
     
     resOne = await taskOne;

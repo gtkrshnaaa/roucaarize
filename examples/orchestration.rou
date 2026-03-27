@@ -5,14 +5,10 @@
 import stdlib io as io
 import stdlib array as arr
 import stdlib string as str
-
-
-
-import stdlib sys as s
-import stdlib fs as f
+import stdlib sys as sys
+import stdlib fs as fs
 import stdlib time as t
-import stdlib proc as p
-import stdlib string as str
+import stdlib proc as pc
 
 // ============================================================================
 // Section 1: Display Functions
@@ -32,10 +28,10 @@ function printField(label, value) {
 
 function showSystemInfo() {
     printHeader("System Information")
-    printField("Hostname", s.hostname())
-    printField("Uptime", toString(s.uptime()) + " seconds")
-    printField("User ID", toString(s.getUid()))
-    printField("Home", s.getEnv("HOME"))
+    printField("Hostname", sys.hostname())
+    printField("Uptime", toString(sys.uptime()) + " seconds")
+    printField("User ID", toString(sys.getUid()))
+    printField("Home", sys.getEnv("HOME"))
     printField("Date", t.format("%Y-%m-%d %H:%M:%S"))
     io.print("")
 }
@@ -54,16 +50,16 @@ function showTimeInfo() {
 
 function showSystemCommands() {
     printHeader("System Commands")
-    kernelVersion = s.exec("uname -r")
+    kernelVersion = sys.exec("uname -r")
     printField("Kernel", kernelVersion)
-    diskUsage = s.exec("df -h / | tail -1 | awk '{print $5}'")
+    diskUsage = sys.exec("df -h / | tail -1 | awk '{print $5}'")
     printField("Disk usage (/)", diskUsage)
     io.print("")
 }
 
 function showProcessInfo() {
     printHeader("Process Info")
-    printField("Memory usage", p.memUsage())
+    printField("Memory usage", pc.memUsage())
     io.print("")
 }
 
@@ -72,7 +68,7 @@ function showProcessInfo() {
 // ============================================================================
 
 function healthCheck(serviceName) {
-    running = p.isRunning(serviceName)
+    running = pc.isRunning(serviceName)
     if (running) {
         io.print("[OK] " + serviceName + " is running")
     } else {
@@ -98,19 +94,19 @@ function demonstrateFileOps() {
     tempFile = "/tmp/roucaarize_test.txt"
     content = "Hello from Roucaarize!\nWritten at: " + t.format("%H:%M:%S")
 
-    f.write(tempFile, content)
+    fs.write(tempFile, content)
     io.print("Wrote to: " + tempFile)
 
-    readBack = f.read(tempFile)
+    readBack = fs.read(tempFile)
     io.print("Read back: " + readBack)
 
-    printField("File exists", toString(f.exists(tempFile)))
+    printField("File exists", toString(fs.exists(tempFile)))
 
-    f.append(tempFile, "\nAppended line")
+    fs.append(tempFile, "\nAppended line")
     io.print("Content after append:")
-    io.print(f.read(tempFile))
+    io.print(fs.read(tempFile))
 
-    f.remove(tempFile)
+    fs.remove(tempFile)
     io.print("Cleaned up temp file")
     io.print("")
 }
