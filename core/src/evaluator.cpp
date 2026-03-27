@@ -12,6 +12,8 @@
 #include <iostream>
 #include <stdexcept>
 #include <sstream>
+#include <future>
+#include <thread>
 
 namespace roucaarize {
 
@@ -48,6 +50,7 @@ Evaluator::Evaluator() {
             case ValueType::STRUCT_INSTANCE: return Value::fromString("struct");
             case ValueType::FUNCTION: return Value::fromString("function");
             case ValueType::NATIVE_FUNCTION: return Value::fromString("function");
+            case ValueType::PROMISE: return Value::fromString("promise");
         }
         return Value::fromString("unknown");
     });
@@ -76,6 +79,13 @@ Value Evaluator::evaluate(const AST& ast, NodeIndex root) {
 // Core Node Dispatch
 // ============================================================================
 
+std::shared_ptr<Environment> Evaluator::cloneEnvironmentChain(std::shared_ptr<Environment> env) {
+    if (!env) return nullptr;
+    auto newEnv = std::make_shared<Environment>(cloneEnvironmentChain(env->outer));
+    newEnv->entries = env->entries;
+    return newEnv;
+}
+
 Value Evaluator::evalNode(NodeIndex idx) {
     if (idx == INVALID_NODE) return Value::nil();
     const ASTNode& node = currentAST->get(idx);
@@ -96,6 +106,7 @@ Value Evaluator::evalNode(NodeIndex idx) {
         case NodeType::BINARY_OP:      return evalBinary(node);
         case NodeType::UNARY_OP:       return evalUnary(node);
         case NodeType::CALL:           return evalCall(node);
+        case NodeType::AWAIT_EXPR:     return evalAwait(node);
         case NodeType::MEMBER_ACCESS:  return evalMemberAccess(node);
         case NodeType::INDEX_ACCESS:   return evalIndexAccess(node);
         case NodeType::ARRAY_LITERAL:  return evalArrayLiteral(node);
@@ -107,9 +118,11 @@ Value Evaluator::evalNode(NodeIndex idx) {
         case NodeType::FOR_STMT:       return executeFor(node);
         case NodeType::WHILE_STMT:     return executeWhile(node);
         case NodeType::TRY_STMT:       return executeTryCatch(node);
+        case NodeType::ASYNC_FUNC_DECL:
         case NodeType::FUNC_DECL: {
             FunctionDef fd;
             fd.nameIdx = node.nameIdx;
+            fd.isAsync = (node.type == NodeType::ASYNC_FUNC_DECL);
             for(auto p : currentAST->getParams(node.paramsIdx)) fd.params.push_back(p);
             fd.bodyIndex = node.left;
             fd.closure = environment;
@@ -215,6 +228,34 @@ Value Evaluator::evalCall(const ASTNode& node) {
         if (args.size() != fd.params.size())
             throw RuntimeError(node, "Expected " + std::to_string(fd.params.size()) +
                                      " arguments but got " + std::to_string(args.size()));
+                                     
+        if (fd.isAsync) {
+            auto asyncClosure = cloneEnvironmentChain(fd.closure);
+            auto asyncEnv = std::make_shared<Environment>(asyncClosure);
+            for (size_t i = 0; i < args.size(); ++i) asyncEnv->define(fd.params[i], args[i]);
+            
+            auto asyncGlobals = cloneEnvironmentChain(globals);
+            auto registry = stdlibRegistry;
+            const AST* astPtr = currentAST;
+            
+            auto fut = std::async(std::launch::async, [asyncGlobals, registry, asyncEnv, bodyIdx = fd.bodyIndex, astPtr]() -> Value {
+                Evaluator tEval;
+                tEval.globals = asyncGlobals;
+                tEval.stdlibRegistry = registry;
+                tEval.currentAST = astPtr;
+                // Run in the asyncEnv explicitly
+                try {
+                    return tEval.evalBlock(bodyIdx, asyncEnv);
+                } catch (const RuntimeException& e) {
+                    if (e.isReturn) return e.value;
+                    return Value::nil();
+                } catch (...) {
+                    return Value::nil();
+                }
+            });
+            return Value::fromPromise(std::make_shared<std::future<Value>>(std::move(fut)));
+        }
+
         auto callEnv = std::make_shared<Environment>(fd.closure);
         for (size_t i = 0; i < args.size(); ++i) callEnv->define(fd.params[i], std::move(args[i]));
         try {
@@ -225,6 +266,21 @@ Value Evaluator::evalCall(const ASTNode& node) {
         }
     }
     throw RuntimeError(node, "Object is not callable");
+}
+
+Value Evaluator::evalAwait(const ASTNode& node) {
+    Value futureVal = evalNode(node.left);
+    if (futureVal.type != ValueType::PROMISE) {
+        throw RuntimeError(node, "Cannot await a non-promise value");
+    }
+    try {
+        if (!futureVal.getPromise()->valid()) return Value::nil();
+        return futureVal.getPromise()->get();
+    } catch (const std::exception& e) {
+        throw RuntimeError(node, std::string("Promise rejected: ") + e.what());
+    } catch (...) {
+        throw RuntimeError(node, "Promise rejected with unknown error");
+    }
 }
 
 Value Evaluator::evalMemberAccess(const ASTNode& node) {

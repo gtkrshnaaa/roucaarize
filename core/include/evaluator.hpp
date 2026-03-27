@@ -43,6 +43,7 @@ private:
     std::unordered_map<std::string,
         std::unordered_map<std::string, NativeFunction>> stdlibRegistry;
 
+    std::shared_ptr<Environment> cloneEnvironmentChain(std::shared_ptr<Environment> env);
     Value evalNode(NodeIndex idx);
     Value evalBlock(NodeIndex idx, std::shared_ptr<Environment> env);
 
@@ -55,6 +56,7 @@ private:
     Value evalIndexAccess(const ASTNode& node);
     Value evalArrayLiteral(const ASTNode& node);
     Value evalMapLiteral(const ASTNode& node);
+    Value evalAwait(const ASTNode& node);
 
     // Statements
     Value executeStatement(NodeIndex idx);

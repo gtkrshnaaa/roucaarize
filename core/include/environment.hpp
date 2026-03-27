@@ -17,6 +17,7 @@ namespace roucaarize {
 
 class Environment : public std::enable_shared_from_this<Environment> {
 public:
+    friend class Evaluator;
     explicit Environment(std::shared_ptr<Environment> outer = nullptr)
         : outer(std::move(outer)) {}
 
