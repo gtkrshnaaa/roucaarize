@@ -1,0 +1,55 @@
+// Event Emitter - Testing Structs holding functions (Methods) and Array manipulation
+
+struct Emitter {
+    listeners
+}
+
+function addListener(emitter, eventName, callback) {
+    if (emitter.listeners[eventName] == null) {
+        emitter.listeners[eventName] = []
+    }
+    emitter.listeners[eventName].push(callback)
+}
+
+function triggerEvent(emitter, eventName, payload) {
+    list = emitter.listeners[eventName]
+    if (list != null) {
+        i = 0
+        while (i < list.length()) {
+            cb = list[i]
+            cb(payload)
+            i++
+        }
+    }
+}
+
+function testEventEmitter() {
+    print("--- Testing Event Emitter ---")
+    system = Emitter({}) // Empty map
+    
+    globalState = 0
+    
+    function onData(payload) {
+        globalState += payload
+    }
+    
+    function onEnd(payload) {
+        globalState *= payload
+    }
+    
+    addListener(system, "data", onData)
+    addListener(system, "data", onData) // attached twice
+    addListener(system, "end", onEnd)
+    
+    triggerEvent(system, "data", 5) // +10
+    triggerEvent(system, "end", 3)  // *3 -> 30
+    
+    print("Final State: " + toString(globalState))
+    if (globalState != 30) { print("FATAL: Event emitter flow failed") }
+}
+
+function main() {
+    testEventEmitter()
+}
+
+main()

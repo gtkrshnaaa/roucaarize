@@ -1,0 +1,31 @@
+// Matrix Determinant Calculator - Testing 2D Arrays and Math
+
+function calculateDeterminant(matrix) {
+    // 3x3 Determinant
+    a = matrix[0][0]; b = matrix[0][1]; c = matrix[0][2]
+    d = matrix[1][0]; e = matrix[1][1]; f = matrix[1][2]
+    g = matrix[2][0]; h = matrix[2][1]; i = matrix[2][2]
+    
+    return a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g)
+}
+
+function testMatrixDeterminant() {
+    print("--- Testing Matrix Determinant ---")
+    
+    mat = [
+        [6, 1, 1],
+        [4, -2, 5],
+        [2, 8, 7]
+    ]
+    
+    det = calculateDeterminant(mat)
+    print("Determinant is: " + toString(det))
+    
+    if (det != -306) { print("FATAL: Determinant calculation failed!") }
+}
+
+function main() {
+    testMatrixDeterminant()
+}
+
+main()

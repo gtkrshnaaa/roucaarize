@@ -1,0 +1,47 @@
+// Linked List Cycle Detection (Floyd's Tortoise and Hare)
+
+struct ListNode {
+    val, next
+}
+
+function hasCycle(head) {
+    if (head == null) { return false }
+    
+    slow = head
+    fast = head.next
+    
+    while (fast != null) {
+        if (fast.next == null) { return false }
+        if (slow == fast) { return true }
+        slow = slow.next
+        fast = fast.next.next
+    }
+    return false
+}
+
+function testCycleDetection() {
+    print("--- Testing List Cycle ---")
+    
+    // List 1: Linear
+    l1 = ListNode(1, ListNode(2, ListNode(3, null)))
+    print("L1 has cycle: " + toString(hasCycle(l1)))
+    if (hasCycle(l1)) { print("FATAL: Cycle detection false positive") }
+    
+    // List 2: Cyclic
+    head = ListNode(10, null)
+    node2 = ListNode(20, null)
+    node3 = ListNode(30, null)
+    
+    head.next = node2
+    node2.next = node3
+    node3.next = head // Loop back
+    
+    print("L2 has cycle: " + toString(hasCycle(head)))
+    if (!hasCycle(head)) { print("FATAL: Cycle detection failed to find real cycle") }
+}
+
+function main() {
+    testCycleDetection()
+}
+
+main()

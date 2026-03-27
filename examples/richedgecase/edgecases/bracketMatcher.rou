@@ -1,0 +1,58 @@
+// Bracket Matcher - Testing Strings and Stack logical consistency
+
+function isBracketValid(str) {
+    stack = []
+    
+    // Split pseudo
+    chars = str.split("")
+    if (chars == null) { return false } // split failed fallback
+    
+    i = 0
+    while (i < chars.length()) {
+        c = chars[i]
+        
+        if (c == "(" or c == "{" or c == "[") {
+            stack.push(c)
+        } else if (c == ")" or c == "}" or c == "]") {
+            if (stack.length() == 0) { return false }
+            top = stack.pop()
+            
+            if (c == ")" and top != "(") { return false }
+            if (c == "}" and top != "{") { return false }
+            if (c == "]" and top != "[") { return false }
+        }
+        i++
+    }
+    
+    return stack.length() == 0
+}
+
+function testBracketMatcher() {
+    print("--- Testing Bracket Matcher ---")
+    
+    valid1 = "()[]{}"
+    valid2 = "([{}])"
+    invalid1 = "(]"
+    invalid2 = "([)]"
+    invalid3 = "{"
+    
+    v1 = isBracketValid(valid1)
+    v2 = isBracketValid(valid2)
+    i1 = isBracketValid(invalid1)
+    i2 = isBracketValid(invalid2)
+    i3 = isBracketValid(invalid3)
+    
+    print("valid1 is " + toString(v1))
+    print("valid2 is " + toString(v2))
+    print("invalid1 is " + toString(i1))
+    print("invalid2 is " + toString(i2))
+    
+    if (!v1 or !v2) { print("FATAL: Failed on valid bracket string") }
+    if (i1 or i2 or i3) { print("FATAL: Failed on invalid bracket string") }
+}
+
+function main() {
+    testBracketMatcher()
+}
+
+main()

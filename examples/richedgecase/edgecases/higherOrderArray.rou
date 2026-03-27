@@ -1,0 +1,60 @@
+// Higher Order Array Operations: Custom Map, Filter, and Reduce
+
+function arrayMap(arr, transform) {
+    res = []
+    i = 0
+    while (i < arr.length()) {
+        res.push(transform(arr[i]))
+        i++
+    }
+    return res
+}
+
+function arrayFilter(arr, predicate) {
+    res = []
+    i = 0
+    while (i < arr.length()) {
+        if (predicate(arr[i])) {
+            res.push(arr[i])
+        }
+        i++
+    }
+    return res
+}
+
+function arrayReduce(arr, reducer, initialAccumulator) {
+    acc = initialAccumulator
+    i = 0
+    while (i < arr.length()) {
+        acc = reducer(acc, arr[i])
+        i++
+    }
+    return acc
+}
+
+function testHOFArrays() {
+    print("--- Testing HOF Map/Filter/Reduce ---")
+    nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    
+    function isEven(n) { return n % 2 == 0 }
+    function doubleVal(n) { return n * 2 }
+    function sumAccum(acc, curr) { return acc + curr }
+    
+    evens = arrayFilter(nums, isEven)
+    print("Evens: " + toString(evens[0]) + ", " + toString(evens[1])) // 2, 4
+    if (evens.length() != 5) { print("FATAL: Filter failed") }
+    
+    doubles = arrayMap(evens, doubleVal)
+    print("Doubles: " + toString(doubles[0])) // 4
+    if (doubles[0] != 4) { print("FATAL: Map failed") }
+    
+    sum = arrayReduce(doubles, sumAccum, 0)
+    print("Sum of doubled evens: " + toString(sum)) // 4+8+12+16+20 = 60
+    if (sum != 60) { print("FATAL: Reduce failed") }
+}
+
+function main() {
+    testHOFArrays()
+}
+
+main()

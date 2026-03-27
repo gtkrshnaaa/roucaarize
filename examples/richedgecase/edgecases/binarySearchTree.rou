@@ -1,0 +1,53 @@
+// Struct-based Binary Search Tree - Testing dynamic allocation and recursive methods
+
+struct TreeNode {
+    val, left, right
+}
+
+function insertNode(root, value) {
+    if (root == null) {
+        return TreeNode(value, null, null)
+    }
+    
+    if (value < root.val) {
+        root.left = insertNode(root.left, value)
+    } else {
+        root.right = insertNode(root.right, value)
+    }
+    return root
+}
+
+function searchNode(root, value) {
+    if (root == null) { return false }
+    if (root.val == value) { return true }
+    
+    if (value < root.val) {
+        return searchNode(root.left, value)
+    } else {
+        return searchNode(root.right, value)
+    }
+}
+
+function testBST() {
+    print("--- Testing Binary Search Tree ---")
+    tree = TreeNode(10, null, null)
+    insertNode(tree, 5)
+    insertNode(tree, 15)
+    insertNode(tree, 2)
+    insertNode(tree, 7)
+    
+    found2 = searchNode(tree, 2)
+    found99 = searchNode(tree, 99)
+    
+    print("Found 2: " + toString(found2))
+    print("Found 99: " + toString(found99))
+    
+    if (!found2) { print("FATAL: BST could not find existing node") }
+    if (found99) { print("FATAL: BST found ghost node") }
+}
+
+function main() {
+    testBST()
+}
+
+main()

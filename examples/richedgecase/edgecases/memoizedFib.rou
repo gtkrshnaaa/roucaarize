@@ -1,0 +1,35 @@
+// Closure Memoization - Testing high-level scoping encapsulation
+
+function createMemoizedFibonacci() {
+    cache = {0: 0, 1: 1}
+    
+    function fib(n) {
+        val = cache[n]
+        if (val != null) {
+            return val
+        }
+        
+        // Compute and store
+        res = fib(n - 1) + fib(n - 2)
+        cache[n] = res
+        return res
+    }
+    
+    return fib
+}
+
+function testMemoizedFib() {
+    print("--- Testing Memoized Closure ---")
+    fastFib = createMemoizedFibonacci()
+    
+    res = fastFib(40) // Will instantly return if memoized correctly (otherwise takes minutes)
+    print("Fib(40) = " + toString(res))
+    
+    if (res != 102334155) { print("FATAL: Memoized fib failed math") }
+}
+
+function main() {
+    testMemoizedFib()
+}
+
+main()

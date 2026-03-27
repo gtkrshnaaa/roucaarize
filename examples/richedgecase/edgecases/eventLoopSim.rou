@@ -1,0 +1,61 @@
+// Event Loop Simulator - Mocking asynchronous task orchestrations
+
+struct EventLoop {
+    microtasks
+}
+
+// Global scope tracker
+accumulator = ""
+
+function queueMicrotask(loop, taskName, executorFn) {
+    loop.microtasks.push(executorFn)
+}
+
+function runLoopTick(loop) {
+    while (loop.microtasks.length() > 0) {
+        // Mock shift (we don't have shift(), so we pop and rebuild array reversed... wait, arrays in Roucaarize don't have shift yet)
+        // I will implement a custom queue by keeping an index.
+        tasks = loop.microtasks
+        loop.microtasks = [] // clear queue for next tick
+        
+        i = 0
+        while (i < tasks.length()) {
+            fn = tasks[i]
+            fn()
+            i++
+        }
+    }
+}
+
+function testEventLoop() {
+    print("--- Testing Event Loop Simulator ---")
+    
+    loop = EventLoop([])
+    
+    function taskA() { accumulator += "A" }
+    function taskB() { accumulator += "B"; queueMicrotask(loop, "C", taskC) } // B queues C
+    function taskC() { accumulator += "C" }
+    function taskD() { accumulator += "D" }
+    
+    queueMicrotask(loop, "A", taskA)
+    queueMicrotask(loop, "B", taskB)
+    queueMicrotask(loop, "D", taskD)
+    
+    // Initial State
+    print("Starting tick...")
+    runLoopTick(loop)
+    
+    print("Accumulator Result: " + accumulator)
+    // Expect "ABD" in first tick. Since B queued C into the next tick, runLoopTick inner clears first queue, repopulates.
+    // Actually, in the code, `loop.microtasks` is cleared, then B pushes to the NEW `loop.microtasks`.
+    // Then the outer `while (loop.microtasks.length() > 0)` loops AGAIN for the next tick!
+    // So it executes A, B, D in tick 1. Then C is in tick 2. Sequence -> ABDC.
+    
+    if (accumulator != "ABDC") { print("FATAL: Event loop queueing order failed: " + accumulator) }
+}
+
+function main() {
+    testEventLoop()
+}
+
+main()

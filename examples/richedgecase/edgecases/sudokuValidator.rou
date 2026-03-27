@@ -1,0 +1,84 @@
+// Sudoku Board Validator - Testing 2D arrays, Maps (Sets), and triple nested loops
+
+function isValidSudoku(board) {
+    // Check rows, cols, and 3x3 grids using Maps as Sets
+    
+    i = 0
+    while (i < 9) {
+        rowSet = {}
+        colSet = {}
+        boxSet = {}
+        
+        j = 0
+        while (j < 9) {
+            rowVal = board[i][j]
+            colVal = board[j][i]
+            
+            // Grid logic 3x3
+            boxRow = 3 * (i / 3) + (j / 3)
+            boxCol = 3 * (i % 3) + (j % 3)
+            boxVal = board[boxRow][boxCol]
+            
+            if (rowVal != ".") {
+                if (rowSet[rowVal] != null) { return false }
+                rowSet[rowVal] = true
+            }
+            if (colVal != ".") {
+                if (colSet[colVal] != null) { return false }
+                colSet[colVal] = true
+            }
+            if (boxVal != ".") {
+                if (boxSet[boxVal] != null) { return false }
+                boxSet[boxVal] = true
+            }
+            
+            j++
+        }
+        i++
+    }
+    
+    return true
+}
+
+function testSudoku() {
+    print("--- Testing Sudoku Validator ---")
+    
+    validBoard = [
+        ["5","3",".",".","7",".",".",".","."],
+        ["6",".",".","1","9","5",".",".","."],
+        [".","9","8",".",".",".",".","6","."],
+        ["8",".",".",".","6",".",".",".","3"],
+        ["4",".",".","8",".","3",".",".","1"],
+        ["7",".",".",".","2",".",".",".","6"],
+        [".","6",".",".",".",".","2","8","."],
+        [".",".",".","4","1","9",".",".","5"],
+        [".",".",".",".","8",".",".","7","9"]
+    ]
+    
+    invalidBoard = [
+        ["8","3",".",".","7",".",".",".","."],
+        ["6",".",".","1","9","5",".",".","."],
+        [".","9","8",".",".",".",".","6","."],
+        ["8",".",".",".","6",".",".",".","3"], // duplicate 8 in row 0 and row 3 col 0
+        ["4",".",".","8",".","3",".",".","1"],
+        ["7",".",".",".","2",".",".",".","6"],
+        [".","6",".",".",".",".","2","8","."],
+        [".",".",".","4","1","9",".",".","5"],
+        [".",".",".",".","8",".",".","7","9"]
+    ]
+    
+    valid = isValidSudoku(validBoard)
+    invalid = isValidSudoku(invalidBoard)
+    
+    print("Valid Sudoku evaluation: " + toString(valid))
+    print("Invalid Sudoku evaluation: " + toString(invalid))
+    
+    if (!valid) { print("FATAL: Validator falsely rejected passing board") }
+    if (invalid) { print("FATAL: Validator falsely allowed invalid board") }
+}
+
+function main() {
+    testSudoku()
+}
+
+main()

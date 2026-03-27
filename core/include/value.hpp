@@ -101,6 +101,11 @@ struct Value {
             case ValueType::INT: return intVal == other.intVal;
             case ValueType::FLOAT: return floatVal == other.floatVal;
             case ValueType::STRING: return *getString() == *other.getString();
+            case ValueType::ARRAY: return getArray() == other.getArray();
+            case ValueType::MAP: return getMap() == other.getMap();
+            case ValueType::STRUCT_INSTANCE: return getStruct() == other.getStruct();
+            case ValueType::FUNCTION: return getFunction() == other.getFunction();
+            case ValueType::NATIVE_FUNCTION: return getNative() == other.getNative();
 
             default: return false;
         }
