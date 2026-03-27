@@ -1,0 +1,19 @@
+// Generated Array Test 5
+
+function testArray5() {
+    arr = []
+    idx = 0
+    while (idx < 6) {
+        arr.push(idx * 2)
+        idx++
+    }
+    
+    if (arr.length() != 6) { print("FATAL: array length mismatch") }
+    if (arr[6-1] != (6-1)*2) { print("FATAL: array element mismatch") }
+}
+
+function main() {
+    testArray5()
+}
+
+main()

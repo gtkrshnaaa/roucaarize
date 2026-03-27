@@ -1,0 +1,19 @@
+// Generated Array Test 22
+
+function testArray22() {
+    arr = []
+    idx = 0
+    while (idx < 36) {
+        arr.push(idx * 2)
+        idx++
+    }
+    
+    if (arr.length() != 36) { print("FATAL: array length mismatch") }
+    if (arr[36-1] != (36-1)*2) { print("FATAL: array element mismatch") }
+}
+
+function main() {
+    testArray22()
+}
+
+main()

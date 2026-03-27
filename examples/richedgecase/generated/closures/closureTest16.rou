@@ -1,0 +1,20 @@
+// Generated Closure Test 16
+
+function createMultiplier16(factor) {
+    function multiply(val) {
+        return val * factor
+    }
+    return multiply
+}
+
+function testClosure16() {
+    mul = createMultiplier16(16)
+    result = mul(10)
+    if (result != 160) { print("FATAL: Closure multiplication failed") }
+}
+
+function main() {
+    testClosure16()
+}
+
+main()

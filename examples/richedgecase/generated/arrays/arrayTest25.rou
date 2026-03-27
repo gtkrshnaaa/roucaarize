@@ -1,0 +1,19 @@
+// Generated Array Test 25
+
+function testArray25() {
+    arr = []
+    idx = 0
+    while (idx < 25) {
+        arr.push(idx * 2)
+        idx++
+    }
+    
+    if (arr.length() != 25) { print("FATAL: array length mismatch") }
+    if (arr[25-1] != (25-1)*2) { print("FATAL: array element mismatch") }
+}
+
+function main() {
+    testArray25()
+}
+
+main()

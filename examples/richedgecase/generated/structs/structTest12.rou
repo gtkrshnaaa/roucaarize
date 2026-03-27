@@ -1,0 +1,21 @@
+// Generated Struct Test 12
+
+struct Engine12 {
+    id, power, status
+}
+
+function testStruct12() {
+    e = Engine12(12, 1200, "idle")
+    e.status = "running"
+    e.power += 50
+    
+    if (e.id != 12) { print("FATAL: Struct ID mismatch") }
+    if (e.status != "running") { print("FATAL: Struct status mutation failed") }
+    if (e.power != 1250) { print("FATAL: Struct power mutation failed") }
+}
+
+function main() {
+    testStruct12()
+}
+
+main()

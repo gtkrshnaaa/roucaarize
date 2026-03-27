@@ -1,0 +1,19 @@
+// Generated Array Test 8
+
+function testArray8() {
+    arr = []
+    idx = 0
+    while (idx < 16) {
+        arr.push(idx * 2)
+        idx++
+    }
+    
+    if (arr.length() != 16) { print("FATAL: array length mismatch") }
+    if (arr[16-1] != (16-1)*2) { print("FATAL: array element mismatch") }
+}
+
+function main() {
+    testArray8()
+}
+
+main()

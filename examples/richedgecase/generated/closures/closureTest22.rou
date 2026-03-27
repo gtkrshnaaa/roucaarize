@@ -1,0 +1,20 @@
+// Generated Closure Test 22
+
+function createMultiplier22(factor) {
+    function multiply(val) {
+        return val * factor
+    }
+    return multiply
+}
+
+function testClosure22() {
+    mul = createMultiplier22(22)
+    result = mul(10)
+    if (result != 220) { print("FATAL: Closure multiplication failed") }
+}
+
+function main() {
+    testClosure22()
+}
+
+main()

@@ -1,0 +1,15 @@
+// Generated Math Test 12
+
+function testMath12() {
+    a = 99
+    b = 49
+    c = 91
+    result = a + b - c
+    if (result != 57) { print("FATAL: math calculation failed in test 12") }
+}
+
+function main() {
+    testMath12()
+}
+
+main()

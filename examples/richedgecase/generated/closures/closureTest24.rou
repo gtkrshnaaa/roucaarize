@@ -1,0 +1,20 @@
+// Generated Closure Test 24
+
+function createMultiplier24(factor) {
+    function multiply(val) {
+        return val * factor
+    }
+    return multiply
+}
+
+function testClosure24() {
+    mul = createMultiplier24(24)
+    result = mul(10)
+    if (result != 240) { print("FATAL: Closure multiplication failed") }
+}
+
+function main() {
+    testClosure24()
+}
+
+main()

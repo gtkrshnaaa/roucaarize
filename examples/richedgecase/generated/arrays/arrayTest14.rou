@@ -1,0 +1,19 @@
+// Generated Array Test 14
+
+function testArray14() {
+    arr = []
+    idx = 0
+    while (idx < 31) {
+        arr.push(idx * 2)
+        idx++
+    }
+    
+    if (arr.length() != 31) { print("FATAL: array length mismatch") }
+    if (arr[31-1] != (31-1)*2) { print("FATAL: array element mismatch") }
+}
+
+function main() {
+    testArray14()
+}
+
+main()

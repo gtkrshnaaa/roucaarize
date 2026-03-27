@@ -1,0 +1,20 @@
+// Generated Closure Test 17
+
+function createMultiplier17(factor) {
+    function multiply(val) {
+        return val * factor
+    }
+    return multiply
+}
+
+function testClosure17() {
+    mul = createMultiplier17(17)
+    result = mul(10)
+    if (result != 170) { print("FATAL: Closure multiplication failed") }
+}
+
+function main() {
+    testClosure17()
+}
+
+main()

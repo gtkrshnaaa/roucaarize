@@ -1,12 +1,12 @@
 Roucaarize Execution & Benchmark Report
-Generated on: Fri Mar 27 08:31:05 AM WIB 2026
+Generated on: Fri Mar 27 08:33:53 AM WIB 2026
 --------------------------------------
 SYSTEM SPECIFICATIONS:
   OS:  Ubuntu 24.04.4 LTS
   CPU: 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz
   RAM: 7635.43 MB
 --------------------------------------
-[x] ./advanced.rou: PASS (RAM: 4388KB, CPU: 100%)
+[x] ./advanced.rou: PASS (RAM: 4444KB, CPU: 50%)
     Output Details:
       == Roucaarize Advanced Demo ==
       
@@ -48,7 +48,7 @@ SYSTEM SPECIFICATIONS:
       
       Advanced example completed successfully.
 --------------------------------------
-[x] ./basics.rou: PASS (RAM: 4616KB, CPU: 50%)
+[x] ./basics.rou: PASS (RAM: 4512KB, CPU: 100%)
     Output Details:
       == Roucaarize Basics Demo ==
       
@@ -98,36 +98,36 @@ SYSTEM SPECIFICATIONS:
       
       Basics example completed successfully.
 --------------------------------------
-[x] ./modularity/calculator.rou: PASS (RAM: 4188KB, CPU: 100%)
+[x] ./modularity/calculator.rou: PASS (RAM: 4160KB, CPU: 100%)
     Output Details:
       
 --------------------------------------
-[x] ./modularity/config.rou: PASS (RAM: 4192KB, CPU: 100%)
+[x] ./modularity/config.rou: PASS (RAM: 4188KB, CPU: 50%)
     Output Details:
       
 --------------------------------------
-[x] ./modularity/main.rou: PASS (RAM: 4280KB, CPU: 100%)
+[x] ./modularity/main.rou: PASS (RAM: 4244KB, CPU: 66%)
     Output Details:
       == Roucaarize Modular Calculator ==
       Calculator Error: Undefined variable: calc
       == Calculator Session Ended ==
 --------------------------------------
-[x] ./modularity/math/operations.rou: PASS (RAM: 4192KB, CPU: 100%)
+[x] ./modularity/math/operations.rou: PASS (RAM: 4160KB, CPU: 50%)
     Output Details:
       
 --------------------------------------
-[x] ./modularity/utils/formatter.rou: PASS (RAM: 4152KB, CPU: 100%)
+[x] ./modularity/utils/formatter.rou: PASS (RAM: 4188KB, CPU: 100%)
     Output Details:
       
 --------------------------------------
-[x] ./orchestration.rou: PASS (RAM: 4828KB, CPU: 103%)
+[x] ./orchestration.rou: PASS (RAM: 4828KB, CPU: 104%)
     Output Details:
       == System Information ==
       Hostname: localhost
-      Uptime: 39293.5 seconds
+      Uptime: 39461.23 seconds
       User ID: 1000
       Home: /home/user
-      Date: 2026-03-27 08:31:05
+      Date: 2026-03-27 08:33:53
       
       == Service Health ==
       [WARN] sshd is not running
@@ -135,10 +135,10 @@ SYSTEM SPECIFICATIONS:
       
       == File Operations ==
       Wrote to: /tmp/roucaarize_test.txt
-      Read back: Hello from Roucaarize!\nWritten at: 08:31:05
+      Read back: Hello from Roucaarize!\nWritten at: 08:33:53
       File exists: true
       Content after append:
-      Hello from Roucaarize!\nWritten at: 08:31:05\nAppended line
+      Hello from Roucaarize!\nWritten at: 08:33:53\nAppended line
       Cleaned up temp file
       
       == String Operations ==
@@ -158,16 +158,16 @@ SYSTEM SPECIFICATIONS:
       Month: 3
       Day: 27
       Hour: 8
-      Minute: 31
-      Second: 5
-      Timestamp: 1774575065
+      Minute: 33
+      Second: 53
+      Timestamp: 1774575233
       
       == System Commands ==
       Kernel: 6.17.0-19-generic
       Disk usage (/): 6%
       
       == Process Info ==
-      Memory usage: 4857/7635MB (63.6%)
+      Memory usage: 5053/7635MB (66.2%)
       
       == Performance Test ==
       Sum of 0..9999: 49995000
@@ -175,55 +175,55 @@ SYSTEM SPECIFICATIONS:
       
       Orchestration example completed successfully.
 --------------------------------------
-[x] ./richedgecase/algorithms/bubbleSort.rou: PASS (RAM: 4460KB, CPU: 100%)
+[x] ./richedgecase/algorithms/bubbleSort.rou: PASS (RAM: 4396KB, CPU: 100%)
     Output Details:
       Sorted Output: 11 ... 90
 --------------------------------------
-[x] ./richedgecase/algorithms/factorial.rou: PASS (RAM: 4208KB, CPU: 100%)
+[x] ./richedgecase/algorithms/factorial.rou: PASS (RAM: 4268KB, CPU: 100%)
     Output Details:
       Factorial(10) = 3628800
 --------------------------------------
-[x] ./richedgecase/algorithms/fibonacci.rou: PASS (RAM: 4448KB, CPU: 92%)
+[x] ./richedgecase/algorithms/fibonacci.rou: PASS (RAM: 4380KB, CPU: 100%)
     Output Details:
       Fibonacci(15) = 610
 --------------------------------------
-[x] ./richedgecase/closures/currying.rou: PASS (RAM: 4332KB, CPU: 100%)
+[x] ./richedgecase/closures/currying.rou: PASS (RAM: 4232KB, CPU: 100%)
     Output Details:
       currying addArguments(10)(20)(30) = 60
 --------------------------------------
-[x] ./richedgecase/closures/multiplier.rou: PASS (RAM: 4332KB, CPU: 100%)
+[x] ./richedgecase/closures/multiplier.rou: PASS (RAM: 4208KB, CPU: 100%)
     Output Details:
       t3(10) = 30
       t5(10) = 50
 --------------------------------------
-[x] ./richedgecase/closures/stateSequence.rou: PASS (RAM: 4268KB, CPU: 100%)
+[x] ./richedgecase/closures/stateSequence.rou: PASS (RAM: 4232KB, CPU: 100%)
     Output Details:
       Generator1: 1, 2
       Generator2: 1
 --------------------------------------
-[x] ./richedgecase/edgecases/dynamicType.rou: PASS (RAM: 4268KB, CPU: 100%)
+[x] ./richedgecase/edgecases/dynamicType.rou: PASS (RAM: 4224KB, CPU: 100%)
     Output Details:
       Dynamic function assignment evaluated: 99
 --------------------------------------
-[x] ./richedgecase/edgecases/shadowScope.rou: PASS (RAM: 4160KB, CPU: 100%)
+[x] ./richedgecase/edgecases/shadowScope.rou: PASS (RAM: 4224KB, CPU: 100%)
     Output Details:
       FATAL: Captured lexical scope was not mutated!
       Post-Mutation Outer Value: outer-func
 --------------------------------------
-[x] ./richedgecase/edgecases/shortCircuit.rou: PASS (RAM: 4328KB, CPU: 100%)
+[x] ./richedgecase/edgecases/shortCircuit.rou: PASS (RAM: 4268KB, CPU: 100%)
     Output Details:
       FATAL: Short circuit failed, trap executed!
       Short circuit guarded successfully.
 --------------------------------------
-[x] ./richedgecase/edgecases/structChain.rou: PASS (RAM: 4156KB, CPU: 100%)
+[x] ./richedgecase/edgecases/structChain.rou: PASS (RAM: 4152KB, CPU: 50%)
     Output Details:
       Deep Struct Evaluation: deep target
 --------------------------------------
-[x] ./richedgecase/edgecases/structMethod.rou: PASS (RAM: 4232KB, CPU: 100%)
+[x] ./richedgecase/edgecases/structMethod.rou: PASS (RAM: 4224KB, CPU: 50%)
     Output Details:
       Struct Action Evaluation: 50
 --------------------------------------
-[x] ./richedgecase/edgecases/syntacticsugar.rou: PASS (RAM: 4288KB, CPU: 100%)
+[x] ./richedgecase/edgecases/syntacticsugar.rou: PASS (RAM: 4232KB, CPU: 50%)
     Output Details:
       --- Testing Increments ---
       Final i value: 1
@@ -237,12 +237,512 @@ SYSTEM SPECIFICATIONS:
       Nested Ternary Grade: B
       All Syntactic Sugar Edge Cases Passed!
 --------------------------------------
-[x] ./stresstest/infiniteLoop.rou: PASS (RAM: 4280KB, CPU: 99%)
+[x] ./richedgecase/generated/arrays/arrayTest10.rou: PASS (RAM: 4152KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest11.rou: PASS (RAM: 4004KB, CPU: 50%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest12.rou: PASS (RAM: 4216KB, CPU: 50%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest13.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest14.rou: PASS (RAM: 4192KB, CPU: 20%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest15.rou: PASS (RAM: 4100KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest16.rou: PASS (RAM: 4052KB, CPU: 50%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest17.rou: PASS (RAM: 4160KB, CPU: 50%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest18.rou: PASS (RAM: 4188KB, CPU: 40%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest19.rou: PASS (RAM: 4048KB, CPU: 33%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest1.rou: PASS (RAM: 4104KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest20.rou: PASS (RAM: 4160KB, CPU: 33%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest21.rou: PASS (RAM: 4224KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest22.rou: PASS (RAM: 4040KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest23.rou: PASS (RAM: 4192KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest24.rou: PASS (RAM: 4124KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest25.rou: PASS (RAM: 4096KB, CPU: 66%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest2.rou: PASS (RAM: 4188KB, CPU: 50%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest3.rou: PASS (RAM: 4160KB, CPU: 66%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest4.rou: PASS (RAM: 4160KB, CPU: 66%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest5.rou: PASS (RAM: 4192KB, CPU: 50%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest6.rou: PASS (RAM: 4096KB, CPU: 50%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest7.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest8.rou: PASS (RAM: 4216KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/arrays/arrayTest9.rou: PASS (RAM: 4048KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest10.rou: PASS (RAM: 4228KB, CPU: 33%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest11.rou: PASS (RAM: 4332KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest12.rou: PASS (RAM: 4268KB, CPU: 33%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest13.rou: PASS (RAM: 4220KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest14.rou: PASS (RAM: 4264KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest15.rou: PASS (RAM: 4332KB, CPU: 50%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest16.rou: PASS (RAM: 4208KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest17.rou: PASS (RAM: 4328KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest18.rou: PASS (RAM: 4228KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest19.rou: PASS (RAM: 4228KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest1.rou: PASS (RAM: 4264KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest20.rou: PASS (RAM: 4228KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest21.rou: PASS (RAM: 4228KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest22.rou: PASS (RAM: 4268KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest23.rou: PASS (RAM: 4332KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest24.rou: PASS (RAM: 4268KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest25.rou: PASS (RAM: 4316KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest2.rou: PASS (RAM: 4268KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest3.rou: PASS (RAM: 4316KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest4.rou: PASS (RAM: 4228KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest5.rou: PASS (RAM: 4224KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest6.rou: PASS (RAM: 4212KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest7.rou: PASS (RAM: 4320KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest8.rou: PASS (RAM: 4332KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/closures/closureTest9.rou: PASS (RAM: 4252KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest10.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest11.rou: PASS (RAM: 4096KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest12.rou: PASS (RAM: 4096KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest13.rou: PASS (RAM: 4228KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest14.rou: PASS (RAM: 4152KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest15.rou: PASS (RAM: 4156KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest16.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest17.rou: PASS (RAM: 4104KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest18.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest19.rou: PASS (RAM: 4156KB, CPU: 0%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest1.rou: PASS (RAM: 4188KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest20.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest21.rou: PASS (RAM: 4192KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest22.rou: PASS (RAM: 4224KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest23.rou: PASS (RAM: 4156KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest24.rou: PASS (RAM: 4192KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest25.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest2.rou: PASS (RAM: 4056KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest3.rou: PASS (RAM: 4048KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest4.rou: PASS (RAM: 4192KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest5.rou: PASS (RAM: 4116KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest6.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest7.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest8.rou: PASS (RAM: 4192KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/logic/logicTest9.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest10.rou: PASS (RAM: 4048KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest11.rou: PASS (RAM: 4060KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest12.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest13.rou: PASS (RAM: 4156KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest14.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest15.rou: PASS (RAM: 4192KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest16.rou: PASS (RAM: 4152KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest17.rou: PASS (RAM: 4060KB, CPU: 0%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest18.rou: PASS (RAM: 4104KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest19.rou: PASS (RAM: 4040KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest1.rou: PASS (RAM: 4148KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest20.rou: PASS (RAM: 4228KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest21.rou: PASS (RAM: 4228KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest22.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest23.rou: PASS (RAM: 4224KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest24.rou: PASS (RAM: 4120KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest25.rou: PASS (RAM: 4096KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest2.rou: PASS (RAM: 4072KB, CPU: 0%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest3.rou: PASS (RAM: 4188KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest4.rou: PASS (RAM: 4152KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest5.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest6.rou: PASS (RAM: 4060KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest7.rou: PASS (RAM: 4152KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest8.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/math/mathTest9.rou: PASS (RAM: 4096KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest10.rou: PASS (RAM: 4100KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest11.rou: PASS (RAM: 4228KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest12.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest13.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest14.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest15.rou: PASS (RAM: 4060KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest16.rou: PASS (RAM: 4192KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest17.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest18.rou: PASS (RAM: 4192KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest19.rou: PASS (RAM: 4104KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest1.rou: PASS (RAM: 4116KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest20.rou: PASS (RAM: 4088KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest21.rou: PASS (RAM: 4160KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest22.rou: PASS (RAM: 4104KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest23.rou: PASS (RAM: 4216KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest24.rou: PASS (RAM: 4192KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest25.rou: PASS (RAM: 4224KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest2.rou: PASS (RAM: 4060KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest3.rou: PASS (RAM: 4056KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest4.rou: PASS (RAM: 4228KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest5.rou: PASS (RAM: 4040KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest6.rou: PASS (RAM: 4048KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest7.rou: PASS (RAM: 4192KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest8.rou: PASS (RAM: 4096KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./richedgecase/generated/structs/structTest9.rou: PASS (RAM: 4096KB, CPU: 100%)
+    Output Details:
+      
+--------------------------------------
+[x] ./stresstest/infiniteLoop.rou: PASS (RAM: 4300KB, CPU: 99%)
     Output Details:
       Testing infinite loop (Target: Watchdog Timeout Guard, no freeze)...
       Intercepted: Execution timeout: while loop exceeded 5s limit
 --------------------------------------
-[x] ./stresstest/main.rou: PASS (RAM: 4444KB, CPU: 100%)
+[x] ./stresstest/main.rou: PASS (RAM: 4472KB, CPU: 100%)
     Output Details:
       ===================================================
       >>> ROUCAARIZE LINUX ORCHESTRATION STRESS TESTS <<<
@@ -259,17 +759,17 @@ SYSTEM SPECIFICATIONS:
       >>> STRESS TEST SUITE COMPLETED WITHOUT SEGFAULT <<<
       ===================================================
 --------------------------------------
-[x] ./stresstest/memoryPressure.rou: PASS (RAM: 22212KB, CPU: 98%)
+[x] ./stresstest/memoryPressure.rou: PASS (RAM: 22164KB, CPU: 98%)
     Output Details:
       Testing heavy memory pressure & allocations...
       Memory pressure survived! Array: 300000, Map: 0
 --------------------------------------
-[x] ./stresstest/orchestrationChaos.rou: PASS (RAM: 4052KB, CPU: 101%)
+[x] ./stresstest/orchestrationChaos.rou: PASS (RAM: 4096KB, CPU: 101%)
     Output Details:
       Testing process orchestration chaos...
       Successfully spawned and terminated 300 external processes.
 --------------------------------------
-[x] ./stresstest/recursion.rou: PASS (RAM: 8524KB, CPU: 94%)
+[x] ./stresstest/recursion.rou: PASS (RAM: 8500KB, CPU: 100%)
     Output Details:
       Testing infinite recursion (Target: Stack Overflow Guard, no segfault)...
       Intercepted: Maximum recursion depth exceeded (2800)
@@ -277,11 +777,11 @@ SYSTEM SPECIFICATIONS:
 
 ==========================================================
 RESULTS SUMMARY:
-Total Tests: 25
-Passed:      25
+Total Tests: 150
+Passed:      150
 Failed:      0
 --------------------------------------
 PERFORMANCE METRICS:
-Peak RAM:    22212 KB (by ./stresstest/memoryPressure.rou)
-Peak CPU:    103% (by ./orchestration.rou)
+Peak RAM:    22164 KB (by ./stresstest/memoryPressure.rou)
+Peak CPU:    104% (by ./orchestration.rou)
 ==========================================================

@@ -1,0 +1,20 @@
+// Generated Closure Test 23
+
+function createMultiplier23(factor) {
+    function multiply(val) {
+        return val * factor
+    }
+    return multiply
+}
+
+function testClosure23() {
+    mul = createMultiplier23(23)
+    result = mul(10)
+    if (result != 230) { print("FATAL: Closure multiplication failed") }
+}
+
+function main() {
+    testClosure23()
+}
+
+main()

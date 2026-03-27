@@ -1,0 +1,20 @@
+// Generated Closure Test 14
+
+function createMultiplier14(factor) {
+    function multiply(val) {
+        return val * factor
+    }
+    return multiply
+}
+
+function testClosure14() {
+    mul = createMultiplier14(14)
+    result = mul(10)
+    if (result != 140) { print("FATAL: Closure multiplication failed") }
+}
+
+function main() {
+    testClosure14()
+}
+
+main()

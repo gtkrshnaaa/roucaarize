@@ -1,0 +1,15 @@
+// Generated Math Test 25
+
+function testMath25() {
+    a = 4
+    b = 37
+    c = 47
+    result = a + b - c
+    if (result != -6) { print("FATAL: math calculation failed in test 25") }
+}
+
+function main() {
+    testMath25()
+}
+
+main()

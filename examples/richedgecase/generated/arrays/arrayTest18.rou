@@ -1,0 +1,19 @@
+// Generated Array Test 18
+
+function testArray18() {
+    arr = []
+    idx = 0
+    while (idx < 50) {
+        arr.push(idx * 2)
+        idx++
+    }
+    
+    if (arr.length() != 50) { print("FATAL: array length mismatch") }
+    if (arr[50-1] != (50-1)*2) { print("FATAL: array element mismatch") }
+}
+
+function main() {
+    testArray18()
+}
+
+main()

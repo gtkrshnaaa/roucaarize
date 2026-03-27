@@ -1,0 +1,22 @@
+// Generated Logic Test 1
+
+function testLogic1() {
+    counter = 0
+    val = 0
+    while (counter < 32) {
+        if (counter % 2 == 0) {
+            val += 2
+        } else {
+            val += 1
+        }
+        counter++
+    }
+    
+    if (counter != 32) { print("FATAL: loop did not terminate correctly") }
+}
+
+function main() {
+    testLogic1()
+}
+
+main()

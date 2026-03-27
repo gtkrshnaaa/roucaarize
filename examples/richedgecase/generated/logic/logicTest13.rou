@@ -1,0 +1,22 @@
+// Generated Logic Test 13
+
+function testLogic13() {
+    counter = 0
+    val = 0
+    while (counter < 70) {
+        if (counter % 2 == 0) {
+            val += 2
+        } else {
+            val += 1
+        }
+        counter++
+    }
+    
+    if (counter != 70) { print("FATAL: loop did not terminate correctly") }
+}
+
+function main() {
+    testLogic13()
+}
+
+main()
