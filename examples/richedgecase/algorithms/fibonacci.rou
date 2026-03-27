@@ -1,6 +1,13 @@
 // Basic Algorithms Test - Roucaarize
 // Tests classic computer science problems (Fibonacci)
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 function fibonacci(n) {
     if (n <= 1) {
         return n
@@ -10,8 +17,8 @@ function fibonacci(n) {
 
 function testFibonacci() {
     result = fibonacci(15)
-    print("Fibonacci(15) = " + toString(result))
-    if (result != 610) { print("FATAL: fibonacci() failed!") }
+    ioLib.print("Fibonacci(15) = " + coreLib.toString(result))
+    if (result != 610) { ioLib.print("FATAL: fibonacci() failed!") }
 }
 
 function main() {

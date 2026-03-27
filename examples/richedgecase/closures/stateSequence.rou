@@ -1,5 +1,12 @@
 // Modifying Outer Environment from Inner Scope - Roucaarize
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 function createSequenceGenerator() {
     state = 0
     function nextValue() {
@@ -17,11 +24,11 @@ function testGenerators() {
     v2 = gen1()
     v3 = gen2()
 
-    print("Generator1: " + toString(v1) + ", " + toString(v2))
-    print("Generator2: " + toString(v3))
+    ioLib.print("Generator1: " + coreLib.toString(v1) + ", " + coreLib.toString(v2))
+    ioLib.print("Generator2: " + coreLib.toString(v3))
 
-    if (v2 != 2) { print("FATAL: Outer lexical scope failed to maintain state!") }
-    if (v3 != 1) { print("FATAL: Generator instances leaked cross-scope state!") }
+    if (v2 != 2) { ioLib.print("FATAL: Outer lexical scope failed to maintain state!") }
+    if (v3 != 1) { ioLib.print("FATAL: Generator instances leaked cross-scope state!") }
 }
 
 function main() {

@@ -1,5 +1,12 @@
 // Struct-based Binary Search Tree - Testing dynamic allocation and recursive methods
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 struct TreeNode {
     val, left, right
 }
@@ -29,7 +36,7 @@ function searchNode(root, value) {
 }
 
 function testBST() {
-    print("--- Testing Binary Search Tree ---")
+    ioLib.print("--- Testing Binary Search Tree ---")
     tree = TreeNode(10, null, null)
     insertNode(tree, 5)
     insertNode(tree, 15)
@@ -39,11 +46,11 @@ function testBST() {
     found2 = searchNode(tree, 2)
     found99 = searchNode(tree, 99)
     
-    print("Found 2: " + toString(found2))
-    print("Found 99: " + toString(found99))
+    ioLib.print("Found 2: " + coreLib.toString(found2))
+    ioLib.print("Found 99: " + coreLib.toString(found99))
     
-    if (!found2) { print("FATAL: BST could not find existing node") }
-    if (found99) { print("FATAL: BST found ghost node") }
+    if (!found2) { ioLib.print("FATAL: BST could not find existing node") }
+    if (found99) { ioLib.print("FATAL: BST found ghost node") }
 }
 
 function main() {

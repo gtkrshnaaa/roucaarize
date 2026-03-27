@@ -1,5 +1,12 @@
 // Linked List Cycle Detection (Floyd's Tortoise and Hare)
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 struct ListNode {
     val, next
 }
@@ -20,12 +27,12 @@ function hasCycle(head) {
 }
 
 function testCycleDetection() {
-    print("--- Testing List Cycle ---")
+    ioLib.print("--- Testing List Cycle ---")
     
     // List 1: Linear
     l1 = ListNode(1, ListNode(2, ListNode(3, null)))
-    print("L1 has cycle: " + toString(hasCycle(l1)))
-    if (hasCycle(l1)) { print("FATAL: Cycle detection false positive") }
+    ioLib.print("L1 has cycle: " + coreLib.toString(hasCycle(l1)))
+    if (hasCycle(l1)) { ioLib.print("FATAL: Cycle detection false positive") }
     
     // List 2: Cyclic
     head = ListNode(10, null)
@@ -36,8 +43,8 @@ function testCycleDetection() {
     node2.next = node3
     node3.next = head // Loop back
     
-    print("L2 has cycle: " + toString(hasCycle(head)))
-    if (!hasCycle(head)) { print("FATAL: Cycle detection failed to find real cycle") }
+    ioLib.print("L2 has cycle: " + coreLib.toString(hasCycle(head)))
+    if (!hasCycle(head)) { ioLib.print("FATAL: Cycle detection failed to find real cycle") }
 }
 
 function main() {

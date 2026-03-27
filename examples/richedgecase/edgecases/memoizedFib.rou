@@ -1,5 +1,12 @@
 // Closure Memoization - Testing high-level scoping encapsulation
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 function createMemoizedFibonacci() {
     cache = {0: 0, 1: 1}
     
@@ -19,13 +26,13 @@ function createMemoizedFibonacci() {
 }
 
 function testMemoizedFib() {
-    print("--- Testing Memoized Closure ---")
+    ioLib.print("--- Testing Memoized Closure ---")
     fastFib = createMemoizedFibonacci()
     
     res = fastFib(40) // Will instantly return if memoized correctly (otherwise takes minutes)
-    print("Fib(40) = " + toString(res))
+    ioLib.print("Fib(40) = " + coreLib.toString(res))
     
-    if (res != 102334155) { print("FATAL: Memoized fib failed math") }
+    if (res != 102334155) { ioLib.print("FATAL: Memoized fib failed math") }
 }
 
 function main() {

@@ -1,5 +1,12 @@
 // Conway's Game Of Life - Matrix state mutation based on logical immediate neighborhood rules
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 function simulateTick(grid, w, h) {
     // Generate new blank state
     nextState = []
@@ -7,8 +14,8 @@ function simulateTick(grid, w, h) {
     while (r < h) {
         row = []
         c = 0
-        while (c < w) { row.push(0); c++ }
-        nextState.push(row)
+        while (c < w) { arrLib.push(row, 0); c++ }
+        arrLib.push(nextState, row)
         r++
     }
     
@@ -55,7 +62,7 @@ function simulateTick(grid, w, h) {
 }
 
 function testGameOfLife() {
-    print("--- Testing Conway Game Of Life Rules ---")
+    ioLib.print("--- Testing Conway Game Of Life Rules ---")
     // Creates a "Blinker" pattern
     grid = [
         [0, 0, 0, 0, 0],
@@ -68,16 +75,16 @@ function testGameOfLife() {
     step1 = simulateTick(grid, 5, 5)
     step2 = simulateTick(step1, 5, 5)
     
-    print("Blinker Matrix Step 1 Center Val: " + toString(step1[2][2]) + " -> expects 1")
-    print("Blinker Matrix Step 1 Pivot Val: " + toString(step1[2][1]) + " -> expects 1")
+    ioLib.print("Blinker Matrix Step 1 Center Val: " + coreLib.toString(step1[2][2]) + " -> expects 1")
+    ioLib.print("Blinker Matrix Step 1 Pivot Val: " + coreLib.toString(step1[2][1]) + " -> expects 1")
     
     // Step 1 should oscillate horizontal:
     // [0, 0, 0, 0, 0]
     // [0, 1, 1, 1, 0]
-    if (step1[2][1] != 1 or step1[1][2] != 0) { print("FATAL: Game of life cellular replication rules broken") }
+    if (step1[2][1] != 1 or step1[1][2] != 0) { ioLib.print("FATAL: Game of life cellular replication rules broken") }
     
     // Step 2 should match grid entirely
-    if (step2[2][2] != grid[2][2] or step2[1][2] != grid[1][2]) { print("FATAL: Game of life cellular oscillation cycle failed") }
+    if (step2[2][2] != grid[2][2] or step2[1][2] != grid[1][2]) { ioLib.print("FATAL: Game of life cellular oscillation cycle failed") }
 }
 
 function main() {

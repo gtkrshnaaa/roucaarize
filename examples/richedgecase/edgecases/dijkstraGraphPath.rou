@@ -1,5 +1,12 @@
 // Dijkstra Shortest Path - Testing Map traversal and Greedy tracking over Strings
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 // Using map to store graph { "A": [["B", 5], ["C", 2]] }
 struct Edge { node, cost }
 
@@ -43,7 +50,7 @@ function dijkstraSolve(graph, startKey, endKey) {
         edges = graph[curr]
         if (edges != null) {
             e = 0
-            while (e < edges.length) {
+            while (e < coreLib.len(edges)) {
                 adj = edges[e].node
                 cost = edges[e].cost
                 
@@ -61,7 +68,7 @@ function dijkstraSolve(graph, startKey, endKey) {
 }
 
 function testDijkstra() {
-    print("--- Testing Dijkstra Graph Solver ---")
+    ioLib.print("--- Testing Dijkstra Graph Solver ---")
     
     g = {}
     g["A"] = [Edge("B", 10), Edge("C", 3)]
@@ -72,14 +79,14 @@ function testDijkstra() {
     
     res = dijkstraSolve(g, "A", "E")
     
-    print("Shortest path cost from A -> E is: " + toString(res))
+    ioLib.print("Shortest path cost from A -> E is: " + coreLib.toString(res))
     // A -> C (3)
     // C -> B (4) -> B is 7
     // B -> D (1) -> D is 8 (wait, C -> D is 2 -> D is 5!)
     // D -> E (10) -> E is 15.
     // B -> E (5) -> E is 12 (7 + 5). So shortest is 12!
     
-    if (res != 12) { print("FATAL: Dijkstra path algorithm evaluated incorrect minimum distance: " + toString(res)) }
+    if (res != 12) { ioLib.print("FATAL: Dijkstra path algorithm evaluated incorrect minimum distance: " + coreLib.toString(res)) }
 }
 
 function main() {

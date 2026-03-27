@@ -1,14 +1,20 @@
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
 function deepCall(n) {
     return deepCall(n + 1)
 }
 
 function run() {
-    print("Testing infinite recursion (Target: Stack Overflow Guard, no segfault)...")
+    ioLib.print("Testing infinite recursion (Target: Stack Overflow Guard, no segfault)...")
     deepCall(1)
 }
 
 try {
     run()
 } catch (err) {
-    print("Intercepted: " + toString(err))
+    ioLib.print("Intercepted: " + coreLib.toString(err))
 }

@@ -1,5 +1,12 @@
 // Virtual Machine Bytecode Emulator - Computing instructions inside the Language
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 // Opcodes
 // 0: PUSH
 // 1: ADD
@@ -15,17 +22,17 @@ function executeOp(vm) {
     if (op == 0) {
         vm.pc++
         val = vm.program[vm.pc]
-        vm.stack.push(val)
+        arrLib.push(vm.stack, val)
     } else if (op == 1) {
-        b = vm.stack.pop()
-        a = vm.stack.pop()
-        vm.stack.push(a + b)
+        b = arrLib.pop(vm.stack)
+        a = arrLib.pop(vm.stack)
+        arrLib.push(vm.stack, a + b)
     } else if (op == 2) {
-        b = vm.stack.pop()
-        a = vm.stack.pop()
-        vm.stack.push(a * b)
+        b = arrLib.pop(vm.stack)
+        a = arrLib.pop(vm.stack)
+        arrLib.push(vm.stack, a * b)
     } else if (op == 3) {
-        print("VM Emulation Output: " + toString(vm.stack.pop())) // Pop and Print
+        ioLib.print("VM Emulation Output: " + coreLib.toString(arrLib.pop(vm.stack))) // Pop and Print
     } else if (op == 4) {
         vm.running = false
     }
@@ -34,7 +41,7 @@ function executeOp(vm) {
 }
 
 function testVirtualMachine() {
-    print("--- Testing VM Emulator ---")
+    ioLib.print("--- Testing VM Emulator ---")
     // Program: PUSH 10, PUSH 20, ADD, PUSH 3, MULT, PRINT, HALT
     // Expects: (10 + 20) * 3 = 90
     prog = [0, 10, 0, 20, 1, 0, 3, 2, 3, 4]
@@ -47,9 +54,9 @@ function testVirtualMachine() {
         safety++
     }
     
-    if (safety >= 100) { print("FATAL: VM Emulator infinite loop") }
+    if (safety >= 100) { ioLib.print("FATAL: VM Emulator infinite loop") }
     // The print op will consume 90 from stack, stack should be empty if clean
-    if (machine.stack.length != 0) { print("FATAL: VM Memory Leaked or Evaluated improperly") }
+    if (coreLib.len(machine.stack) != 0) { ioLib.print("FATAL: VM Memory Leaked or Evaluated improperly") }
 }
 
 function main() {

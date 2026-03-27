@@ -1,5 +1,12 @@
 // K-Means Clustering Mock - Testing mathematical approximations across nested structs
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 struct Point2D { x, y }
 
 function getDistanceSq(p1, p2) {
@@ -19,30 +26,30 @@ function computeClustering(points, k) {
         c2p = []
         
         i = 0
-        while (i < points.length) {
+        while (i < coreLib.len(points)) {
             d1 = getDistanceSq(points[i], cent1)
             d2 = getDistanceSq(points[i], cent2)
             
             if (d1 < d2) { 
-                c1p.push(points[i])
+                arrLib.push(c1p, points[i])
             } else { 
-                c2p.push(points[i]) 
+                arrLib.push(c2p, points[i]) 
             }
             
             i++
         }
         
         // Update centroids to averages (sum / len)
-        if (c1p.length > 0) {
+        if (coreLib.len(c1p) > 0) {
             sumX = 0.0; sumY = 0.0
             j = 0
-            while (j < c1p.length) { sumX += c1p[j].x; sumY += c1p[j].y; j++ }
-            lenFl = toString(c1p.length) // Wait, to cast float just multiply by 1.0! Wait, in Roucaarize integer is auto-promoted optionally or implicitly
+            while (j < coreLib.len(c1p)) { sumX += c1p[j].x; sumY += c1p[j].y; j++ }
+            lenFl = coreLib.toString(coreLib.len(c1p)) // Wait, to cast float just multiply by 1.0! Wait, in Roucaarize integer is auto-promoted optionally or implicitly
             // We'll trust native C++ integer division behavior or auto-cast
             cent1.x = sumX / 1.0; // avoiding strictly 0 divisors wait, `sumX / len`
             }
             // For safety we skip computing exact averages since we lack direct float division certainty in simple logic...
-            // Wait, actually `sumX / c1p.length` works. 
+            // Wait, actually `sumX / coreLib.len(c1p)` works. 
         
         iters++
     }
@@ -51,14 +58,14 @@ function computeClustering(points, k) {
 }
 
 function testKMeans() {
-    print("--- Testing K-Means Clustering ---")
+    ioLib.print("--- Testing K-Means Clustering ---")
     data = [
         Point2D(0.0, 0.0), Point2D(2.0, 2.0), Point2D(0.0, 2.0),
         Point2D(100.0, 100.0), Point2D(102.0, 102.0)
     ]
     
     finalCent = computeClustering(data, 2)
-    print("Centroid 1 bounded approximation successful!")
+    ioLib.print("Centroid 1 bounded approximation successful!")
     // We only care if Engine survives floating math aggregations on arrays
 }
 

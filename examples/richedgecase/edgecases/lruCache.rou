@@ -1,5 +1,12 @@
 // Least Recently Used (LRU) Cache - Testing Map mutability and array element shifting logical ordering
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 struct CacheNode {
     key, value
 }
@@ -15,9 +22,9 @@ function initLRU(cap) {
 function removeKeyFromQueue(queue, targetKey) {
     newQ = []
     i = 0
-    while (i < queue.length) {
+    while (i < coreLib.len(queue)) {
         if (queue[i] != targetKey) {
-            newQ.push(queue[i])
+            arrLib.push(newQ, queue[i])
         }
         i++
     }
@@ -29,7 +36,7 @@ function putCache(lru, key, value) {
     if (lru.cacheMap[key] != null) {
         lru.queue = removeKeyFromQueue(lru.queue, key)
     } else {
-        if (lru.queue.length >= lru.capacity) {
+        if (coreLib.len(lru.queue) >= lru.capacity) {
             // Evict oldest (front of queue)
             // No shift() so we pop all to temporary, wait, we can just slice.
             oldestKey = lru.queue[0]
@@ -39,7 +46,7 @@ function putCache(lru, key, value) {
     }
     
     lru.cacheMap[key] = value
-    lru.queue.push(key)
+    arrLib.push(lru.queue, key)
 }
 
 function getCache(lru, key) {
@@ -48,13 +55,13 @@ function getCache(lru, key) {
     // Move to most recently used
     val = lru.cacheMap[key]
     lru.queue = removeKeyFromQueue(lru.queue, key)
-    lru.queue.push(key)
+    arrLib.push(lru.queue, key)
     
     return val
 }
 
 function testLRUCache() {
-    print("--- Testing LRU Cache ---")
+    ioLib.print("--- Testing LRU Cache ---")
     cache = initLRU(2)
     
     putCache(cache, "A", 1)
@@ -66,13 +73,13 @@ function testLRUCache() {
     valB = getCache(cache, "B") // Should be -1
     valC = getCache(cache, "C") // Should be 3
     
-    print("valA: " + toString(valA))
-    print("valB: " + toString(valB))
-    print("valC: " + toString(valC))
+    ioLib.print("valA: " + coreLib.toString(valA))
+    ioLib.print("valB: " + coreLib.toString(valB))
+    ioLib.print("valC: " + coreLib.toString(valC))
     
-    if (valA != 1) { print("FATAL: LRU accessed value A failed") }
-    if (valB != -1) { print("FATAL: LRU eviction failed to clear B") }
-    if (valC != 3) { print("FATAL: LRU new insertion failed") }
+    if (valA != 1) { ioLib.print("FATAL: LRU accessed value A failed") }
+    if (valB != -1) { ioLib.print("FATAL: LRU eviction failed to clear B") }
+    if (valC != 3) { ioLib.print("FATAL: LRU new insertion failed") }
 }
 
 function main() {

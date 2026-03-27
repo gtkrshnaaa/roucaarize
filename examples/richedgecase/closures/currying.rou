@@ -1,5 +1,12 @@
 // Advanced Currying (Nested Returns) - Roucaarize
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 function addArguments(a) {
     function innerBind(b) {
         function finalBind(c) {
@@ -12,8 +19,8 @@ function addArguments(a) {
 
 function testCurrying() {
     sumResult = addArguments(10)(20)(30)
-    print("currying addArguments(10)(20)(30) = " + toString(sumResult))
-    if (sumResult != 60) { print("FATAL: Currying logic failed!") }
+    ioLib.print("currying addArguments(10)(20)(30) = " + coreLib.toString(sumResult))
+    if (sumResult != 60) { ioLib.print("FATAL: Currying logic failed!") }
 }
 
 function main() {

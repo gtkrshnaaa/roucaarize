@@ -1,43 +1,49 @@
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
 import "recursion.rou" as rec
 import "memoryPressure.rou" as mem
 import "orchestrationChaos.rou" as orch
 import "infiniteLoop.rou" as inf
 
-print("===================================================")
-print(">>> ROUCAARIZE LINUX ORCHESTRATION STRESS TESTS <<<")
-print("===================================================")
-print("")
+ioLib.print("===================================================")
+ioLib.print(">>> ROUCAARIZE LINUX ORCHESTRATION STRESS TESTS <<<")
+ioLib.print("===================================================")
+ioLib.print("")
 
 try {
     rec.run()
 } catch (e) {
-    print("[SAFE CATCH] Recursion handled cleanly: " + toString(e))
+    ioLib.print("[SAFE CATCH] Recursion handled cleanly: " + coreLib.toString(e))
 }
 
-print("---------------------------------------------------")
+ioLib.print("---------------------------------------------------")
 
 try {
     mem.run()
 } catch (e) {
-    print("[SAFE CATCH] Memory handled cleanly: " + toString(e))
+    ioLib.print("[SAFE CATCH] Memory handled cleanly: " + coreLib.toString(e))
 }
 
-print("---------------------------------------------------")
+ioLib.print("---------------------------------------------------")
 
 try {
     orch.run()
 } catch (e) {
-    print("[SAFE CATCH] Orchestration handled cleanly: " + toString(e))
+    ioLib.print("[SAFE CATCH] Orchestration handled cleanly: " + coreLib.toString(e))
 }
 
-print("---------------------------------------------------")
+ioLib.print("---------------------------------------------------")
 
 try {
     inf.run()
 } catch (e) {
-    print("[SAFE CATCH] Infinite loop handled cleanly: " + toString(e))
+    ioLib.print("[SAFE CATCH] Infinite loop handled cleanly: " + coreLib.toString(e))
 }
 
-print("===================================================")
-print(">>> STRESS TEST SUITE COMPLETED WITHOUT SEGFAULT <<<")
-print("===================================================")
+ioLib.print("===================================================")
+ioLib.print(">>> STRESS TEST SUITE COMPLETED WITHOUT SEGFAULT <<<")
+ioLib.print("===================================================")

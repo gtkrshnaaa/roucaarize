@@ -1,18 +1,25 @@
 // Bracket Matcher - Testing Strings and Stack logical consistency
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 function isBracketValid(str) {
     stack = []
     
     // Split pseudo
     i = 0
-    while (i < str.length) { 
+    while (i < coreLib.len(str)) { 
         c = str[i]
         
         if (c == "(" or c == "{" or c == "[") {
-            stack.push(c)
+            arrLib.push(stack, c)
         } else if (c == ")" or c == "}" or c == "]") {
-            if (stack.length() == 0) { return false }
-            top = stack.pop()
+            if (coreLib.len(stack) == 0) { return false }
+            top = arrLib.pop(stack)
             
             if (c == ")" and top != "(") { return false }
             if (c == "}" and top != "{") { return false }
@@ -21,11 +28,11 @@ function isBracketValid(str) {
         i++
     }
     
-    return stack.length() == 0
+    return coreLib.len(stack) == 0
 }
 
 function testBracketMatcher() {
-    print("--- Testing Bracket Matcher ---")
+    ioLib.print("--- Testing Bracket Matcher ---")
     
     valid1 = "()[]{}"
     valid2 = "([{}])"
@@ -39,13 +46,13 @@ function testBracketMatcher() {
     i2 = isBracketValid(invalid2)
     i3 = isBracketValid(invalid3)
     
-    print("valid1 is " + toString(v1))
-    print("valid2 is " + toString(v2))
-    print("invalid1 is " + toString(i1))
-    print("invalid2 is " + toString(i2))
+    ioLib.print("valid1 is " + coreLib.toString(v1))
+    ioLib.print("valid2 is " + coreLib.toString(v2))
+    ioLib.print("invalid1 is " + coreLib.toString(i1))
+    ioLib.print("invalid2 is " + coreLib.toString(i2))
     
-    if (!v1 or !v2) { print("FATAL: Failed on valid bracket string") }
-    if (i1 or i2 or i3) { print("FATAL: Failed on invalid bracket string") }
+    if (!v1 or !v2) { ioLib.print("FATAL: Failed on valid bracket string") }
+    if (i1 or i2 or i3) { ioLib.print("FATAL: Failed on invalid bracket string") }
 }
 
 function main() {

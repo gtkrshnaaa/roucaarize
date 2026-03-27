@@ -1,5 +1,12 @@
 // Event Loop Simulator - Mocking asynchronous task orchestrations
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 struct EventLoop {
     microtasks
 }
@@ -8,18 +15,18 @@ struct EventLoop {
 accumulator = ""
 
 function queueMicrotask(loop, taskName, executorFn) {
-    loop.microtasks.push(executorFn)
+    arrLib.push(loop.microtasks, executorFn)
 }
 
 function runLoopTick(loop) {
-    while (loop.microtasks.length() > 0) {
+    while (coreLib.len(loop.microtasks) > 0) {
         // Mock shift (we don't have shift(), so we pop and rebuild array reversed... wait, arrays in Roucaarize don't have shift yet)
         // I will implement a custom queue by keeping an index.
         tasks = loop.microtasks
         loop.microtasks = [] // clear queue for next tick
         
         i = 0
-        while (i < tasks.length()) {
+        while (i < coreLib.len(tasks)) {
             fn = tasks[i]
             fn()
             i++
@@ -28,7 +35,7 @@ function runLoopTick(loop) {
 }
 
 function testEventLoop() {
-    print("--- Testing Event Loop Simulator ---")
+    ioLib.print("--- Testing Event Loop Simulator ---")
     
     loop = EventLoop([])
     
@@ -42,16 +49,16 @@ function testEventLoop() {
     queueMicrotask(loop, "D", taskD)
     
     // Initial State
-    print("Starting tick...")
+    ioLib.print("Starting tick...")
     runLoopTick(loop)
     
-    print("Accumulator Result: " + accumulator)
+    ioLib.print("Accumulator Result: " + accumulator)
     // Expect "ABD" in first tick. Since B queued C into the next tick, runLoopTick inner clears first queue, repopulates.
     // Actually, in the code, `loop.microtasks` is cleared, then B pushes to the NEW `loop.microtasks`.
-    // Then the outer `while (loop.microtasks.length() > 0)` loops AGAIN for the next tick!
+    // Then the outer `while (coreLib.len(loop.microtasks) > 0)` loops AGAIN for the next tick!
     // So it executes A, B, D in tick 1. Then C is in tick 2. Sequence -> ABDC.
     
-    if (accumulator != "ABDC") { print("FATAL: Event loop queueing order failed: " + accumulator) }
+    if (accumulator != "ABDC") { ioLib.print("FATAL: Event loop queueing order failed: " + accumulator) }
 }
 
 function main() {

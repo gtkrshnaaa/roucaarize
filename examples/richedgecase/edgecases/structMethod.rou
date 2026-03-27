@@ -1,5 +1,12 @@
 // Function Execution Passed Inside Structs - Roucaarize
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 struct ActionRunner {
     name, execute
 }
@@ -13,8 +20,8 @@ function testStructCall() {
     runner.execute = tempFunction
 
     result = runner.execute(5)
-    print("Struct Action Evaluation: " + toString(result))
-    if (result != 50) { print("FATAL: Struct Function evaluation failed!") }
+    ioLib.print("Struct Action Evaluation: " + coreLib.toString(result))
+    if (result != 50) { ioLib.print("FATAL: Struct Function evaluation failed!") }
 }
 
 function main() {

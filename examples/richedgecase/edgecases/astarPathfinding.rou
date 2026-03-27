@@ -1,5 +1,12 @@
 // A* Pathfinding Algorithm Mock - Testing 2D grids, heuristics, and graph searching
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 struct Point { x, y }
 
 function heuristic(a, b) {
@@ -14,7 +21,7 @@ function heuristic(a, b) {
 // Very simplified A* evaluating a tiny 5x5 grid logic
 // Uses an Array queue acting as an unoptimized Priority Queue
 function testAStarPathfind() {
-    print("--- Testing A* Pathfinding logic ---")
+    ioLib.print("--- Testing A* Pathfinding logic ---")
     
     // 0 is open, 1 is wall
     grid = [
@@ -38,12 +45,12 @@ function testAStarPathfind() {
     steps = 0
     
     keepSearching = true
-    while (queue.length > 0 and keepSearching) {
+    while (coreLib.len(queue) > 0 and keepSearching) {
         // Shift mock
         curr = queue[0]
         shiftQueue = []
         si = 1
-        while (si < queue.length) { shiftQueue.push(queue[si]); si++ }
+        while (si < coreLib.len(queue)) { arrLib.push(shiftQueue, queue[si]); si++ }
         queue = shiftQueue
         
         if (curr.x == goal.x and curr.y == goal.y) {
@@ -57,12 +64,12 @@ function testAStarPathfind() {
         while (di < 4) {
             nx = curr.x + dirs[di][0]
             ny = curr.y + dirs[di][1]
-            key = toString(nx) + "," + toString(ny)
+            key = coreLib.toString(nx) + "," + coreLib.toString(ny)
             
             if (nx >= 0 and nx < 5 and ny >= 0 and ny < 5) {
                 if (grid[ny][nx] == 0 and visited[key] == null) {
                     visited[key] = true
-                    queue.push(Point(nx, ny))
+                    arrLib.push(queue, Point(nx, ny))
                 }
             }
             di++
@@ -71,10 +78,10 @@ function testAStarPathfind() {
         }
     }
     
-    print("A* Target Found: " + toString(found))
-    print("Nodes Explored: " + toString(steps))
+    ioLib.print("A* Target Found: " + coreLib.toString(found))
+    ioLib.print("Nodes Explored: " + coreLib.toString(steps))
     
-    if (!found) { print("FATAL: Pathfinding algorithm failed to navigate maze") }
+    if (!found) { ioLib.print("FATAL: Pathfinding algorithm failed to navigate maze") }
 }
 
 function main() {

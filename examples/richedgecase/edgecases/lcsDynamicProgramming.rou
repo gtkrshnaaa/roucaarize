@@ -1,17 +1,24 @@
 // Longest Common Subsequence (LCS) - Testing Dynamic Programming with 2D Arrays
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 function calculateLCS(str1, str2) {
     // We mock building a 2D Array DP table
-    len1 = str1.length
-    len2 = str2.length
+    len1 = coreLib.len(str1)
+    len2 = coreLib.len(str2)
     
     dp = []
     i = 0
     while (i <= len1) {
         row = []
         j = 0
-        while (j <= len2) { row.push(0); j++ }
-        dp.push(row)
+        while (j <= len2) { arrLib.push(row, 0); j++ }
+        arrLib.push(dp, row)
         i++
     }
     
@@ -40,15 +47,15 @@ function calculateLCS(str1, str2) {
 }
 
 function testLCS() {
-    print("--- Testing LCS Dynamic Programming ---")
+    ioLib.print("--- Testing LCS Dynamic Programming ---")
     s1 = "AGGTAB"
     s2 = "GXTXAYB"
     
     lcsLen = calculateLCS(s1, s2)
-    print("LCS Length of " + s1 + " and " + s2 + " is: " + toString(lcsLen))
+    ioLib.print("LCS Length of " + s1 + " and " + s2 + " is: " + coreLib.toString(lcsLen))
     
     // The LCS is "GTAB", length 4.
-    if (lcsLen != 4) { print("FATAL: Dynamic Programming 2D Table logic evaluates incorrectly") }
+    if (lcsLen != 4) { ioLib.print("FATAL: Dynamic Programming 2D Table logic evaluates incorrectly") }
 }
 
 function main() {

@@ -1,6 +1,13 @@
 // config.rou
 // Global configuration settings
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 struct Config {
     debug,
     precision

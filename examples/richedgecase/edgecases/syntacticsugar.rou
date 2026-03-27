@@ -1,18 +1,25 @@
 // Syntactic Sugar AST Desugaring Tests - Roucaarize
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 function testIncrement() {
-    print("--- Testing Increments ---")
+    ioLib.print("--- Testing Increments ---")
     i = 0
     i++
     i++
     i--
     
-    print("Final i value: " + toString(i))
-    if (i != 1) { print("FATAL: postfix increment/decrement failed!") }
+    ioLib.print("Final i value: " + coreLib.toString(i))
+    if (i != 1) { ioLib.print("FATAL: postfix increment/decrement failed!") }
 }
 
 function testCompoundAssignments() {
-    print("--- Testing Compound Assignments ---")
+    ioLib.print("--- Testing Compound Assignments ---")
     val = 10
     val += 5
     val -= 2
@@ -25,38 +32,38 @@ function testCompoundAssignments() {
     // 39 / 2 = 19
     // 19 % 7 = 5
     
-    print("Final val value: " + toString(val))
-    if (val != 5) { print("FATAL: compound assignments failed!") }
+    ioLib.print("Final val value: " + coreLib.toString(val))
+    if (val != 5) { ioLib.print("FATAL: compound assignments failed!") }
 }
 
 function testArrayCompound() {
-    print("--- Testing Array Index Compound ---")
+    ioLib.print("--- Testing Array Index Compound ---")
     arr = [100, 200, 300]
     arr[1] += 50
     arr[2]--
     
-    print("Array: " + toString(arr[0]) + ", " + toString(arr[1]) + ", " + toString(arr[2]))
-    if (arr[1] != 250) { print("FATAL: Index += failed!") }
-    if (arr[2] != 299) { print("FATAL: Index -- failed!") }
+    ioLib.print("Array: " + coreLib.toString(arr[0]) + ", " + coreLib.toString(arr[1]) + ", " + coreLib.toString(arr[2]))
+    if (arr[1] != 250) { ioLib.print("FATAL: Index += failed!") }
+    if (arr[2] != 299) { ioLib.print("FATAL: Index -- failed!") }
 }
 
 function testTernary() {
-    print("--- Testing Ternary Operators ---")
+    ioLib.print("--- Testing Ternary Operators ---")
     
     // Simple
     x = true ? "YES" : "NO"
-    print("Ternary true: " + x)
-    if (x != "YES") { print("FATAL: ternary true branch failed!") }
+    ioLib.print("Ternary true: " + x)
+    if (x != "YES") { ioLib.print("FATAL: ternary true branch failed!") }
     
     y = false ? 99 : 0
-    print("Ternary false: " + toString(y))
-    if (y != 0) { print("FATAL: ternary false branch failed!") }
+    ioLib.print("Ternary false: " + coreLib.toString(y))
+    if (y != 0) { ioLib.print("FATAL: ternary false branch failed!") }
     
     // Nested
     score = 85
     grade = score > 90 ? "A" : (score > 80 ? "B" : "C")
-    print("Nested Ternary Grade: " + grade)
-    if (grade != "B") { print("FATAL: nested ternary syntax failed!") }
+    ioLib.print("Nested Ternary Grade: " + grade)
+    if (grade != "B") { ioLib.print("FATAL: nested ternary syntax failed!") }
 }
 
 function main() {
@@ -65,7 +72,7 @@ function main() {
     testArrayCompound()
     testTernary()
     
-    print("All Syntactic Sugar Edge Cases Passed!")
+    ioLib.print("All Syntactic Sugar Edge Cases Passed!")
 }
 
 main()

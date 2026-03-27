@@ -1,5 +1,12 @@
 // Tic Tac Toe Win Validator - Testing Multi-Axis Matrix verification
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 function checkWin(grid, player) {
     // Check rows
     i = 0
@@ -36,7 +43,7 @@ function checkDraw(grid) {
 }
 
 function testTicTacToe() {
-    print("--- Testing Tic Tac Toe Engine ---")
+    ioLib.print("--- Testing Tic Tac Toe Engine ---")
     
     xWins = [
         ["X", "O", "X"],
@@ -50,12 +57,12 @@ function testTicTacToe() {
         ["X", "O", "X"]
     ]
     
-    if (!checkWin(xWins, "X")) { print("FATAL: Tic Tac Toe failed to catch diagonal win") }
-    if (checkWin(xWins, "O")) { print("FATAL: Tic Tac Toe falsely flagged O as winner") }
-    if (checkWin(drawBoard, "X") or checkWin(drawBoard, "O")) { print("FATAL: Tic Tac Toe falsely won a draw") }
-    if (!checkDraw(drawBoard)) { print("FATAL: Tic Tac Toe engine failed to evaluate DRAW state") }
+    if (!checkWin(xWins, "X")) { ioLib.print("FATAL: Tic Tac Toe failed to catch diagonal win") }
+    if (checkWin(xWins, "O")) { ioLib.print("FATAL: Tic Tac Toe falsely flagged O as winner") }
+    if (checkWin(drawBoard, "X") or checkWin(drawBoard, "O")) { ioLib.print("FATAL: Tic Tac Toe falsely won a draw") }
+    if (!checkDraw(drawBoard)) { ioLib.print("FATAL: Tic Tac Toe engine failed to evaluate DRAW state") }
     
-    print("Tic Tac Toe Grid validations clear!")
+    ioLib.print("Tic Tac Toe Grid validations clear!")
 }
 
 function main() {

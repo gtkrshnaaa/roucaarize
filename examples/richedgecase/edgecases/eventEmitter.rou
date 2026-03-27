@@ -1,5 +1,12 @@
 // Event Emitter - Testing Structs holding functions (Methods) and Array manipulation
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 struct Emitter {
     listeners
 }
@@ -8,14 +15,14 @@ function addListener(emitter, eventName, callback) {
     if (emitter.listeners[eventName] == null) {
         emitter.listeners[eventName] = []
     }
-    emitter.listeners[eventName].push(callback)
+    arrLib.push(emitter.listeners[eventName], callback)
 }
 
 function triggerEvent(emitter, eventName, payload) {
     list = emitter.listeners[eventName]
     if (list != null) {
         i = 0
-        while (i < list.length()) {
+        while (i < coreLib.len(list)) {
             cb = list[i]
             cb(payload)
             i++
@@ -24,7 +31,7 @@ function triggerEvent(emitter, eventName, payload) {
 }
 
 function testEventEmitter() {
-    print("--- Testing Event Emitter ---")
+    ioLib.print("--- Testing Event Emitter ---")
     system = Emitter({}) // Empty map
     
     globalState = 0
@@ -44,8 +51,8 @@ function testEventEmitter() {
     triggerEvent(system, "data", 5) // +10
     triggerEvent(system, "end", 3)  // *3 -> 30
     
-    print("Final State: " + toString(globalState))
-    if (globalState != 30) { print("FATAL: Event emitter flow failed") }
+    ioLib.print("Final State: " + coreLib.toString(globalState))
+    if (globalState != 30) { ioLib.print("FATAL: Event emitter flow failed") }
 }
 
 function main() {

@@ -1,5 +1,12 @@
 // Iterative Factorial - Roucaarize
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 function factorial(n) {
     result = 1
     i = 1
@@ -12,8 +19,8 @@ function factorial(n) {
 
 function testFactorial() {
     result = factorial(10)
-    print("Factorial(10) = " + toString(result))
-    if (result != 3628800) { print("FATAL: factorial() failed!") }
+    ioLib.print("Factorial(10) = " + coreLib.toString(result))
+    if (result != 3628800) { ioLib.print("FATAL: factorial() failed!") }
 }
 
 function main() {

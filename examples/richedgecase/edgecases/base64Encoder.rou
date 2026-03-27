@@ -1,5 +1,12 @@
 // Base64 Dictionary Encoder Mock - Using Array lookup matching values
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 function getBase64Dictionary() {
     // Array where index matches the mapped character
     return ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
@@ -13,21 +20,21 @@ function encodeMockBase64(stringData) {
     
     encoded = ""
     i = 0
-    while (i < stringData.length) {
+    while (i < coreLib.len(stringData)) {
         // Since we cannot extract bytes and do true bit shifting natively in this version without overhead,
         // We will mock it by converting string length parity.
         // Wait, just sum length and map it!
         c = stringData[i]
         
         // Faking it by using index lookup mod 64
-        pseudoHash = (stringData.length * 7 + i * 3) % 64
+        pseudoHash = (coreLib.len(stringData) * 7 + i * 3) % 64
         encoded += dict[pseudoHash]
         
         i++
     }
     
     // Add padded =
-    padCount = (3 - (stringData.length % 3)) % 3
+    padCount = (3 - (coreLib.len(stringData) % 3)) % 3
     p = 0
     while (p < padCount) {
         encoded += "="
@@ -38,16 +45,16 @@ function encodeMockBase64(stringData) {
 }
 
 function testBase64Encoder() {
-    print("--- Testing Mock Base64 Dictionary Encoding ---")
+    ioLib.print("--- Testing Mock Base64 Dictionary Encoding ---")
     str1 = "Rouca"
     str2 = "RoucaarizeEngine"
     
     e1 = encodeMockBase64(str1)
     e2 = encodeMockBase64(str2)
     
-    print("Output: " + e1)
+    ioLib.print("Output: " + e1)
     
-    if (e1 == "" or e2 == "") { print("FATAL: Dictionary mapping array bounds error") }
+    if (e1 == "" or e2 == "") { ioLib.print("FATAL: Dictionary mapping array bounds error") }
     // As long as it generates a string matching expected padding it works as a stress test for dictionaries.
 }
 

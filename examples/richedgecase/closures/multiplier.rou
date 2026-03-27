@@ -1,5 +1,12 @@
 // Higher Order Function (Generator) - Roucaarize
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 function createMultiplier(factor) {
     function multiplier(num) {
         return num * factor
@@ -11,9 +18,9 @@ function testMultiplier() {
     t3 = createMultiplier(3)
     t5 = createMultiplier(5)
 
-    print("t3(10) = " + toString(t3(10)))
-    print("t5(10) = " + toString(t5(10)))
-    if (t3(10) != 30) { print("FATAL: HOF multiplier failed!") }
+    ioLib.print("t3(10) = " + coreLib.toString(t3(10)))
+    ioLib.print("t5(10) = " + coreLib.toString(t5(10)))
+    if (t3(10) != 30) { ioLib.print("FATAL: HOF multiplier failed!") }
 }
 
 function main() {

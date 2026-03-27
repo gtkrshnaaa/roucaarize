@@ -1,6 +1,13 @@
 // calculator.rou
 // Core logic that bonds math operations and formatting together
 
+import stdlib io as ioLib
+import stdlib core as coreLib
+import stdlib array as arrLib
+import stdlib string as strLib
+
+
+
 import "math/operations.rou" as math
 import "utils/formatter.rou" as fmt
 
