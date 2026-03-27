@@ -139,6 +139,7 @@ Value Evaluator::evalNode(NodeIndex idx) {
             throw RuntimeException(std::move(val), true);
         }
         case NodeType::THROW_STMT:     return executeThrow(node);
+        case NodeType::BREAK_STMT:     throw RuntimeException(Value::nil(), false, true);
         case NodeType::CATCH_STMT:     return Value::nil();
         default:
             throw RuntimeError(node, "Unknown node type: " + std::to_string(static_cast<int>(node.type)));
@@ -480,7 +481,12 @@ Value Evaluator::executeWhile(const ASTNode& node) {
         if (!evalNode(node.left).isTruthy()) break;
         
     execute_body:
-        evalNode(node.right);
+        try {
+            evalNode(node.right);
+        } catch (const RuntimeException& e) {
+            if (e.isBreak) break;
+            throw;
+        }
         if (++iterCount % GUARD_LOOP_CHECK_INTERVAL == 0) {
             if (runtime_guard::checkTimeout()) {
                 throw RuntimeError(node, 
@@ -500,7 +506,12 @@ Value Evaluator::executeFor(const ASTNode& node) {
     for (const auto& item : *iterable.getArray()) {
         auto loopEnv = std::make_shared<Environment>(environment);
         loopEnv->define(node.nameIdx, item);
-        evalBlock(node.right, loopEnv);
+        try {
+            evalBlock(node.right, loopEnv);
+        } catch (const RuntimeException& e) {
+            if (e.isBreak) break;
+            throw;
+        }
         if (++iterCount % GUARD_LOOP_CHECK_INTERVAL == 0) {
             if (runtime_guard::checkTimeout()) {
                 throw RuntimeError(node, "Execution timeout: for loop exceeded "

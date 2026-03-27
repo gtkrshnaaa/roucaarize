@@ -822,6 +822,9 @@ void GrammarChecker::analyze(const AST& ast, NodeIndex startIdx, uint32_t startD
                 break;
             }
 
+            case NodeType::BREAK_STMT: {
+                break;
+            }
             case NodeType::CATCH_STMT: {
                 if (node.left != INVALID_NODE) {
                     const ASTNode& body = ast.get(node.left);

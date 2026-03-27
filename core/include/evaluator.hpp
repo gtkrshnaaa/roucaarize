@@ -76,7 +76,9 @@ private:
 struct RuntimeException {
     Value value;
     bool isReturn;
-    RuntimeException(Value v, bool ret) : value(std::move(v)), isReturn(ret) {}
+    bool isBreak;
+    RuntimeException(Value v, bool ret, bool brk = false) 
+        : value(std::move(v)), isReturn(ret), isBreak(brk) {}
 };
 
 } // namespace roucaarize
