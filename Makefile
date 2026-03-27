@@ -3,8 +3,8 @@
 
 # Compiler settings
 CXX := g++
-CXXFLAGS := -std=c++20 -Wall -Wextra -Wpedantic -O3 -march=native -fno-rtti -fno-stack-protector -MMD -MP
-CXXFLAGS_DEBUG := -std=c++20 -Wall -Wextra -Wpedantic -g -O0 -DDEBUG -MMD -MP
+CXXFLAGS := -std=c++20 -pthread -Wall -Wextra -Wpedantic -O3 -march=native -fno-rtti -fno-stack-protector -MMD -MP
+CXXFLAGS_DEBUG := -std=c++20 -pthread -Wall -Wextra -Wpedantic -g -O0 -DDEBUG -MMD -MP
 
 # Directories
 SRC_DIR := core/src

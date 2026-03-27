@@ -9,6 +9,7 @@
 #include "symbolTable.hpp"
 #include "error.hpp"
 #include "runtimeGuard.hpp"
+#include "concurrency.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <sstream>
@@ -238,7 +239,7 @@ Value Evaluator::evalCall(const ASTNode& node) {
             auto registry = stdlibRegistry;
             const AST* astPtr = currentAST;
             
-            auto fut = std::async(std::launch::async, [asyncGlobals, registry, asyncEnv, bodyIdx = fd.bodyIndex, astPtr]() -> Value {
+            auto futPtr = AsyncExecutor::spawn([asyncGlobals, registry, asyncEnv, bodyIdx = fd.bodyIndex, astPtr]() -> Value {
                 Evaluator tEval;
                 tEval.globals = asyncGlobals;
                 tEval.stdlibRegistry = registry;
@@ -253,7 +254,7 @@ Value Evaluator::evalCall(const ASTNode& node) {
                     return Value::nil();
                 }
             });
-            return Value::fromPromise(std::make_shared<std::future<Value>>(std::move(fut)));
+            return Value::fromPromise(futPtr);
         }
 
         auto callEnv = std::make_shared<Environment>(fd.closure);
