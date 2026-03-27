@@ -1,12 +1,12 @@
 Roucaarize Execution & Benchmark Report
-Generated on: Fri Mar 27 03:16:52 PM WIB 2026
+Generated on: Fri Mar 27 03:23:04 PM WIB 2026
 --------------------------------------
 SYSTEM SPECIFICATIONS:
   OS:  Ubuntu 24.04.4 LTS
   CPU: 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz
   RAM: 7635.43 MB
 --------------------------------------
-[x] ./advanced.rou: PASS (RAM: 4480KB, CPU: 50%)
+[x] ./advanced.rou: PASS (RAM: 4520KB, CPU: 50%)
     Output Details:
       == Roucaarize Advanced Demo ==
       
@@ -100,17 +100,17 @@ SYSTEM SPECIFICATIONS:
       
       Basics example completed successfully.
 --------------------------------------
-[x] ./concurrency/asyncAwait.rou: PASS (RAM: 4592KB, CPU: 0%)
+[x] ./concurrency/asyncAwait.rou: PASS (RAM: 4624KB, CPU: 0%)
     Output Details:
       Main Thread: Spawning background tasks...
-      Worker A starting...
       Main Thread: Tasks spawned! Now doing other work...
+      Worker A starting...
       Worker B starting...
-      Worker B running... iter=1
       Worker A running... iter=1
+      Worker B running... iter=1
       Main Thread: Finished other work. Awaiting tasks...
-      Worker B running... iter=2
       Worker A running... iter=2
+      Worker B running... iter=2
       Worker B running... iter=3
       Worker B finished!
       Worker A running... iter=3
@@ -118,15 +118,15 @@ SYSTEM SPECIFICATIONS:
       All tasks complete!
       Results: Result_A, Result_B
 --------------------------------------
-[x] ./modularity/calculator.rou: PASS (RAM: 4208KB, CPU: 75%)
+[x] ./modularity/calculator.rou: PASS (RAM: 4164KB, CPU: 100%)
     Output Details:
       
 --------------------------------------
-[x] ./modularity/config.rou: PASS (RAM: 4108KB, CPU: 100%)
+[x] ./modularity/config.rou: PASS (RAM: 4208KB, CPU: 100%)
     Output Details:
       
 --------------------------------------
-[x] ./modularity/main.rou: PASS (RAM: 4388KB, CPU: 50%)
+[x] ./modularity/main.rou: PASS (RAM: 4460KB, CPU: 50%)
     Output Details:
       == Roucaarize Modular Calculator ==
       Calculator Error: Undefined variable: calc
@@ -136,18 +136,18 @@ SYSTEM SPECIFICATIONS:
     Output Details:
       
 --------------------------------------
-[x] ./modularity/utils/formatter.rou: PASS (RAM: 4104KB, CPU: 100%)
+[x] ./modularity/utils/formatter.rou: PASS (RAM: 4152KB, CPU: 50%)
     Output Details:
       
 --------------------------------------
-[x] ./orchestration.rou: PASS (RAM: 4896KB, CPU: 102%)
+[x] ./orchestration.rou: PASS (RAM: 4888KB, CPU: 103%)
     Output Details:
       == System Information ==
       Hostname: localhost
-      Uptime: 63642.67 seconds
+      Uptime: 64013.99 seconds
       User ID: 1000
       Home: /home/user
-      Date: 2026-03-27 15:16:54
+      Date: 2026-03-27 15:23:05
       
       == Service Health ==
       [WARN] sshd is not running
@@ -155,10 +155,10 @@ SYSTEM SPECIFICATIONS:
       
       == File Operations ==
       Wrote to: /tmp/roucaarize_test.txt
-      Read back: Hello from Roucaarize!\nWritten at: 15:16:54
+      Read back: Hello from Roucaarize!\nWritten at: 15:23:05
       File exists: true
       Content after append:
-      Hello from Roucaarize!\nWritten at: 15:16:54\nAppended line
+      Hello from Roucaarize!\nWritten at: 15:23:05\nAppended line
       Cleaned up temp file
       
       == String Operations ==
@@ -178,16 +178,16 @@ SYSTEM SPECIFICATIONS:
       Month: 3
       Day: 27
       Hour: 15
-      Minute: 16
-      Second: 54
-      Timestamp: 1774599414
+      Minute: 23
+      Second: 5
+      Timestamp: 1774599785
       
       == System Commands ==
       Kernel: 6.17.0-19-generic
       Disk usage (/): 6%
       
       == Process Info ==
-      Memory usage: 5548/7635MB (72.7%)
+      Memory usage: 5397/7635MB (70.7%)
       
       == Performance Test ==
       Sum of 0..9999: 49995000
@@ -195,39 +195,39 @@ SYSTEM SPECIFICATIONS:
       
       Orchestration example completed successfully.
 --------------------------------------
-[x] ./richedgecase/algorithms/bubbleSort.rou: PASS (RAM: 4512KB, CPU: 100%)
+[x] ./richedgecase/algorithms/bubbleSort.rou: PASS (RAM: 4448KB, CPU: 100%)
     Output Details:
       Sorted Output: 11 ... 90
 --------------------------------------
-[x] ./richedgecase/algorithms/factorial.rou: PASS (RAM: 4456KB, CPU: 100%)
+[x] ./richedgecase/algorithms/factorial.rou: PASS (RAM: 4448KB, CPU: 100%)
     Output Details:
       Factorial(10) = 3628800
 --------------------------------------
-[x] ./richedgecase/algorithms/fibonacci.rou: PASS (RAM: 4476KB, CPU: 92%)
+[x] ./richedgecase/algorithms/fibonacci.rou: PASS (RAM: 4432KB, CPU: 92%)
     Output Details:
       Fibonacci(15) = 610
 --------------------------------------
-[x] ./richedgecase/closures/currying.rou: PASS (RAM: 4432KB, CPU: 100%)
+[x] ./richedgecase/closures/currying.rou: PASS (RAM: 4344KB, CPU: 100%)
     Output Details:
       currying addArguments(10)(20)(30) = 60
 --------------------------------------
-[x] ./richedgecase/closures/multiplier.rou: PASS (RAM: 4432KB, CPU: 100%)
+[x] ./richedgecase/closures/multiplier.rou: PASS (RAM: 4308KB, CPU: 100%)
     Output Details:
       t3(10) = 30
       t5(10) = 50
 --------------------------------------
-[x] ./richedgecase/closures/stateSequence.rou: PASS (RAM: 4468KB, CPU: 100%)
+[x] ./richedgecase/closures/stateSequence.rou: PASS (RAM: 4476KB, CPU: 100%)
     Output Details:
       Generator1: 1, 2
       Generator2: 1
 --------------------------------------
-[x] ./richedgecase/edgecases/astarPathfinding.rou: PASS (RAM: 4272KB, CPU: 100%)
+[x] ./richedgecase/edgecases/astarPathfinding.rou: PASS (RAM: 4236KB, CPU: 100%)
     Output Details:
       --- Testing A* Pathfinding logic ---
       A* Target Found: true
       Nodes Explored: 14
 --------------------------------------
-[x] ./richedgecase/edgecases/asyncParallelPromiseMock.rou: PASS (RAM: 4528KB, CPU: 3%)
+[x] ./richedgecase/edgecases/asyncParallelPromiseMock.rou: PASS (RAM: 4568KB, CPU: 2%)
     Output Details:
       Starting parallel fetch mock...
       Fetching user 1...
@@ -238,7 +238,7 @@ SYSTEM SPECIFICATIONS:
       All users fetched:
       User_1, User_2, User_3, User_4, User_5
 --------------------------------------
-[x] ./richedgecase/edgecases/asyncPipelineMock.rou: PASS (RAM: 4664KB, CPU: 0%)
+[x] ./richedgecase/edgecases/asyncPipelineMock.rou: PASS (RAM: 4640KB, CPU: 0%)
     Output Details:
       Initiating Pipeline...
       Main thread is free! Doing UI work...
@@ -247,7 +247,7 @@ SYSTEM SPECIFICATIONS:
       [3] Uploading data: raw_data_block_processed
       Pipeline finalized with status: Success
 --------------------------------------
-[x] ./richedgecase/edgecases/asyncRetryBackoff.rou: PASS (RAM: 4648KB, CPU: 1%)
+[x] ./richedgecase/edgecases/asyncRetryBackoff.rou: PASS (RAM: 4752KB, CPU: 1%)
     Output Details:
       Starting auto-retry routine...
       NetworkCall attempt 1 failed.
@@ -257,13 +257,13 @@ SYSTEM SPECIFICATIONS:
       NetworkCall attempt 3 succeeded!
       Routine completed with data: DataPayload
 --------------------------------------
-[x] ./richedgecase/edgecases/base64Encoder.rou: PASS (RAM: 4444KB, CPU: 80%)
+[x] ./richedgecase/edgecases/base64Encoder.rou: PASS (RAM: 4448KB, CPU: 80%)
     Output Details:
       --- Testing Mock Base64 Dictionary Encoding ---
       Output: 
       FATAL: Dictionary mapping array bounds error
 --------------------------------------
-[x] ./richedgecase/edgecases/binaryHeapPriorityQueue.rou: PASS (RAM: 4388KB, CPU: 66%)
+[x] ./richedgecase/edgecases/binaryHeapPriorityQueue.rou: PASS (RAM: 4448KB, CPU: 100%)
     Output Details:
       --- Testing Min Heap Data Structure ---
       Heap Sorted Extraction:
@@ -274,19 +274,19 @@ SYSTEM SPECIFICATIONS:
       50
       80
 --------------------------------------
-[x] ./richedgecase/edgecases/binarySearchTree.rou: PASS (RAM: 4476KB, CPU: 100%)
+[x] ./richedgecase/edgecases/binarySearchTree.rou: PASS (RAM: 4464KB, CPU: 50%)
     Output Details:
       --- Testing Binary Search Tree ---
       Found 2: true
       Found 99: false
 --------------------------------------
-[x] ./richedgecase/edgecases/bouncingDVDLogo.rou: PASS (RAM: 4432KB, CPU: 50%)
+[x] ./richedgecase/edgecases/bouncingDVDLogo.rou: PASS (RAM: 4448KB, CPU: 50%)
     Output Details:
       --- Testing Vector Bouncing Simulation ---
       Ticks performed: 2
       Logo Position at break: X=801 Y=601
 --------------------------------------
-[x] ./richedgecase/edgecases/bracketMatcher.rou: PASS (RAM: 4476KB, CPU: 100%)
+[x] ./richedgecase/edgecases/bracketMatcher.rou: PASS (RAM: 4472KB, CPU: 100%)
     Output Details:
       --- Testing Bracket Matcher ---
       valid1 is true
@@ -294,7 +294,7 @@ SYSTEM SPECIFICATIONS:
       invalid1 is false
       invalid2 is false
 --------------------------------------
-[x] ./richedgecase/edgecases/chessBoardValidator.rou: PASS (RAM: 4444KB, CPU: 50%)
+[x] ./richedgecase/edgecases/chessBoardValidator.rou: PASS (RAM: 4512KB, CPU: 100%)
     Output Details:
       === Chess Board Validator ===
       Validating Rook moves from (4,4):
@@ -302,7 +302,7 @@ SYSTEM SPECIFICATIONS:
         Move to (5,5) [Diagonal]: false
         Move to (4,7) [Blocked by Pawn at 4,6]: false
 --------------------------------------
-[x] ./richedgecase/edgecases/consistentHashingRing.rou: PASS (RAM: 4500KB, CPU: 50%)
+[x] ./richedgecase/edgecases/consistentHashingRing.rou: PASS (RAM: 4448KB, CPU: 100%)
     Output Details:
       === Consistent Hashing Ring Sim ===
       Ring Topology Size: 9
@@ -312,51 +312,51 @@ SYSTEM SPECIFICATIONS:
         Key 'DataA' routed to -> ServerA
         Key 'DataB' routed to -> ServerA
 --------------------------------------
-[x] ./richedgecase/edgecases/dfsDirectorySize.rou: PASS (RAM: 4432KB, CPU: 100%)
+[x] ./richedgecase/edgecases/dfsDirectorySize.rou: PASS (RAM: 4476KB, CPU: 100%)
     Output Details:
       --- Testing DFS Virtual File System ---
       Total virtual drive size: 55650 bytes
 --------------------------------------
-[x] ./richedgecase/edgecases/dijkstraGraphPath.rou: PASS (RAM: 4448KB, CPU: 100%)
+[x] ./richedgecase/edgecases/dijkstraGraphPath.rou: PASS (RAM: 4392KB, CPU: 100%)
     Output Details:
       --- Testing Dijkstra Graph Solver ---
       Shortest path cost from A -> E is: 12
 --------------------------------------
-[x] ./richedgecase/edgecases/dynamicType.rou: PASS (RAM: 4468KB, CPU: 100%)
+[x] ./richedgecase/edgecases/dynamicType.rou: PASS (RAM: 4448KB, CPU: 100%)
     Output Details:
       Dynamic function assignment evaluated: 99
 --------------------------------------
-[x] ./richedgecase/edgecases/eventEmitter.rou: PASS (RAM: 4336KB, CPU: 100%)
+[x] ./richedgecase/edgecases/eventEmitter.rou: PASS (RAM: 4272KB, CPU: 100%)
     Output Details:
       --- Testing Event Emitter ---
       Final State: 30
 --------------------------------------
-[x] ./richedgecase/edgecases/eventLoopSim.rou: PASS (RAM: 4336KB, CPU: 100%)
+[x] ./richedgecase/edgecases/eventLoopSim.rou: PASS (RAM: 4400KB, CPU: 100%)
     Output Details:
       --- Testing Event Loop Simulator ---
       Starting tick...
       Accumulator Result: ABDC
 --------------------------------------
-[x] ./richedgecase/edgecases/gameOfLifeSolver.rou: PASS (RAM: 4448KB, CPU: 50%)
+[x] ./richedgecase/edgecases/gameOfLifeSolver.rou: PASS (RAM: 4444KB, CPU: 50%)
     Output Details:
       --- Testing Conway Game Of Life Rules ---
       Blinker Matrix Step 1 Center Val: 1 -> expects 1
       Blinker Matrix Step 1 Pivot Val: 1 -> expects 1
 --------------------------------------
-[x] ./richedgecase/edgecases/hashTableCollision.rou: PASS (RAM: 4512KB, CPU: 100%)
+[x] ./richedgecase/edgecases/hashTableCollision.rou: PASS (RAM: 4476KB, CPU: 100%)
     Output Details:
       --- Testing Hash Table Collisions ---
       Dog says: Woof
       Cat says: Meow
 --------------------------------------
-[x] ./richedgecase/edgecases/higherOrderArray.rou: PASS (RAM: 4444KB, CPU: 50%)
+[x] ./richedgecase/edgecases/higherOrderArray.rou: PASS (RAM: 4476KB, CPU: 50%)
     Output Details:
       --- Testing HOF Map/Filter/Reduce ---
       Evens: 2, 4
       Doubles: 4
       Sum of doubled evens: 60
 --------------------------------------
-[x] ./richedgecase/edgecases/huffmanCodingTree.rou: PASS (RAM: 4540KB, CPU: 50%)
+[x] ./richedgecase/edgecases/huffmanCodingTree.rou: PASS (RAM: 4564KB, CPU: 50%)
     Output Details:
       === Huffman Tree Coding Simulation ===
       Input Text: RROUUUCARRRIZE
@@ -380,7 +380,7 @@ SYSTEM SPECIFICATIONS:
         Z -> 000
         E -> 001
 --------------------------------------
-[x] ./richedgecase/edgecases/jsonPathQuery.rou: PASS (RAM: 4616KB, CPU: 100%)
+[x] ./richedgecase/edgecases/jsonPathQuery.rou: PASS (RAM: 4552KB, CPU: 100%)
     Output Details:
       === JSON Path Query Simulation ===
       Querying 'store.book.0.title'...
@@ -392,17 +392,17 @@ SYSTEM SPECIFICATIONS:
       Querying generic missing path 'store.book.5.author'...
       Result: null
 --------------------------------------
-[x] ./richedgecase/edgecases/jsonStringifyMock.rou: PASS (RAM: 4476KB, CPU: 100%)
+[x] ./richedgecase/edgecases/jsonStringifyMock.rou: PASS (RAM: 4432KB, CPU: 100%)
     Output Details:
       --- Testing JSON Stringifier ---
       Output: [1,{'name':'Roucaarize','age':1,'active':true},'test',null]
 --------------------------------------
-[x] ./richedgecase/edgecases/kMeansClustering.rou: PASS (RAM: 4564KB, CPU: 50%)
+[x] ./richedgecase/edgecases/kMeansClustering.rou: PASS (RAM: 4484KB, CPU: 100%)
     Output Details:
       --- Testing K-Means Clustering ---
       Centroid 1 bounded approximation successful!
 --------------------------------------
-[x] ./richedgecase/edgecases/lcsDynamicProgramming.rou: PASS (RAM: 4448KB, CPU: 50%)
+[x] ./richedgecase/edgecases/lcsDynamicProgramming.rou: PASS (RAM: 4492KB, CPU: 100%)
     Output Details:
       --- Testing LCS Dynamic Programming ---
       LCS Length of AGGTAB and GXTXAYB is: 0
@@ -414,14 +414,14 @@ SYSTEM SPECIFICATIONS:
       L1 has cycle: false
       L2 has cycle: true
 --------------------------------------
-[x] ./richedgecase/edgecases/lruCache.rou: PASS (RAM: 4472KB, CPU: 100%)
+[x] ./richedgecase/edgecases/lruCache.rou: PASS (RAM: 4476KB, CPU: 100%)
     Output Details:
       --- Testing LRU Cache ---
       valA: 1
       valB: -1
       valC: 3
 --------------------------------------
-[x] ./richedgecase/edgecases/markovChainTextGen.rou: PASS (RAM: 4448KB, CPU: 100%)
+[x] ./richedgecase/edgecases/markovChainTextGen.rou: PASS (RAM: 4512KB, CPU: 100%)
     Output Details:
       === Markov Chain Text Generator ===
       Training Text: the cat is green the cat is blue the dog is heavy the dog is running fast
@@ -440,7 +440,7 @@ SYSTEM SPECIFICATIONS:
       Generated 10 words starting from 'the':
       the dog is green the cat is blue the cat is
 --------------------------------------
-[x] ./richedgecase/edgecases/matrixDeterminant.rou: PASS (RAM: 4448KB, CPU: 100%)
+[x] ./richedgecase/edgecases/matrixDeterminant.rou: PASS (RAM: 4512KB, CPU: 100%)
     Output Details:
       --- Testing Matrix Determinant ---
       Determinant is: -306
@@ -462,24 +462,24 @@ SYSTEM SPECIFICATIONS:
       > 43
       > 82
 --------------------------------------
-[x] ./richedgecase/edgecases/monteCarloPi.rou: PASS (RAM: 4576KB, CPU: 85%)
+[x] ./richedgecase/edgecases/monteCarloPi.rou: PASS (RAM: 4612KB, CPU: 87%)
     Output Details:
       --- Testing Monte Carlo Pi Simulation ---
       Estimated Pi (10k iterations): 3.1452
 --------------------------------------
-[x] ./richedgecase/edgecases/neuralNetFeedForward.rou: PASS (RAM: 4596KB, CPU: 100%)
+[x] ./richedgecase/edgecases/neuralNetFeedForward.rou: PASS (RAM: 4676KB, CPU: 100%)
     Output Details:
       === Neural Net Math Simulation ===
       Hidden Layer Outputs: 0.35, 0.85
       Final Neural Net Output: -0.009901
 --------------------------------------
-[x] ./richedgecase/edgecases/promiseAllSim.rou: PASS (RAM: 4476KB, CPU: 100%)
+[x] ./richedgecase/edgecases/promiseAllSim.rou: PASS (RAM: 4444KB, CPU: 100%)
     Output Details:
       --- Testing Promise Aggregation States ---
       Agg Valid Data items: 3
       Agg Error Trace: Aggregation Rejection: Node Timeout
 --------------------------------------
-[x] ./richedgecase/edgecases/raycasting2DGrid.rou: PASS (RAM: 4520KB, CPU: 50%)
+[x] ./richedgecase/edgecases/raycasting2DGrid.rou: PASS (RAM: 4520KB, CPU: 100%)
     Output Details:
       === 2D Grid Raycaster Engine ===
       Grid Map with Ray Hits (X):
@@ -489,19 +489,19 @@ SYSTEM SPECIFICATIONS:
       # . . . # # 
       # X X # # # 
 --------------------------------------
-[x] ./richedgecase/edgecases/regexFiniteAutomaton.rou: PASS (RAM: 4496KB, CPU: 50%)
+[x] ./richedgecase/edgecases/regexFiniteAutomaton.rou: PASS (RAM: 4468KB, CPU: 100%)
     Output Details:
       --- Testing NFA Regex Automaton Logic ---
       NFA valid1: true
       NFA valid2: true
 --------------------------------------
-[x] ./richedgecase/edgecases/rpnCalculator.rou: PASS (RAM: 4572KB, CPU: 100%)
+[x] ./richedgecase/edgecases/rpnCalculator.rou: PASS (RAM: 4576KB, CPU: 100%)
     Output Details:
       --- Testing RPN Stack Evaluator ---
       RPN Result: 9
       RPN 2 Result: 6.6
 --------------------------------------
-[x] ./richedgecase/edgecases/rsaEncryptionMock.rou: PASS (RAM: 4392KB, CPU: 50%)
+[x] ./richedgecase/edgecases/rsaEncryptionMock.rou: PASS (RAM: 4432KB, CPU: 100%)
     Output Details:
       === RSA Encryption Simulation ===
       Public Key: (17, 3233)
@@ -514,7 +514,7 @@ SYSTEM SPECIFICATIONS:
       Decrypted Message: CAB
       RSA Cryptosystem Verification: SUCCESS
 --------------------------------------
-[x] ./richedgecase/edgecases/shadowScope.rou: PASS (RAM: 4340KB, CPU: 100%)
+[x] ./richedgecase/edgecases/shadowScope.rou: PASS (RAM: 4320KB, CPU: 100%)
     Output Details:
       Initial Global Value: global
       Post-Mutation Outer Value: inner-mutation
@@ -532,7 +532,7 @@ SYSTEM SPECIFICATIONS:
         Match ID: 101 | User: Alice | Dept: HR
         Match ID: 102 | User: Bob | Dept: Engineering
 --------------------------------------
-[x] ./richedgecase/edgecases/sqlSelectParser.rou: PASS (RAM: 4476KB, CPU: 100%)
+[x] ./richedgecase/edgecases/sqlSelectParser.rou: PASS (RAM: 4496KB, CPU: 100%)
     Output Details:
       --- Testing SQL String AST Parser ---
       Parsed Table: players
@@ -543,17 +543,17 @@ SYSTEM SPECIFICATIONS:
     Output Details:
       Deep Struct Evaluation: deep target
 --------------------------------------
-[x] ./richedgecase/edgecases/structMethod.rou: PASS (RAM: 4372KB, CPU: 100%)
+[x] ./richedgecase/edgecases/structMethod.rou: PASS (RAM: 4320KB, CPU: 50%)
     Output Details:
       Struct Action Evaluation: 50
 --------------------------------------
-[x] ./richedgecase/edgecases/sudokuValidator.rou: PASS (RAM: 4476KB, CPU: 50%)
+[x] ./richedgecase/edgecases/sudokuValidator.rou: PASS (RAM: 4512KB, CPU: 20%)
     Output Details:
       --- Testing Sudoku Validator ---
       Valid Sudoku evaluation: true
       Invalid Sudoku evaluation: false
 --------------------------------------
-[x] ./richedgecase/edgecases/syntacticsugar.rou: PASS (RAM: 4360KB, CPU: 100%)
+[x] ./richedgecase/edgecases/syntacticsugar.rou: PASS (RAM: 4276KB, CPU: 100%)
     Output Details:
       --- Testing Increments ---
       Final i value: 1
@@ -567,7 +567,7 @@ SYSTEM SPECIFICATIONS:
       Nested Ternary Grade: B
       All Syntactic Sugar Edge Cases Passed!
 --------------------------------------
-[x] ./richedgecase/edgecases/textJustification.rou: PASS (RAM: 4448KB, CPU: 100%)
+[x] ./richedgecase/edgecases/textJustification.rou: PASS (RAM: 4476KB, CPU: 100%)
     Output Details:
       --- Testing Text Justification Array Combinations ---
       Padding Array:
@@ -575,12 +575,18 @@ SYSTEM SPECIFICATIONS:
       FATAL: Padded block counts mismatch
       FATAL: Justification greedy logic failed text boundaries
 --------------------------------------
-[x] ./richedgecase/edgecases/ticTacToeEngine.rou: PASS (RAM: 4444KB, CPU: 50%)
+[x] ./richedgecase/edgecases/ticTacToeEngine.rou: PASS (RAM: 4448KB, CPU: 100%)
     Output Details:
       --- Testing Tic Tac Toe Engine ---
       Tic Tac Toe Grid validations clear!
 --------------------------------------
-[x] ./richedgecase/edgecases/trieAutocomplete.rou: PASS (RAM: 4388KB, CPU: 100%)
+[x] ./richedgecase/edgecases/topologicalSort.rou: PASS (RAM: 4472KB, CPU: 50%)
+    Output Details:
+      --- Testing Topological Sort (Dependency Resolver) ---
+      Optimal Build Order:
+      headers -> source -> compiler -> linker -> executable
+--------------------------------------
+[x] ./richedgecase/edgecases/trieAutocomplete.rou: PASS (RAM: 4512KB, CPU: 50%)
     Output Details:
       === Trie Autocomplete Sim ===
       Trie built with 7 words.
@@ -588,17 +594,17 @@ SYSTEM SPECIFICATIONS:
         - app
         - apple
 --------------------------------------
-[x] ./richedgecase/edgecases/virtualMachineEmulator.rou: PASS (RAM: 4216KB, CPU: 100%)
+[x] ./richedgecase/edgecases/virtualMachineEmulator.rou: PASS (RAM: 4276KB, CPU: 100%)
     Output Details:
       --- Testing VM Emulator ---
       VM Emulation Output: 90
 --------------------------------------
-[x] ./stresstest/infiniteLoop.rou: PASS (RAM: 4308KB, CPU: 99%)
+[x] ./stresstest/infiniteLoop.rou: PASS (RAM: 4332KB, CPU: 99%)
     Output Details:
       Testing infinite loop (Target: Watchdog Timeout Guard, no freeze)...
       Intercepted: Execution timeout: while loop exceeded 5s limit
 --------------------------------------
-[x] ./stresstest/main.rou: PASS (RAM: 4496KB, CPU: 100%)
+[x] ./stresstest/main.rou: PASS (RAM: 4460KB, CPU: 100%)
     Output Details:
       ===================================================
       >>> ROUCAARIZE LINUX ORCHESTRATION STRESS TESTS <<<
@@ -615,17 +621,17 @@ SYSTEM SPECIFICATIONS:
       >>> STRESS TEST SUITE COMPLETED WITHOUT SEGFAULT <<<
       ===================================================
 --------------------------------------
-[x] ./stresstest/memoryPressure.rou: PASS (RAM: 22092KB, CPU: 98%)
+[x] ./stresstest/memoryPressure.rou: PASS (RAM: 22232KB, CPU: 99%)
     Output Details:
       Testing heavy memory pressure & allocations...
       Memory pressure survived! Array: 300000, Map: 0
 --------------------------------------
-[x] ./stresstest/orchestrationChaos.rou: PASS (RAM: 4180KB, CPU: 102%)
+[x] ./stresstest/orchestrationChaos.rou: PASS (RAM: 4024KB, CPU: 102%)
     Output Details:
       Testing process orchestration chaos...
       Successfully spawned and terminated 300 external processes.
 --------------------------------------
-[x] ./stresstest/recursion.rou: PASS (RAM: 8808KB, CPU: 100%)
+[x] ./stresstest/recursion.rou: PASS (RAM: 8804KB, CPU: 94%)
     Output Details:
       Testing infinite recursion (Target: Stack Overflow Guard, no segfault)...
       Intercepted: Maximum recursion depth exceeded (2800)
@@ -633,11 +639,11 @@ SYSTEM SPECIFICATIONS:
 
 ==========================================================
 RESULTS SUMMARY:
-Total Tests: 69
-Passed:      69
+Total Tests: 70
+Passed:      70
 Failed:      0
 --------------------------------------
 PERFORMANCE METRICS:
-Peak RAM:    22092 KB (by ./stresstest/memoryPressure.rou)
-Peak CPU:    102% (by ./orchestration.rou)
+Peak RAM:    22232 KB (by ./stresstest/memoryPressure.rou)
+Peak CPU:    103% (by ./orchestration.rou)
 ==========================================================

@@ -1,0 +1,115 @@
+// Topological Sort (Kahn's Algorithm) - Dependency Orchestration Simulator
+// This example demonstrates DAG traversal, in-degree calculation, and queue-based sorting.
+
+import stdlib io as io
+import stdlib array as arr
+import stdlib string as str
+
+struct Graph {
+    adj,       // Map: node -> [neighbors]
+    inDegree   // Map: node -> count
+}
+
+function createGraph(nodes) {
+    g = Graph({}, {})
+    i = 0
+    while (i < arr.length(nodes)) {
+        node = nodes[i]
+        g.adj[node] = []
+        g.inDegree[node] = 0
+        i++
+    }
+    return g
+}
+
+function addEdge(graph, from, to) {
+    arr.push(graph.adj[from], to)
+    graph.inDegree[to] = graph.inDegree[to] + 1
+}
+
+function topologicalSort(graph, nodes) {
+    queue = []
+    result = []
+    
+    // 1. Find all nodes with 0 in-degree
+    i = 0
+    while (i < arr.length(nodes)) {
+        n = nodes[i]
+        if (graph.inDegree[n] == 0) {
+            arr.push(queue, n)
+        }
+        i++
+    }
+    
+    // 2. Process queue
+    qIdx = 0
+    while (qIdx < arr.length(queue)) {
+        u = queue[qIdx]
+        arr.push(result, u)
+        
+        // Decrease in-degree of all neighbors
+        neighbors = graph.adj[u]
+        j = 0
+        while (j < arr.length(neighbors)) {
+            v = neighbors[j]
+            graph.inDegree[v] = graph.inDegree[v] - 1
+            if (graph.inDegree[v] == 0) {
+                arr.push(queue, v)
+            }
+            j++
+        }
+        qIdx++
+    }
+    
+    // Check for cycles
+    if (arr.length(result) != arr.length(nodes)) {
+        return null // Cycle detected
+    }
+    
+    return result
+}
+
+function testOrchestration() {
+    io.print("--- Testing Topological Sort (Dependency Resolver) ---")
+    
+    // Simulate build steps dependency:
+    // "compiler" -> "linker"
+    // "source"   -> "compiler"
+    // "headers"  -> "compiler"
+    // "linker"   -> "executable"
+    
+    steps = ["headers", "source", "compiler", "linker", "executable"]
+    g = createGraph(steps)
+    
+    addEdge(g, "source", "compiler")
+    addEdge(g, "headers", "compiler")
+    addEdge(g, "compiler", "linker")
+    addEdge(g, "linker", "executable")
+    
+    ordered = topologicalSort(g, steps)
+    
+    if (ordered == null) {
+        io.print("FATAL: Cycle detected in build dependencies!")
+    } else {
+        io.print("Optimal Build Order:")
+        k = 0
+        output = ""
+        while (k < arr.length(ordered)) {
+            output += ordered[k]
+            if (k < arr.length(ordered) - 1) { output += " -> " }
+            k++
+        }
+        io.print(output)
+        
+        // Basic validation: executable must be last
+        if (ordered[arr.length(ordered)-1] != "executable") {
+            io.print("FATAL: Last step should be executable!")
+        }
+    }
+}
+
+function main() {
+    testOrchestration()
+}
+
+main()
