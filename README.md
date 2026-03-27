@@ -24,6 +24,14 @@
 
 ---
 
+### how to play
+
+- `roucaarize script.rou` (just run it, fr)
+- `roucaarize -g .` (she will check every `.rou` file recursively. so thorough 🧸)
+
+
+---
+
 ### a smol taste 
 
 managing services is kinda cute when you do it like this:
