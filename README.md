@@ -37,7 +37,7 @@ import stdlib time as t
 function checkVibes() {
     who = sys.hostname()
     up = sys.uptime()
-    io.print("hi " + who + "! ❤️ " + toString(up) + "s up")
+    io.print("hi " + who + "! up " + toString(up) + "s 🧸")
 }
 
 // checking in on our friend
