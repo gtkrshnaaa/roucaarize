@@ -32,18 +32,17 @@ managing services is kinda cute when you do it like this:
 import stdlib sys as sys
 import stdlib time as t
 
-// just a smol helper
-function takeCareOf(service) {
-    // systemctl is-active returns 0 if running
-    if (sys.spawn("systemctl is-active " + service + " > /dev/null 2>&1") != 0) {
-        sys.spawn("systemctl start " + service)
+// just a smol helper to say hi to our services
+function waveAt(pal) {
+    if (sys.exec("systemctl is-active " + pal) != "active") {
+        sys.spawn("systemctl start " + pal)
     }
 }
 
-// taking care of our friends
-friends = ["nginx", "redis"]
-for (friend in friends) {
-    takeCareOf(friend)
+// waving at our pals
+pals = ["nginx", "redis"]
+for (pal in pals) {
+    waveAt(pal)
     t.sleep(100) // take a breath
 }
 ```
