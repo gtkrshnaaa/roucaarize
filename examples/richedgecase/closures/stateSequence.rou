@@ -1,0 +1,31 @@
+// Modifying Outer Environment from Inner Scope - Roucaarize
+
+function createSequenceGenerator() {
+    state = 0
+    function nextValue() {
+        state = state + 1
+        return state
+    }
+    return nextValue
+}
+
+function testGenerators() {
+    gen1 = createSequenceGenerator()
+    gen2 = createSequenceGenerator()
+
+    v1 = gen1()
+    v2 = gen1()
+    v3 = gen2()
+
+    print("Generator1: " + toString(v1) + ", " + toString(v2))
+    print("Generator2: " + toString(v3))
+
+    if (v2 != 2) { print("FATAL: Outer lexical scope failed to maintain state!") }
+    if (v3 != 1) { print("FATAL: Generator instances leaked cross-scope state!") }
+}
+
+function main() {
+    testGenerators()
+}
+
+main()

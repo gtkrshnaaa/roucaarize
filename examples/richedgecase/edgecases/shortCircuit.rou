@@ -1,0 +1,19 @@
+// Short-circuit Booleans - Roucaarize
+
+function trapFlag() {
+    print("FATAL: Short circuit failed, trap executed!")
+    return true
+}
+
+function testShortCircuit() {
+    scBool = false
+    result = scBool and trapFlag()
+    if (result) { print("FATAL: Short-circuit evaluations failed!") }
+    print("Short circuit guarded successfully.")
+}
+
+function main() {
+    testShortCircuit()
+}
+
+main()

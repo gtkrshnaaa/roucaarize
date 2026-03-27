@@ -1,12 +1,12 @@
 Roucaarize Execution & Benchmark Report
-Generated on: Fri Mar 27 08:04:37 AM WIB 2026
+Generated on: Fri Mar 27 08:17:59 AM WIB 2026
 --------------------------------------
 SYSTEM SPECIFICATIONS:
   OS:  Ubuntu 24.04.4 LTS
   CPU: 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz
   RAM: 7635.43 MB
 --------------------------------------
-[x] ./advanced.rou: PASS (RAM: 4440KB, CPU: 100%)
+[x] ./advanced.rou: PASS (RAM: 4424KB, CPU: 100%)
     Output Details:
       == Roucaarize Advanced Demo ==
       
@@ -98,11 +98,11 @@ SYSTEM SPECIFICATIONS:
       
       Basics example completed successfully.
 --------------------------------------
-[x] ./modularity/calculator.rou: PASS (RAM: 4156KB, CPU: 100%)
+[x] ./modularity/calculator.rou: PASS (RAM: 4148KB, CPU: 100%)
     Output Details:
       
 --------------------------------------
-[x] ./modularity/config.rou: PASS (RAM: 4120KB, CPU: 100%)
+[x] ./modularity/config.rou: PASS (RAM: 4092KB, CPU: 100%)
     Output Details:
       
 --------------------------------------
@@ -116,18 +116,18 @@ SYSTEM SPECIFICATIONS:
     Output Details:
       
 --------------------------------------
-[x] ./modularity/utils/formatter.rou: PASS (RAM: 4120KB, CPU: 100%)
+[x] ./modularity/utils/formatter.rou: PASS (RAM: 4156KB, CPU: 100%)
     Output Details:
       
 --------------------------------------
-[x] ./orchestration.rou: PASS (RAM: 4724KB, CPU: 103%)
+[x] ./orchestration.rou: PASS (RAM: 4868KB, CPU: 105%)
     Output Details:
       == System Information ==
       Hostname: localhost
-      Uptime: 37705.44 seconds
+      Uptime: 38507.48 seconds
       User ID: 1000
       Home: /home/user
-      Date: 2026-03-27 08:04:37
+      Date: 2026-03-27 08:17:59
       
       == Service Health ==
       [WARN] sshd is not running
@@ -135,10 +135,10 @@ SYSTEM SPECIFICATIONS:
       
       == File Operations ==
       Wrote to: /tmp/roucaarize_test.txt
-      Read back: Hello from Roucaarize!\nWritten at: 08:04:37
+      Read back: Hello from Roucaarize!\nWritten at: 08:17:59
       File exists: true
       Content after append:
-      Hello from Roucaarize!\nWritten at: 08:04:37\nAppended line
+      Hello from Roucaarize!\nWritten at: 08:17:59\nAppended line
       Cleaned up temp file
       
       == String Operations ==
@@ -158,29 +158,77 @@ SYSTEM SPECIFICATIONS:
       Month: 3
       Day: 27
       Hour: 8
-      Minute: 4
-      Second: 37
-      Timestamp: 1774573477
+      Minute: 17
+      Second: 59
+      Timestamp: 1774574279
       
       == System Commands ==
       Kernel: 6.17.0-19-generic
       Disk usage (/): 6%
       
       == Process Info ==
-      Memory usage: 4858/7635MB (63.6%)
+      Memory usage: 4813/7635MB (63.0%)
       
       == Performance Test ==
       Sum of 0..9999: 49995000
-      Time elapsed: 1ms
+      Time elapsed: 0ms
       
       Orchestration example completed successfully.
 --------------------------------------
-[x] ./stresstest/infiniteLoop.rou: PASS (RAM: 4296KB, CPU: 99%)
+[x] ./richedgecase/algorithms/bubbleSort.rou: PASS (RAM: 4356KB, CPU: 100%)
+    Output Details:
+      Sorted Output: 11 ... 90
+--------------------------------------
+[x] ./richedgecase/algorithms/factorial.rou: PASS (RAM: 4224KB, CPU: 100%)
+    Output Details:
+      Factorial(10) = 3628800
+--------------------------------------
+[x] ./richedgecase/algorithms/fibonacci.rou: PASS (RAM: 4456KB, CPU: 92%)
+    Output Details:
+      Fibonacci(15) = 610
+--------------------------------------
+[x] ./richedgecase/closures/currying.rou: PASS (RAM: 4324KB, CPU: 100%)
+    Output Details:
+      currying addArguments(10)(20)(30) = 60
+--------------------------------------
+[x] ./richedgecase/closures/multiplier.rou: PASS (RAM: 4312KB, CPU: 100%)
+    Output Details:
+      t3(10) = 30
+      t5(10) = 50
+--------------------------------------
+[x] ./richedgecase/closures/stateSequence.rou: PASS (RAM: 4208KB, CPU: 100%)
+    Output Details:
+      Generator1: 1, 2
+      Generator2: 1
+--------------------------------------
+[x] ./richedgecase/edgecases/dynamicType.rou: PASS (RAM: 4328KB, CPU: 100%)
+    Output Details:
+      Dynamic function assignment evaluated: 99
+--------------------------------------
+[x] ./richedgecase/edgecases/shadowScope.rou: PASS (RAM: 4056KB, CPU: 100%)
+    Output Details:
+      FATAL: Captured lexical scope was not mutated!
+      Post-Mutation Outer Value: outer-func
+--------------------------------------
+[x] ./richedgecase/edgecases/shortCircuit.rou: PASS (RAM: 4324KB, CPU: 100%)
+    Output Details:
+      FATAL: Short circuit failed, trap executed!
+      Short circuit guarded successfully.
+--------------------------------------
+[x] ./richedgecase/edgecases/structChain.rou: PASS (RAM: 4132KB, CPU: 100%)
+    Output Details:
+      Deep Struct Evaluation: deep target
+--------------------------------------
+[x] ./richedgecase/edgecases/structMethod.rou: PASS (RAM: 4264KB, CPU: 100%)
+    Output Details:
+      Struct Action Evaluation: 50
+--------------------------------------
+[x] ./stresstest/infiniteLoop.rou: PASS (RAM: 4248KB, CPU: 99%)
     Output Details:
       Testing infinite loop (Target: Watchdog Timeout Guard, no freeze)...
       Intercepted: Execution timeout: while loop exceeded 5s limit
 --------------------------------------
-[x] ./stresstest/main.rou: PASS (RAM: 4312KB, CPU: 100%)
+[x] ./stresstest/main.rou: PASS (RAM: 4440KB, CPU: 100%)
     Output Details:
       ===================================================
       >>> ROUCAARIZE LINUX ORCHESTRATION STRESS TESTS <<<
@@ -197,17 +245,17 @@ SYSTEM SPECIFICATIONS:
       >>> STRESS TEST SUITE COMPLETED WITHOUT SEGFAULT <<<
       ===================================================
 --------------------------------------
-[x] ./stresstest/memoryPressure.rou: PASS (RAM: 22144KB, CPU: 99%)
+[x] ./stresstest/memoryPressure.rou: PASS (RAM: 22176KB, CPU: 99%)
     Output Details:
       Testing heavy memory pressure & allocations...
       Memory pressure survived! Array: 300000, Map: 0
 --------------------------------------
-[x] ./stresstest/orchestrationChaos.rou: PASS (RAM: 4048KB, CPU: 100%)
+[x] ./stresstest/orchestrationChaos.rou: PASS (RAM: 4040KB, CPU: 100%)
     Output Details:
       Testing process orchestration chaos...
       Successfully spawned and terminated 300 external processes.
 --------------------------------------
-[x] ./stresstest/recursion.rou: PASS (RAM: 8536KB, CPU: 100%)
+[x] ./stresstest/recursion.rou: PASS (RAM: 8556KB, CPU: 94%)
     Output Details:
       Testing infinite recursion (Target: Stack Overflow Guard, no segfault)...
       Intercepted: Maximum recursion depth exceeded (2800)
@@ -215,11 +263,11 @@ SYSTEM SPECIFICATIONS:
 
 ==========================================================
 RESULTS SUMMARY:
-Total Tests: 13
-Passed:      13
+Total Tests: 24
+Passed:      24
 Failed:      0
 --------------------------------------
 PERFORMANCE METRICS:
-Peak RAM:    22144 KB (by ./stresstest/memoryPressure.rou)
-Peak CPU:    103% (by ./orchestration.rou)
+Peak RAM:    22176 KB (by ./stresstest/memoryPressure.rou)
+Peak CPU:    105% (by ./orchestration.rou)
 ==========================================================

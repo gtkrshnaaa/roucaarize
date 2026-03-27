@@ -1,0 +1,23 @@
+// Advanced Currying (Nested Returns) - Roucaarize
+
+function addArguments(a) {
+    function innerBind(b) {
+        function finalBind(c) {
+            return a + b + c
+        }
+        return finalBind
+    }
+    return innerBind
+}
+
+function testCurrying() {
+    sumResult = addArguments(10)(20)(30)
+    print("currying addArguments(10)(20)(30) = " + toString(sumResult))
+    if (sumResult != 60) { print("FATAL: Currying logic failed!") }
+}
+
+function main() {
+    testCurrying()
+}
+
+main()

@@ -1,0 +1,21 @@
+// Extreme Dynamic Type Mutation - Roucaarize
+
+function getNumber() {
+    return 99
+}
+
+function testDynamicTyping() {
+    varX = 100
+    varX = "Now I am a string"
+    varX = [1, 2, 3]
+    varX = getNumber
+
+    print("Dynamic function assignment evaluated: " + toString(varX()))
+    if (varX() != 99) { print("FATAL: Dynamic typing corruption!") }
+}
+
+function main() {
+    testDynamicTyping()
+}
+
+main()

@@ -1,0 +1,23 @@
+// Higher Order Function (Generator) - Roucaarize
+
+function createMultiplier(factor) {
+    function multiplier(num) {
+        return num * factor
+    }
+    return multiplier
+}
+
+function testMultiplier() {
+    t3 = createMultiplier(3)
+    t5 = createMultiplier(5)
+
+    print("t3(10) = " + toString(t3(10)))
+    print("t5(10) = " + toString(t5(10)))
+    if (t3(10) != 30) { print("FATAL: HOF multiplier failed!") }
+}
+
+function main() {
+    testMultiplier()
+}
+
+main()

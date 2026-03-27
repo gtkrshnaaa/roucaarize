@@ -1,0 +1,24 @@
+// Function Execution Passed Inside Structs - Roucaarize
+
+struct ActionRunner {
+    name, execute
+}
+
+function tempFunction(x) { 
+    return x * 10 
+}
+
+function testStructCall() {
+    runner = ActionRunner("Hero", nil)
+    runner.execute = tempFunction
+
+    result = runner.execute(5)
+    print("Struct Action Evaluation: " + toString(result))
+    if (result != 50) { print("FATAL: Struct Function evaluation failed!") }
+}
+
+function main() {
+    testStructCall()
+}
+
+main()

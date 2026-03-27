@@ -459,7 +459,11 @@ NodeIndex Parser::postfix() {
 }
 
 NodeIndex Parser::primary() {
-    if (match(TokenType::FALSE)) return ast.addNode(ASTNode(NodeType::LITERAL_BOOL, previous().line, previous().column));
+    if (match(TokenType::FALSE)) {
+        ASTNode n(NodeType::LITERAL_BOOL, previous().line, previous().column);
+        n.literal = LiteralValue(false);
+        return ast.addNode(std::move(n));
+    }
     if (match(TokenType::TRUE)) {
         ASTNode n(NodeType::LITERAL_BOOL, previous().line, previous().column);
         n.literal = LiteralValue(true);

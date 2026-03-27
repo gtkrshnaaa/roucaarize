@@ -1,0 +1,22 @@
+// Variable Lexical Shadowing - Roucaarize
+
+levelScope = "global"
+
+function testShadowTricks() {
+    levelScope = "outer-func"
+    
+    function isolateScope() {
+        levelScope = "inner (shadowed)"
+        return levelScope
+    }
+    
+    if (levelScope != "inner (shadowed)") { print("FATAL: Captured lexical scope was not mutated!") }
+    
+    print("Post-Mutation Outer Value: " + levelScope)
+}
+
+function main() {
+    testShadowTricks()
+}
+
+main()
