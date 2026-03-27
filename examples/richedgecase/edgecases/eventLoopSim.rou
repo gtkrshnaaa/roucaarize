@@ -13,7 +13,7 @@ struct EventLoop {
 // Global scope tracker
 accumulator = ""
 
-function queueMicrotask(loop, taskName, executorFn) {
+function queueMicrotask(loop, executorFn) {
     arr.push(loop.microtasks, executorFn)
 }
 
@@ -39,13 +39,13 @@ function testEventLoop() {
     loop = EventLoop([])
     
     function taskA() { accumulator += "A" }
-    function taskB() { accumulator += "B"; queueMicrotask(loop, "C", taskC) } // B queues C
     function taskC() { accumulator += "C" }
+    function taskB() { accumulator += "B"; queueMicrotask(loop, taskC) } // B queues C
     function taskD() { accumulator += "D" }
     
-    queueMicrotask(loop, "A", taskA)
-    queueMicrotask(loop, "B", taskB)
-    queueMicrotask(loop, "D", taskD)
+    queueMicrotask(loop, taskA)
+    queueMicrotask(loop, taskB)
+    queueMicrotask(loop, taskD)
     
     // Initial State
     io.print("Starting tick...")
