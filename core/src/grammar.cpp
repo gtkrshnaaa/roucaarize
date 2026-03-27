@@ -110,7 +110,7 @@ void GrammarChecker::initBuiltins() {
     };
 
     knownStdlibModules = {
-        "sys", "fs", "net", "proc", "string"
+        "sys", "fs", "net", "proc", "string", "io", "core", "array"
     };
 
     stdlibMethods["sys"] = {
@@ -243,7 +243,7 @@ AnalysisResult GrammarChecker::analyzeSource(const std::string& source, const st
         const auto& globalScope = scopeStack.back();
         for (const auto& varName : globalScope.variables) {
             if (globalScope.readVariables.find(varName) == globalScope.readVariables.end()) {
-                if (varName.length() > 1) {
+                if (varName.length() > 1 && importAliases.find(varName) == importAliases.end()) {
                     addDiag(DiagLevel::WARNING, 0, 0,
                             "Variable '" + varName + "' is assigned but never read",
                             "semantic.unusedVariable");
@@ -453,12 +453,12 @@ void GrammarChecker::registerTopLevel(const AST& ast, NodeIndex idx) {
             }
             std::vector<std::string> p; for(auto id : ast.getParams(childNode.paramsIdx)) p.push_back(ast.getString(id)); structFields[ast.getString(childNode.nameIdx)] = p;
             declareFunction(ast.getString(childNode.nameIdx));
-        } else if (childNode.type == NodeType::IMPORT_STDLIB) {
+        } else if (childNode.type == NodeType::IMPORT_STDLIB || childNode.type == NodeType::IMPORT_FILE) {
             if (!ast.getParams(childNode.paramsIdx).empty()) {
                 importAliases.insert(ast.getString(ast.getParams(childNode.paramsIdx)[0]));
                 declareVariable(ast.getString(ast.getParams(childNode.paramsIdx)[0]));
             }
-            if (knownStdlibModules.find(ast.getString(childNode.nameIdx)) == knownStdlibModules.end()) {
+            if (childNode.type == NodeType::IMPORT_STDLIB && knownStdlibModules.find(ast.getString(childNode.nameIdx)) == knownStdlibModules.end()) {
                 addDiag(DiagLevel::ERROR, childNode.line, childNode.column,
                         "Unknown stdlib module '" + ast.getString(childNode.nameIdx) +
                         "' — known modules for orchestration: sys, fs, net, proc, string",
@@ -472,259 +472,340 @@ void GrammarChecker::registerTopLevel(const AST& ast, NodeIndex idx) {
 // Single-Pass Analysis (Naming + Semantics + Performance)
 // ============================================================================
 
-void GrammarChecker::analyze(const AST& ast, NodeIndex idx, uint32_t depth) {
-    if (idx == INVALID_NODE) return;
-    if (depth >= MAX_ANALYSIS_DEPTH) return;
-    if (!withinBudget()) return;
+void GrammarChecker::analyze(const AST& ast, NodeIndex startIdx, uint32_t startDepth) {
+    if (startIdx == INVALID_NODE) return;
 
-    ++nodeVisitCount_;
-    const ASTNode& node = ast.get(idx);
+    struct Task {
+        int action; // 0=Visit, 1=PopScope, 2=PopFuncScope, 3=DeclareVar, 4=PushScope
+        NodeIndex idx;
+        uint32_t depth;
+        std::vector<std::string> params;
+        std::string name;
+        int32_t line, column;
+        bool isFunction;
+    };
 
-    switch (node.type) {
-        case NodeType::PROGRAM: {
-            for (NodeIndex child : ast.getChildren(node.childrenIdx)) {
-                if (!withinBudget()) break;
-                analyze(ast, child, depth + 1);
-            }
-            break;
-        }
+    std::vector<Task> stack;
+    stack.push_back({0, startIdx, startDepth, {}, "", 0, 0, false});
 
-        case NodeType::VAR_ASSIGN: {
-            // Naming: check camelCase
-            if (!ast.getString(node.nameIdx).empty() && !isLowerCamelCase(ast.getString(node.nameIdx))) {
-                if (ast.getString(node.nameIdx).length() > 1) {
-                    addDiag(DiagLevel::WARNING, node.line, node.column,
-                            "Variable '" + ast.getString(node.nameIdx) + "' should use camelCase (no underscores allowed)",
-                            "naming.camelCase");
-                }
-            }
-            // Semantics: analyze value, then declare
-            analyze(ast, node.left, depth + 1);
-            declareVariable(ast.getString(node.nameIdx));
-            break;
-        }
+    while (!stack.empty()) {
+        if (!withinBudget()) return;
+        
+        Task task = stack.back();
+        stack.pop_back();
 
-        case NodeType::FUNC_DECL: {
-            // Naming: function name
-            if (!ast.getString(node.nameIdx).empty() && !isLowerCamelCase(ast.getString(node.nameIdx))) {
-                addDiag(DiagLevel::WARNING, node.line, node.column,
-                        "Function '" + ast.getString(node.nameIdx) + "' should use camelCase",
-                        "naming.funcCamelCase");
-            }
-            // Naming: parameter names
-            for (auto paramIdx : ast.getParams(node.paramsIdx)) { std::string param = ast.getString(paramIdx);
-                if (!isLowerCamelCase(param)) {
-                    addDiag(DiagLevel::WARNING, node.line, node.column,
-                            "Parameter '" + param + "' should use camelCase",
-                            "naming.paramCamelCase");
-                }
-            }
-            // Performance: empty function body
-            if (node.left != INVALID_NODE) {
-                const ASTNode& body = ast.get(node.left);
-                if (body.type == NodeType::BLOCK && ast.getChildren(body.childrenIdx).empty()) {
-                    addDiag(DiagLevel::WARNING, node.line, node.column,
-                            "Function '" + ast.getString(node.nameIdx) + "' has an empty body",
-                            "perf.emptyFunction");
-                }
-            }
-            // Semantics: scope and parameter analysis
-            pushScope(true);
-            for (auto paramIdx : ast.getParams(node.paramsIdx)) declareVariable(ast.getString(paramIdx));
-            analyze(ast, node.left, depth + 1);
-
+        if (task.action == 1) {
+            popScope();
+            continue;
+        } else if (task.action == 2) {
             if (!scopeStack.empty()) {
                 const auto& funcScope = scopeStack.back();
-                for (auto paramIdx : ast.getParams(node.paramsIdx)) { std::string param = ast.getString(paramIdx);
+                for (const auto& param : task.params) {
                     if (funcScope.readVariables.find(param) == funcScope.readVariables.end()) {
-                        addDiag(DiagLevel::WARNING, node.line, node.column,
-                                "Parameter '" + param + "' of function '" + ast.getString(node.nameIdx) + "' is never used",
+                        addDiag(DiagLevel::WARNING, task.line, task.column,
+                                "Parameter '" + param + "' of function '" + task.name + "' is never used",
                                 "semantic.unusedParam");
                     }
                 }
             }
             popScope();
-            break;
+            continue;
+        } else if (task.action == 3) {
+            declareVariable(task.name);
+            continue;
+        } else if (task.action == 4) {
+            pushScope(task.isFunction);
+            continue;
         }
 
-        case NodeType::STRUCT_DECL: {
-            // Naming: struct name must be PascalCase
-            if (!ast.getString(node.nameIdx).empty() && !isUpperCamelCase(ast.getString(node.nameIdx))) {
-                addDiag(DiagLevel::ERROR, node.line, node.column,
-                        "Struct '" + ast.getString(node.nameIdx) + "' must use PascalCase (no underscores)",
-                        "naming.structPascalCase");
-            }
-            // Naming: field names
-            for (auto fieldIdx : ast.getParams(node.paramsIdx)) { std::string field = ast.getString(fieldIdx);
-                if (!isLowerCamelCase(field)) {
-                    addDiag(DiagLevel::WARNING, node.line, node.column,
-                            "Struct field '" + field + "' should use camelCase",
-                            "naming.fieldCamelCase");
+        NodeIndex idx = task.idx;
+        uint32_t depth = task.depth;
+        
+        if (idx == INVALID_NODE) continue;
+        if (depth >= MAX_ANALYSIS_DEPTH) {
+             // Since it's iterative, we could go deeper, but let's cap it or warn.
+             continue;
+        }
+
+        ++nodeVisitCount_;
+        const ASTNode& node = ast.get(idx);
+
+        switch (node.type) {
+            case NodeType::PROGRAM: {
+                auto children = ast.getChildren(node.childrenIdx);
+                for (auto it = children.rbegin(); it != children.rend(); ++it) {
+                    stack.push_back({0, *it, depth + 1, {}, "", 0, 0, false});
                 }
+                break;
             }
-            break;
-        }
 
-        case NodeType::IMPORT_STDLIB: {
-            // Naming: import alias
-            if (!ast.getParams(node.paramsIdx).empty()) {
-                std::string alias = ast.getString(ast.getParams(node.paramsIdx)[0]);
-                if (!isLowerCamelCase(alias)) {
-                    addDiag(DiagLevel::WARNING, node.line, node.column,
-                            "Import alias '" + alias + "' should be lowercase",
-                            "naming.importAlias");
-                }
-            }
-            break;
-        }
-
-        case NodeType::IDENTIFIER: {
-            // Semantics: check variable usage before assignment
-            if (!ast.getString(node.nameIdx).empty() &&
-                !isVariableDeclared(ast.getString(node.nameIdx)) &&
-                !isFunctionDeclared(ast.getString(node.nameIdx)) &&
-                !importAliases.count(ast.getString(node.nameIdx)) &&
-                structFields.find(ast.getString(node.nameIdx)) == structFields.end()) {
-                addDiag(DiagLevel::WARNING, node.line, node.column,
-                        "Variable '" + ast.getString(node.nameIdx) + "' used before assignment",
-                        "semantic.undefinedVar");
-            } else {
-                markVariableRead(ast.getString(node.nameIdx));
-            }
-            break;
-        }
-
-        case NodeType::CALL: {
-            // Semantics: check callee exists
-            if (node.left != INVALID_NODE) {
-                const ASTNode& callee = ast.get(node.left);
-                if (callee.type == NodeType::IDENTIFIER) {
-                    if (!isFunctionDeclared(ast.getString(callee.nameIdx)) &&
-                        structFields.find(ast.getString(callee.nameIdx)) == structFields.end()) {
-                        addDiag(DiagLevel::ERROR, callee.line, callee.column,
-                                "Undefined function '" + ast.getString(callee.nameIdx) + "'",
-                                "semantic.undefinedFunc");
+            case NodeType::VAR_ASSIGN: {
+                std::string varName = ast.getString(node.nameIdx);
+                if (!varName.empty() && !isLowerCamelCase(varName)) {
+                    if (varName.length() > 1) {
+                        addDiag(DiagLevel::WARNING, node.line, node.column,
+                                "Variable '" + varName + "' should use camelCase (no underscores allowed)",
+                                "naming.camelCase");
                     }
-                    markVariableRead(ast.getString(callee.nameIdx));
-                } else if (callee.type == NodeType::MEMBER_ACCESS) {
-                    analyze(ast, callee.left, depth + 1);
                 }
+                
+                // reverse logic: declare comes AFTER visit
+                stack.push_back({3, INVALID_NODE, 0, {}, varName, 0, 0, false});
+                stack.push_back({0, node.left, depth + 1, {}, "", 0, 0, false});
+                break;
             }
-            for (NodeIndex arg : ast.getChildren(node.childrenIdx)) {
-                if (!withinBudget()) break;
-                analyze(ast, arg, depth + 1);
-            }
-            break;
-        }
 
-        case NodeType::BLOCK: {
-            bool foundReturn = false;
-            for (size_t i = 0; i < ast.getChildren(node.childrenIdx).size(); ++i) {
-                if (!withinBudget()) break;
-                NodeIndex child = ast.getChildren(node.childrenIdx)[i];
-                if (foundReturn) {
-                    const ASTNode& deadNode = ast.get(child);
-                    addDiag(DiagLevel::WARNING, deadNode.line, deadNode.column,
-                            "Unreachable code after return/throw statement",
-                            "semantic.unreachableCode");
-                    break;
+            case NodeType::FUNC_DECL: {
+                std::string funcName = ast.getString(node.nameIdx);
+                if (!funcName.empty() && !isLowerCamelCase(funcName)) {
+                    addDiag(DiagLevel::WARNING, node.line, node.column,
+                            "Function '" + funcName + "' should use camelCase",
+                            "naming.funcCamelCase");
                 }
-                analyze(ast, child, depth + 1);
-                const ASTNode& childNode = ast.get(child);
-                if (childNode.type == NodeType::RETURN_STMT || childNode.type == NodeType::THROW_STMT) {
-                    foundReturn = true;
+                
+                std::vector<std::string> paramNames;
+                for (auto paramIdx : ast.getParams(node.paramsIdx)) { 
+                    std::string param = ast.getString(paramIdx);
+                    if (!isLowerCamelCase(param)) {
+                        addDiag(DiagLevel::WARNING, node.line, node.column,
+                                "Parameter '" + param + "' should use camelCase",
+                                "naming.paramCamelCase");
+                    }
+                    paramNames.push_back(param);
                 }
-            }
-            break;
-        }
-
-        case NodeType::IF_STMT: {
-            analyze(ast, node.left, depth + 1);
-            analyze(ast, node.right, depth + 1);
-            analyze(ast, node.extra, depth + 1);
-            break;
-        }
-
-        case NodeType::FOR_STMT: {
-            // Naming: iterator variable
-            if (!ast.getString(node.nameIdx).empty() && !isLowerCamelCase(ast.getString(node.nameIdx))) {
-                addDiag(DiagLevel::WARNING, node.line, node.column,
-                        "Iterator variable '" + ast.getString(node.nameIdx) + "' should use camelCase",
-                        "naming.iteratorCamelCase");
-            }
-            // Semantics: scoped iteration
-            pushScope(false);
-            declareVariable(ast.getString(node.nameIdx));
-            analyze(ast, node.left, depth + 1);
-            // Performance: empty loop body
-            if (node.right != INVALID_NODE) {
-                const ASTNode& body = ast.get(node.right);
-                if (body.type == NodeType::BLOCK && ast.getChildren(body.childrenIdx).empty()) {
-                    addDiag(DiagLevel::PERF, node.line, node.column,
-                            "Empty loop detected. This burns CPU cycles unnecessarily in daemon scripts.",
-                            "perf.emptyLoop");
+                
+                if (node.left != INVALID_NODE) {
+                    const ASTNode& body = ast.get(node.left);
+                    if (body.type == NodeType::BLOCK && ast.getChildren(body.childrenIdx).empty()) {
+                        addDiag(DiagLevel::WARNING, node.line, node.column,
+                                "Function '" + funcName + "' has an empty body",
+                                "perf.emptyFunction");
+                    }
                 }
-            }
-            analyze(ast, node.right, depth + 1);
-            popScope();
-            break;
-        }
-
-        case NodeType::WHILE_STMT: {
-            // Performance: empty loop body
-            if (node.right != INVALID_NODE) {
-                const ASTNode& body = ast.get(node.right);
-                if (body.type == NodeType::BLOCK && ast.getChildren(body.childrenIdx).empty()) {
-                    addDiag(DiagLevel::PERF, node.line, node.column,
-                            "Empty loop detected. This burns CPU cycles unnecessarily in daemon scripts.",
-                            "perf.emptyLoop");
+                
+                if (!funcName.empty()) {
+                    declareFunction(funcName);
                 }
-            }
-            analyze(ast, node.left, depth + 1);
-            pushScope(false);
-            analyze(ast, node.right, depth + 1);
-            popScope();
-            break;
-        }
-
-        case NodeType::TRY_STMT: {
-            analyze(ast, node.left, depth + 1);
-            pushScope(false);
-            if (!ast.getString(node.nameIdx).empty()) declareVariable(ast.getString(node.nameIdx));
-            analyze(ast, node.right, depth + 1);
-            popScope();
-            // Finally block
-            for (NodeIndex child : ast.getChildren(node.childrenIdx)) {
-                if (!withinBudget()) break;
-                analyze(ast, child, depth + 1);
-            }
-            break;
-        }
-
-        case NodeType::CATCH_STMT: {
-            // Performance: empty catch
-            if (node.left != INVALID_NODE) {
-                const ASTNode& body = ast.get(node.left);
-                if (body.type == NodeType::BLOCK && ast.getChildren(body.childrenIdx).empty()) {
-                    addDiag(DiagLevel::PERF, node.line, node.column,
-                            "Empty catch block detected. Swallowing system errors silently can lead to catastrophic failures during orchestration.",
-                            "perf.emptyCatch");
+                
+                // reverse execution: pop scope, then visit body, then declare params, then push scope
+                stack.push_back({2, INVALID_NODE, 0, paramNames, funcName, node.line, node.column, false});
+                stack.push_back({0, node.left, depth + 1, {}, "", 0, 0, false});
+                for (auto it = paramNames.rbegin(); it != paramNames.rend(); ++it) {
+                    stack.push_back({3, INVALID_NODE, 0, {}, *it, 0, 0, false});
                 }
+                stack.push_back({4, INVALID_NODE, 0, {}, "", 0, 0, true});
+                break;
             }
-            analyze(ast, node.left, depth + 1);
-            break;
-        }
 
-        default: {
-            // Generic traversal for expression nodes, member access, etc.
-            if (node.left != INVALID_NODE) analyze(ast, node.left, depth + 1);
-            if (node.right != INVALID_NODE) analyze(ast, node.right, depth + 1);
-            if (node.extra != INVALID_NODE) analyze(ast, node.extra, depth + 1);
-            for (NodeIndex child : ast.getChildren(node.childrenIdx)) {
-                if (!withinBudget()) break;
-                analyze(ast, child, depth + 1);
+            case NodeType::STRUCT_DECL: {
+                std::string structName = ast.getString(node.nameIdx);
+                if (!structName.empty() && !isUpperCamelCase(structName)) {
+                    addDiag(DiagLevel::ERROR, node.line, node.column,
+                            "Struct '" + structName + "' must use PascalCase (no underscores)",
+                            "naming.structPascalCase");
+                }
+                for (auto fieldIdx : ast.getParams(node.paramsIdx)) { 
+                    std::string field = ast.getString(fieldIdx);
+                    if (!isLowerCamelCase(field)) {
+                        addDiag(DiagLevel::WARNING, node.line, node.column,
+                                "Struct field '" + field + "' should use camelCase",
+                                "naming.fieldCamelCase");
+                    }
+                }
+                break;
             }
-            break;
+
+            case NodeType::IMPORT_STDLIB: 
+            case NodeType::IMPORT_FILE: {
+                if (!ast.getParams(node.paramsIdx).empty()) {
+                    std::string alias = ast.getString(ast.getParams(node.paramsIdx)[0]);
+                    if (!isLowerCamelCase(alias)) {
+                        addDiag(DiagLevel::WARNING, node.line, node.column,
+                                "Import alias '" + alias + "' should be lowercase",
+                                "naming.importAlias");
+                    }
+                }
+                break;
+            }
+
+            case NodeType::IDENTIFIER: {
+                std::string varName = ast.getString(node.nameIdx);
+                if (!varName.empty() &&
+                    !isVariableDeclared(varName) &&
+                    !isFunctionDeclared(varName) &&
+                    !importAliases.count(varName) &&
+                    structFields.find(varName) == structFields.end()) {
+                    
+                    // Specific whitelist for grammar checkers to allow basic primitives
+                    if (varName != "len" && varName != "length") { // `length` is object prop
+                        addDiag(DiagLevel::WARNING, node.line, node.column,
+                                "Variable '" + varName + "' used before assignment",
+                                "semantic.undefinedVar");
+                    }
+                } else {
+                    markVariableRead(varName);
+                }
+                break;
+            }
+
+            case NodeType::CALL: {
+                if (node.left != INVALID_NODE) {
+                    const ASTNode& callee = ast.get(node.left);
+                    if (callee.type == NodeType::IDENTIFIER) {
+                        std::string calleeName = ast.getString(callee.nameIdx);
+                        if (!isFunctionDeclared(calleeName) &&
+                            !isVariableDeclared(calleeName) &&
+                            structFields.find(calleeName) == structFields.end()) {
+                            
+                            // Native global typechecks bypass undefined validation
+                            if (calleeName != "len" && calleeName != "toInt" && calleeName != "toString" && calleeName != "typeof") {
+                                addDiag(DiagLevel::ERROR, callee.line, callee.column,
+                                        "Undefined function '" + calleeName + "'",
+                                        "semantic.undefinedFunc");
+                            }
+                        }
+                        markVariableRead(calleeName);
+                    } else if (callee.type == NodeType::MEMBER_ACCESS) {
+                        stack.push_back({0, callee.left, depth + 1, {}, "", 0, 0, false});
+                    }
+                }
+                auto children = ast.getChildren(node.childrenIdx);
+                for (auto it = children.rbegin(); it != children.rend(); ++it) {
+                    stack.push_back({0, *it, depth + 1, {}, "", 0, 0, false});
+                }
+                break;
+            }
+
+            case NodeType::BLOCK: {
+                bool foundReturn = false;
+                auto children = ast.getChildren(node.childrenIdx);
+                for (size_t i = 0; i < children.size(); ++i) {
+                    NodeIndex child = children[i];
+                    if (foundReturn) {
+                        const ASTNode& deadNode = ast.get(child);
+                        addDiag(DiagLevel::WARNING, deadNode.line, deadNode.column,
+                                "Unreachable code after return/throw statement",
+                                "semantic.unreachableCode");
+                        break;
+                    }
+                    const ASTNode& childNode = ast.get(child);
+                    if (childNode.type == NodeType::RETURN_STMT || childNode.type == NodeType::THROW_STMT) {
+                        foundReturn = true;
+                    }
+                }
+                
+                // push backward
+                if (!foundReturn) {
+                    for (auto it = children.rbegin(); it != children.rend(); ++it) {
+                        stack.push_back({0, *it, depth + 1, {}, "", 0, 0, false});
+                    }
+                } else {
+                    // push forwards until return backwards
+                    std::vector<NodeIndex> processList;
+                    for (size_t i = 0; i < children.size(); ++i) {
+                        processList.push_back(children[i]);
+                        const ASTNode& cNode = ast.get(children[i]);
+                        if (cNode.type == NodeType::RETURN_STMT || cNode.type == NodeType::THROW_STMT) break;
+                    }
+                    for (auto it = processList.rbegin(); it != processList.rend(); ++it) {
+                        stack.push_back({0, *it, depth + 1, {}, "", 0, 0, false});
+                    }
+                }
+                
+                break;
+            }
+
+            case NodeType::IF_STMT: {
+                stack.push_back({0, node.extra, depth + 1, {}, "", 0, 0, false});
+                stack.push_back({0, node.right, depth + 1, {}, "", 0, 0, false});
+                stack.push_back({0, node.left, depth + 1, {}, "", 0, 0, false});
+                break;
+            }
+
+            case NodeType::FOR_STMT: {
+                std::string iterName = ast.getString(node.nameIdx);
+                if (!iterName.empty() && !isLowerCamelCase(iterName)) {
+                    addDiag(DiagLevel::WARNING, node.line, node.column,
+                            "Iterator variable '" + iterName + "' should use camelCase",
+                            "naming.iteratorCamelCase");
+                }
+                
+                if (node.right != INVALID_NODE) {
+                    const ASTNode& body = ast.get(node.right);
+                    if (body.type == NodeType::BLOCK && ast.getChildren(body.childrenIdx).empty()) {
+                        addDiag(DiagLevel::PERF, node.line, node.column,
+                                "Empty loop detected. This burns CPU cycles unnecessarily in daemon scripts.",
+                                "perf.emptyLoop");
+                    }
+                }
+                
+                stack.push_back({1, INVALID_NODE, 0, {}, "", 0, 0, false}); // pop
+                stack.push_back({0, node.right, depth + 1, {}, "", 0, 0, false}); // analyze body
+                stack.push_back({3, INVALID_NODE, 0, {}, iterName, 0, 0, false}); // declare iter
+                stack.push_back({4, INVALID_NODE, 0, {}, "", 0, 0, false}); // push scope
+                stack.push_back({0, node.left, depth + 1, {}, "", 0, 0, false}); // analyze iterable
+                break;
+            }
+
+            case NodeType::WHILE_STMT: {
+                if (node.right != INVALID_NODE) {
+                    const ASTNode& body = ast.get(node.right);
+                    if (body.type == NodeType::BLOCK && ast.getChildren(body.childrenIdx).empty()) {
+                        addDiag(DiagLevel::PERF, node.line, node.column,
+                                "Empty loop detected. This burns CPU cycles unnecessarily in daemon scripts.",
+                                "perf.emptyLoop");
+                    }
+                }
+                
+                stack.push_back({1, INVALID_NODE, 0, {}, "", 0, 0, false}); // pop
+                stack.push_back({0, node.right, depth + 1, {}, "", 0, 0, false}); // body
+                stack.push_back({4, INVALID_NODE, 0, {}, "", 0, 0, false}); // push
+                stack.push_back({0, node.left, depth + 1, {}, "", 0, 0, false}); // condition
+                break;
+            }
+
+            case NodeType::TRY_STMT: {
+                // order: finally -> catch(right) -> try(left)
+                auto children = ast.getChildren(node.childrenIdx);
+                for (auto it = children.rbegin(); it != children.rend(); ++it) {
+                    stack.push_back({0, *it, depth + 1, {}, "", 0, 0, false}); // finally children
+                }
+                
+                std::string catchVar = ast.getString(node.nameIdx);
+                stack.push_back({1, INVALID_NODE, 0, {}, "", 0, 0, false}); // pop catch scope
+                stack.push_back({0, node.right, depth + 1, {}, "", 0, 0, false}); // analyze catch
+                if (!catchVar.empty()) {
+                    stack.push_back({3, INVALID_NODE, 0, {}, catchVar, 0, 0, false}); // decl catch var
+                }
+                stack.push_back({4, INVALID_NODE, 0, {}, "", 0, 0, false}); // push catch scope
+                
+                stack.push_back({0, node.left, depth + 1, {}, "", 0, 0, false}); // try block
+                break;
+            }
+
+            case NodeType::CATCH_STMT: {
+                if (node.left != INVALID_NODE) {
+                    const ASTNode& body = ast.get(node.left);
+                    if (body.type == NodeType::BLOCK && ast.getChildren(body.childrenIdx).empty()) {
+                        addDiag(DiagLevel::PERF, node.line, node.column,
+                                "Empty catch block detected. Swallowing system errors silently can lead to catastrophic failures.",
+                                "perf.emptyCatch");
+                    }
+                }
+                stack.push_back({0, node.left, depth + 1, {}, "", 0, 0, false});
+                break;
+            }
+
+            default: {
+                auto children = ast.getChildren(node.childrenIdx);
+                for (auto it = children.rbegin(); it != children.rend(); ++it) {
+                    stack.push_back({0, *it, depth + 1, {}, "", 0, 0, false});
+                }
+                if (node.extra != INVALID_NODE) stack.push_back({0, node.extra, depth + 1, {}, "", 0, 0, false});
+                if (node.right != INVALID_NODE) stack.push_back({0, node.right, depth + 1, {}, "", 0, 0, false});
+                if (node.left != INVALID_NODE) stack.push_back({0, node.left, depth + 1, {}, "", 0, 0, false});
+                break;
+            }
         }
     }
 }

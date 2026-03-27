@@ -12,7 +12,7 @@ function run() {
     targetList = []
     i = 0
     while (i < 300000) { 
-        push(targetList, i)
+        arr.push(targetList, i)
         i = i + 1
     }
     

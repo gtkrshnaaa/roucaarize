@@ -130,6 +130,7 @@ io.print("== Structs ==")
 web = Server("web01", "192.168.1.10", 80, "running")
 db = Server("db01", "192.168.1.20", 5432, "running")
 showServer(web)
+showServer(db)
 web.status = "maintenance"
 io.print("Updated status: " + web.status)
 io.print("")
