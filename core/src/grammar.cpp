@@ -438,7 +438,7 @@ void GrammarChecker::registerTopLevel(const AST& ast, NodeIndex idx) {
 
     for (NodeIndex child : ast.getChildren(node.childrenIdx)) {
         const ASTNode& childNode = ast.get(child);
-        if (childNode.type == NodeType::FUNC_DECL) {
+        if (childNode.type == NodeType::FUNC_DECL || childNode.type == NodeType::ASYNC_FUNC_DECL) {
             if (isFunctionDeclared(ast.getString(childNode.nameIdx))) {
                 addDiag(DiagLevel::WARNING, childNode.line, childNode.column,
                         "Function '" + ast.getString(childNode.nameIdx) + "' is declared multiple times",
@@ -555,6 +555,7 @@ void GrammarChecker::analyze(const AST& ast, NodeIndex startIdx, uint32_t startD
                 break;
             }
 
+            case NodeType::ASYNC_FUNC_DECL:
             case NodeType::FUNC_DECL: {
                 std::string funcName = ast.getString(node.nameIdx);
                 if (!funcName.empty() && !isLowerCamelCase(funcName)) {
