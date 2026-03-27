@@ -68,8 +68,12 @@ we don't do anything too fancy. it's just a quiet pipeline:
 |--------|--------|-----------|
 | **sys** | `as sys` | talks to linux, gently |
 | **fs** | `as fs` | touches files with care |
-| **t** | `as t` | knows what time it is |
-| **arr** | `as arr` | holds your things together |
+| **time** | `as t` | knows what time it is |
+| **array** | `as arr` | holds your things together |
+| **io** | `as io` | says hello to the world |
+| **string** | `as str` | plays with words |
+| **proc** | `as pc` | watches over your tasks |
+| **net** | `as net` | reaches out to friends |
 
 ---
 
