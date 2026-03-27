@@ -30,20 +30,22 @@ managing services is kinda cute when you do it like this:
 
 ```rou
 import stdlib sys as sys
+import stdlib io as io
 import stdlib time as t
 
-// just a smol helper to say hi to our services
-function waveAt(pal) {
-    if (sys.exec("systemctl is-active " + pal) != "active") {
-        sys.spawn("systemctl start " + pal)
-    }
+// just a smol helper to check how our system is feeling
+function checkVibes() {
+    who = sys.hostname()
+    up = sys.uptime()
+    io.print("hi " + who + "! you've been awake for " + toString(up) + " seconds. so proud of u. 🧸")
 }
 
-// waving at our pals
-pals = ["nginx", "redis"]
-for (pal in pals) {
-    waveAt(pal)
-    t.sleep(100) // take a breath
+// checking in on our friend
+i = 0
+while (i < 3) {
+    checkVibes()
+    t.sleep(1000) // take a smol nap
+    i = i + 1
 }
 ```
 
