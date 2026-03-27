@@ -15,14 +15,14 @@ function printResult(name, ops, sec) {
 }
 
 function benchInt() {
-    limit = 5000000
-    start = t.millis()
+    limit = 10000
+    start = t.nanos()
     i = 0
     while (i < limit) {
         i = i + 1
     }
-    end = t.millis()
-    sec = (end - start) / 1000.0
+    end = t.nanos()
+    sec = (end - start) / 1000000000.0
     if (sec == 0) { sec = 0.0001 }
     ops = 0
     if (sec > 0) { ops = limit / sec; } else { ops = limit / 0.0001; }
@@ -30,16 +30,16 @@ function benchInt() {
 }
 
 function benchDouble() {
-    limit = 5000000
+    limit = 100000
     val = 0.0
-    start = t.millis()
+    start = t.nanos()
     i = 0
     while (i < limit) {
         val = val + 1.1
         i = i + 1
     }
-    end = t.millis()
-    sec = (end - start) / 1000.0
+    end = t.nanos()
+    sec = (end - start) / 1000000000.0
     if (sec == 0) { sec = 0.0001 }
     ops = 0
     if (sec > 0) { ops = limit / sec; } else { ops = limit / 0.0001; }
@@ -47,16 +47,16 @@ function benchDouble() {
 }
 
 function benchString() {
-    limit = 50000
-    start = t.millis()
+    limit = 5000
+    start = t.nanos()
     s = ""
     i = 0
     while (i < limit) {
         s = s + "a"
         i = i + 1
     }
-    end = t.millis()
-    sec = (end - start) / 1000.0
+    end = t.nanos()
+    sec = (end - start) / 1000000000.0
     if (sec == 0) { sec = 0.0001 }
     ops = 0
     if (sec > 0) { ops = limit / sec; } else { ops = limit / 0.0001; }
@@ -64,16 +64,16 @@ function benchString() {
 }
 
 function benchArray() {
-    limit = 1000000
-    start = t.millis()
+    limit = 10000
+    start = t.nanos()
     arr = []
     i = 0
     while (i < limit) {
         push(arr, i)
         i = i + 1
     }
-    end = t.millis()
-    sec = (end - start) / 1000.0
+    end = t.nanos()
+    sec = (end - start) / 1000000000.0
     if (sec == 0) { sec = 0.0001 }
     ops = 0
     if (sec > 0) { ops = limit / sec; } else { ops = limit / 0.0001; }
@@ -81,17 +81,17 @@ function benchArray() {
 }
 
 function benchStruct() {
-    limit = 2500000
+    limit = 500000
     o = Obj(0)
-    start = t.millis()
+    start = t.nanos()
     i = 0
     while (i < limit) {
         o.val = i
         x = o.val
         i = i + 1
     }
-    end = t.millis()
-    sec = (end - start) / 1000.0
+    end = t.nanos()
+    sec = (end - start) / 1000000000.0
     if (sec == 0) { sec = 0.0001 }
     ops = 0
     if (sec > 0) { ops = limit / sec; } else { ops = limit / 0.0001; }

@@ -1,7 +1,7 @@
 ================================================================================
                    ULTIMATE LANGUAGE BENCHMARK BATTLE
 ================================================================================
-Execution Date: Thu Mar 26 11:11:56 PM WIB 2026
+Execution Date: Fri Mar 27 07:48:17 AM WIB 2026
 
 SYSTEM SPECIFICATIONS:
   OS:  Ubuntu 24.04.4 LTS
@@ -16,17 +16,17 @@ Arch: AST-Walking Interpreter (C++20 Native)
   -------------------------------------------------------------
   Benchmark       |     Performance | Time
   -------------------------------------------------------------
-  Integer Add     | 10000000.0 OPS/sec | 0.001s
-  Double Arith    | 5000000.0 OPS/sec | 0.02s
-  String Concat   | 2500000.0 OPS/sec | 0.002s
-  Array Push      | 2500000.0 OPS/sec | 0.004s
-  Struct Access   | 3875968.992248 OPS/sec | 0.129s
+  Integer Add     | 35103361.848964 OPS/sec | 0.000285s
+  Double Arith    | 23549021.17316 OPS/sec | 0.004246s
+  String Concat   | 4365020.471946 OPS/sec | 0.001145s
+  Array Push      | 7908608.124513 OPS/sec | 0.001264s
+  Struct Access   | 11550223.931121 OPS/sec | 0.043289s
   -------------------------------------------------------------
 
 [System Resources]
-  Peak RAM : 6160 KB
-  CPU Load : 98%
-  Total Time: 0.15 s
+  Peak RAM : 4780 KB
+  CPU Load : 100%
+  Total Time: 0.05 s
 
 ================================================================================
 --- PHP 8 (Standard) ---
@@ -35,16 +35,16 @@ Arch: Bytecode (Stack-based) - Zend (OpCache Only)
   -------------------------------------------------------------
   Benchmark       |     Performance | Time
   -------------------------------------------------------------
-  Integer Add     |    455902608.70 OPS/sec | 0.0000s
-  Double Arith    |    149476265.15 OPS/sec | 0.0007s
-  String Concat   |     46707171.49 OPS/sec | 0.0001s
+  Integer Add     |    371177345.13 OPS/sec | 0.0000s
+  Double Arith    |    206615960.59 OPS/sec | 0.0005s
+  String Concat   |     43151275.72 OPS/sec | 0.0001s
   Array Push      |     55553695.36 OPS/sec | 0.0002s
-  Struct Access   |     94910934.11 OPS/sec | 0.0053s
+  Struct Access   |     91259878.15 OPS/sec | 0.0055s
   -------------------------------------------------------------
 
 [System Resources]
-  Peak RAM : 26184 KB
-  CPU Load : 90%
+  Peak RAM : 25988 KB
+  CPU Load : 100%
   Total Time: 0.02 s
 
 ================================================================================
@@ -54,16 +54,16 @@ Arch: Zend Engine + JIT Enabled (Max Power)
   -------------------------------------------------------------
   Benchmark       |     Performance | Time
   -------------------------------------------------------------
-  Integer Add     |    126716132.93 OPS/sec | 0.0001s
-  Double Arith    |    699050666.67 OPS/sec | 0.0001s
-  String Concat   |     47233153.15 OPS/sec | 0.0001s
-  Array Push      |     85423706.72 OPS/sec | 0.0001s
-  Struct Access   |    410803525.95 OPS/sec | 0.0012s
+  Integer Add     |    158875151.52 OPS/sec | 0.0001s
+  Double Arith    |    730714982.58 OPS/sec | 0.0001s
+  String Concat   |     58254222.22 OPS/sec | 0.0001s
+  Array Push      |     89240510.64 OPS/sec | 0.0001s
+  Struct Access   |    389082003.71 OPS/sec | 0.0013s
   -------------------------------------------------------------
 
 [System Resources]
-  Peak RAM : 29528 KB
-  CPU Load : 94%
+  Peak RAM : 29512 KB
+  CPU Load : 89%
   Total Time: 0.01 s
 
 ================================================================================
@@ -73,16 +73,16 @@ Arch: Bytecode (Register-based) - Standard Interpreter
   -------------------------------------------------------------
   Benchmark       |     Performance | Time
   -------------------------------------------------------------
-  Integer Add     |    192307692.31 OPS/sec | 0.0001s
-  Double Arith    |    131061598.95 OPS/sec | 0.0008s
-  String Concat   |      6067961.17 OPS/sec | 0.0008s
-  Array Push      |     18148820.33 OPS/sec | 0.0006s
-  Struct Access   |     92250922.51 OPS/sec | 0.0054s
+  Integer Add     |    172413793.10 OPS/sec | 0.0001s
+  Double Arith    |    131233595.80 OPS/sec | 0.0008s
+  String Concat   |      5952380.95 OPS/sec | 0.0008s
+  Array Push      |     17667844.52 OPS/sec | 0.0006s
+  Struct Access   |     87904360.06 OPS/sec | 0.0057s
   -------------------------------------------------------------
 
 [System Resources]
-  Peak RAM : 3460 KB
-  CPU Load : 100%
+  Peak RAM : 3364 KB
+  CPU Load : 88%
   Total Time: 0.00 s
 
 ================================================================================
@@ -92,16 +92,16 @@ Arch: JIT Compiled - Trace-based Compiler
   -------------------------------------------------------------
   Benchmark       |     Performance | Time
   -------------------------------------------------------------
-  Integer Add     |    243902439.02 OPS/sec | 0.0000s
-  Double Arith    |    813008130.08 OPS/sec | 0.0001s
-  String Concat   |      2834467.12 OPS/sec | 0.0018s
-  Array Push      |    106382978.72 OPS/sec | 0.0001s
-  Struct Access   |    912408759.12 OPS/sec | 0.0005s
+  Integer Add     |    250000000.00 OPS/sec | 0.0000s
+  Double Arith    |    854700854.70 OPS/sec | 0.0001s
+  String Concat   |      2572016.46 OPS/sec | 0.0019s
+  Array Push      |     83333333.33 OPS/sec | 0.0001s
+  Struct Access   |    738552437.22 OPS/sec | 0.0007s
   -------------------------------------------------------------
 
 [System Resources]
-  Peak RAM : 2824 KB
-  CPU Load : 100%
+  Peak RAM : 2832 KB
+  CPU Load : 66%
   Total Time: 0.00 s
 
 ================================================================================
@@ -111,20 +111,18 @@ Arch: Bytecode (Stack-based) - CPython Interpreter
   -------------------------------------------------------------
   Benchmark       |     Performance | Time
   -------------------------------------------------------------
-  Integer Add     |   44,858,866.31 OPS/sec | 0.0002s
-  Double Arith    |   33,140,834.39 OPS/sec | 0.0030s
-  String Concat   |   21,845,333.33 OPS/sec | 0.0002s
-  Array Push      |   24,556,814.99 OPS/sec | 0.0004s
-  Struct Access   |   32,576,612.40 OPS/sec | 0.0153s
+  Integer Add     |   41,692,882.70 OPS/sec | 0.0002s
+  Double Arith    |   31,476,953.10 OPS/sec | 0.0032s
+  String Concat   |   23,563,505.62 OPS/sec | 0.0002s
+  Array Push      |   25,497,288.75 OPS/sec | 0.0004s
+  Struct Access   |   32,055,761.06 OPS/sec | 0.0156s
   -------------------------------------------------------------
 
 
 [System Resources]
-  Peak RAM : 10280 KB
+  Peak RAM : 10140 KB
   CPU Load : 100%
-  Total Time: 0.02 s
+  Total Time: 0.03 s
 
 ================================================================================
 Benchmark Complete.
-
-Detailed report saved to: battleReport.txt

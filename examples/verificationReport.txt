@@ -1,12 +1,12 @@
 Roucaarize Execution & Benchmark Report
-Generated on: Fri Mar 27 05:56:19 AM WIB 2026
+Generated on: Fri Mar 27 07:01:08 AM WIB 2026
 --------------------------------------
 SYSTEM SPECIFICATIONS:
   OS:  Ubuntu 24.04.4 LTS
   CPU: 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz
   RAM: 7635.43 MB
 --------------------------------------
-[x] ./advanced.rou: PASS (RAM: 4564KB, CPU: 100%)
+[x] ./advanced.rou: PASS (RAM: 4400KB, CPU: 100%)
     Output Details:
       == Roucaarize Advanced Demo ==
       
@@ -48,7 +48,7 @@ SYSTEM SPECIFICATIONS:
       
       Advanced example completed successfully.
 --------------------------------------
-[x] ./basics.rou: PASS (RAM: 4672KB, CPU: 50%)
+[x] ./basics.rou: PASS (RAM: 4556KB, CPU: 50%)
     Output Details:
       == Roucaarize Basics Demo ==
       
@@ -98,36 +98,36 @@ SYSTEM SPECIFICATIONS:
       
       Basics example completed successfully.
 --------------------------------------
-[x] ./modularity/calculator.rou: PASS (RAM: 4152KB, CPU: 100%)
+[x] ./modularity/calculator.rou: PASS (RAM: 4188KB, CPU: 100%)
     Output Details:
       
 --------------------------------------
-[x] ./modularity/config.rou: PASS (RAM: 4176KB, CPU: 100%)
+[x] ./modularity/config.rou: PASS (RAM: 4156KB, CPU: 50%)
     Output Details:
       
 --------------------------------------
-[x] ./modularity/main.rou: PASS (RAM: 4380KB, CPU: 100%)
+[x] ./modularity/main.rou: PASS (RAM: 4312KB, CPU: 100%)
     Output Details:
       == Roucaarize Modular Calculator ==
       Calculator Error: Undefined variable: calc
       == Calculator Session Ended ==
 --------------------------------------
-[x] ./modularity/math/operations.rou: PASS (RAM: 4176KB, CPU: 100%)
+[x] ./modularity/math/operations.rou: PASS (RAM: 4156KB, CPU: 100%)
     Output Details:
       
 --------------------------------------
-[x] ./modularity/utils/formatter.rou: PASS (RAM: 4136KB, CPU: 100%)
+[x] ./modularity/utils/formatter.rou: PASS (RAM: 4156KB, CPU: 100%)
     Output Details:
       
 --------------------------------------
-[x] ./orchestration.rou: PASS (RAM: 4952KB, CPU: 102%)
+[x] ./orchestration.rou: PASS (RAM: 4824KB, CPU: 91%)
     Output Details:
       == System Information ==
       Hostname: localhost
-      Uptime: 30007.63 seconds
+      Uptime: 33896.2 seconds
       User ID: 1000
       Home: /home/user
-      Date: 2026-03-27 05:56:19
+      Date: 2026-03-27 07:01:08
       
       == Service Health ==
       [WARN] sshd is not running
@@ -135,10 +135,10 @@ SYSTEM SPECIFICATIONS:
       
       == File Operations ==
       Wrote to: /tmp/roucaarize_test.txt
-      Read back: Hello from Roucaarize!\nWritten at: 05:56:19
+      Read back: Hello from Roucaarize!\nWritten at: 07:01:08
       File exists: true
       Content after append:
-      Hello from Roucaarize!\nWritten at: 05:56:19\nAppended line
+      Hello from Roucaarize!\nWritten at: 07:01:08\nAppended line
       Cleaned up temp file
       
       == String Operations ==
@@ -157,30 +157,30 @@ SYSTEM SPECIFICATIONS:
       Year: 2026
       Month: 3
       Day: 27
-      Hour: 5
-      Minute: 56
-      Second: 19
-      Timestamp: 1774565779
+      Hour: 7
+      Minute: 1
+      Second: 8
+      Timestamp: 1774569668
       
       == System Commands ==
       Kernel: 6.17.0-19-generic
       Disk usage (/): 6%
       
       == Process Info ==
-      Memory usage: 4298/7635MB (56.3%)
+      Memory usage: 4601/7635MB (60.3%)
       
       == Performance Test ==
       Sum of 0..9999: 49995000
-      Time elapsed: 2ms
+      Time elapsed: 1ms
       
       Orchestration example completed successfully.
 --------------------------------------
-[x] ./stresstest/infiniteLoop.rou: PASS (RAM: 4236KB, CPU: 99%)
+[x] ./stresstest/infiniteLoop.rou: PASS (RAM: 4312KB, CPU: 99%)
     Output Details:
       Testing infinite loop (Target: Watchdog Timeout Guard, no freeze)...
       Intercepted: Execution timeout: while loop exceeded 5s limit
 --------------------------------------
-[x] ./stresstest/main.rou: PASS (RAM: 4392KB, CPU: 100%)
+[x] ./stresstest/main.rou: PASS (RAM: 4436KB, CPU: 100%)
     Output Details:
       ===================================================
       >>> ROUCAARIZE LINUX ORCHESTRATION STRESS TESTS <<<
@@ -197,17 +197,17 @@ SYSTEM SPECIFICATIONS:
       >>> STRESS TEST SUITE COMPLETED WITHOUT SEGFAULT <<<
       ===================================================
 --------------------------------------
-[x] ./stresstest/memoryPressure.rou: PASS (RAM: 61492KB, CPU: 99%)
+[x] ./stresstest/memoryPressure.rou: PASS (RAM: 22180KB, CPU: 99%)
     Output Details:
       Testing heavy memory pressure & allocations...
       Memory pressure survived! Array: 300000, Map: 0
 --------------------------------------
-[x] ./stresstest/orchestrationChaos.rou: PASS (RAM: 4032KB, CPU: 102%)
+[x] ./stresstest/orchestrationChaos.rou: PASS (RAM: 4084KB, CPU: 101%)
     Output Details:
       Testing process orchestration chaos...
       Successfully spawned and terminated 300 external processes.
 --------------------------------------
-[x] ./stresstest/recursion.rou: PASS (RAM: 6888KB, CPU: 87%)
+[x] ./stresstest/recursion.rou: PASS (RAM: 8520KB, CPU: 94%)
     Output Details:
       Testing infinite recursion (Target: Stack Overflow Guard, no segfault)...
       Intercepted: Maximum recursion depth exceeded (2800)
@@ -220,6 +220,6 @@ Passed:      13
 Failed:      0
 --------------------------------------
 PERFORMANCE METRICS:
-Peak RAM:    61492 KB (by ./stresstest/memoryPressure.rou)
-Peak CPU:    102% (by ./orchestration.rou)
+Peak RAM:    22180 KB (by ./stresstest/memoryPressure.rou)
+Peak CPU:    101% (by ./stresstest/orchestrationChaos.rou)
 ==========================================================
