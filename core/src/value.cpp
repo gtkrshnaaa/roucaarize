@@ -41,6 +41,7 @@ std::string Value::toString() const {
         case ValueType::STRUCT_INSTANCE: return "<struct " + SymbolTable::get().getString(getStruct()->typeNameIdx) + ">";
         case ValueType::FUNCTION: return "<function " + SymbolTable::get().getString(getFunction()->nameIdx) + ">";
         case ValueType::NATIVE_FUNCTION: return "<native function>";
+        case ValueType::PROMISE: return "<promise>";
 
         default: return "unknown";
     }

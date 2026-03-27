@@ -14,6 +14,7 @@
 #include <unordered_map>
 #include <memory>
 #include <functional>
+#include <future>
 
 namespace roucaarize {
 
@@ -32,7 +33,8 @@ enum class ValueType : uint8_t {
     MAP,
     STRUCT_INSTANCE,
     FUNCTION,
-    NATIVE_FUNCTION
+    NATIVE_FUNCTION,
+    PROMISE
 };
 
 using NativeFunction = std::function<Value(Evaluator&, const std::vector<Value>&)>;
@@ -42,6 +44,7 @@ struct FunctionDef {
     std::vector<uint32_t> params;
     uint32_t bodyIndex;
     std::shared_ptr<class Environment> closure;
+    bool isAsync = false;
 };
 
 struct StructInstance {
@@ -71,6 +74,7 @@ struct Value {
     static Value fromStruct(std::shared_ptr<StructInstance> s) { Value v; v.type = ValueType::STRUCT_INSTANCE; v.objVal = std::move(s); return v; }
     static Value fromNative(NativeFunction fn) { Value v; v.type = ValueType::NATIVE_FUNCTION; v.objVal = std::make_shared<NativeFunction>(std::move(fn)); return v; }
     static Value fromFunction(FunctionDef fd) { Value v; v.type = ValueType::FUNCTION; v.objVal = std::make_shared<FunctionDef>(std::move(fd)); return v; }
+    static Value fromPromise(std::shared_ptr<std::future<Value>> p) { Value v; v.type = ValueType::PROMISE; v.objVal = std::move(p); return v; }
 
     
     bool isNumber() const { return type == ValueType::INT || type == ValueType::FLOAT; }
@@ -85,6 +89,7 @@ struct Value {
     std::shared_ptr<StructInstance> getStruct() const { return std::static_pointer_cast<StructInstance>(objVal); }
     std::shared_ptr<NativeFunction> getNative() const { return std::static_pointer_cast<NativeFunction>(objVal); }
     std::shared_ptr<FunctionDef> getFunction() const { return std::static_pointer_cast<FunctionDef>(objVal); }
+    std::shared_ptr<std::future<Value>> getPromise() const { return std::static_pointer_cast<std::future<Value>>(objVal); }
 
     
     double asDouble() const {
@@ -106,6 +111,7 @@ struct Value {
             case ValueType::STRUCT_INSTANCE: return getStruct() == other.getStruct();
             case ValueType::FUNCTION: return getFunction() == other.getFunction();
             case ValueType::NATIVE_FUNCTION: return getNative() == other.getNative();
+            case ValueType::PROMISE: return getPromise() == other.getPromise();
 
             default: return false;
         }
