@@ -30,12 +30,13 @@ managing services is kinda cute when you do it like this:
 
 ```rou
 import stdlib sys as sys
-import stdlib t as t
+import stdlib time as t
 
 // just a smol helper
 function takeCareOf(service) {
-    if (!sys.systemctl("is-active", service)) {
-        sys.systemctl("start", service)
+    // systemctl is-active returns 0 if running
+    if (sys.spawn("systemctl is-active " + service + " > /dev/null 2>&1") != 0) {
+        sys.spawn("systemctl start " + service)
     }
 }
 
