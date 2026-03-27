@@ -1,4 +1,4 @@
-// Variable Lexical Shadowing - Roucaarize
+// Global variable access and mutation - Roucaarize
 
 import stdlib io as io
 import stdlib array as arr
@@ -12,16 +12,19 @@ function testShadowTricks() {
     levelScope = "outer-func"
     
     function isolateScope() {
-        levelScope = "inner (shadowed)"
+        levelScope = "inner-mutation"
         return levelScope
     }
     
-    if (levelScope != "inner (shadowed)") { io.print("FATAL: Captured lexical scope was not mutated!") }
+    isolateScope()
+    
+    if (levelScope != "inner-mutation") { io.print("FATAL: Captured lexical scope was not mutated!") }
     
     io.print("Post-Mutation Outer Value: " + levelScope)
 }
 
 function main() {
+    io.print("Initial Global Value: " + levelScope)
     testShadowTricks()
 }
 
