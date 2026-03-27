@@ -1,0 +1,78 @@
+import stdlib io as io
+import stdlib array as arr
+import stdlib string as str
+
+struct Piece {
+    type,
+    color
+}
+
+function isOutOfBounds(r, c) {
+    return (r < 0 or r > 7 or c < 0 or c > 7)
+}
+
+function generateEmptyBoard() {
+    board = []
+    r = 0
+    while (r < 8) {
+        row = []
+        c = 0
+        while (c < 8) {
+            arr.push(row, null)
+            c++
+        }
+        arr.push(board, row)
+        r++
+    }
+    return board
+}
+
+function isValidRookMove(board, startR, startC, endR, endC) {
+    if (startR != endR and startC != endC) { return false } // Must be straight line
+    
+    rDir = 0
+    if (endR > startR) { rDir = 1 } else if (endR < startR) { rDir = -1 }
+    
+    cDir = 0
+    if (endC > startC) { cDir = 1 } else if (endC < startC) { cDir = -1 }
+    
+    currR = startR + rDir
+    currC = startC + cDir
+    
+    while (currR != endR or currC != endC) {
+        if (board[currR][currC] != null) {
+            return false // Blocked
+        }
+        currR += rDir
+        currC += cDir
+    }
+    return true
+}
+
+function runChessValidator() {
+    board = generateEmptyBoard()
+    
+    // Place a White Rook at 4,4
+    board[4][4] = Piece("Rook", "White")
+    // Place a Black Pawn at 4,6
+    board[4][6] = Piece("Pawn", "Black")
+    // Place a White Knight at 2,4
+    board[2][4] = Piece("Knight", "White")
+    
+    io.print("Validating Rook moves from (4,4):")
+    
+    // Straight clear
+    v1 = isValidRookMove(board, 4, 4, 4, 1)
+    io.print("  Move to (4,1) [Clear Path]: " + toString(v1))
+    
+    // Diagonal invalid
+    v2 = isValidRookMove(board, 4, 4, 5, 5)
+    io.print("  Move to (5,5) [Diagonal]: " + toString(v2))
+    
+    // Blocked path
+    v3 = isValidRookMove(board, 4, 4, 4, 7)
+    io.print("  Move to (4,7) [Blocked by Pawn at 4,6]: " + toString(v3))
+}
+
+io.print("=== Chess Board Validator ===")
+runChessValidator()

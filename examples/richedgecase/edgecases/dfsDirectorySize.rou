@@ -12,13 +12,13 @@ function File(n, s) { return Node(n, s, []) }
 function Directory(n, childs) { return Node(n, 0, childs) }
 
 function calculateDFSSize(node) {
-    if (len(node.children) == 0) {
+    if (arr.length(node.children) == 0) {
         return node.size
     }
     
     totalSize = node.size
     i = 0
-    while (i < len(node.children)) {
+    while (i < arr.length(node.children)) {
         child = node.children[i]
         totalSize += calculateDFSSize(child)
         i++

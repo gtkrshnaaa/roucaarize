@@ -18,14 +18,14 @@ function queueMicrotask(loop, taskName, executorFn) {
 }
 
 function runLoopTick(loop) {
-    while (len(loop.microtasks) > 0) {
+    while (arr.length(loop.microtasks) > 0) {
         // Mock shift (we don't have shift(), so we pop and rebuild array reversed... wait, arrays in Roucaarize don't have shift yet)
         // I will implement a custom queue by keeping an index.
         tasks = loop.microtasks
         loop.microtasks = [] // clear queue for next tick
         
         i = 0
-        while (i < len(tasks)) {
+        while (i < arr.length(tasks)) {
             fn = tasks[i]
             fn()
             i++
@@ -54,7 +54,7 @@ function testEventLoop() {
     io.print("Accumulator Result: " + accumulator)
     // Expect "ABD" in first tick. Since B queued C into the next tick, runLoopTick inner clears first queue, repopulates.
     // Actually, in the code, `loop.microtasks` is cleared, then B pushes to the NEW `loop.microtasks`.
-    // Then the outer `while (len(loop.microtasks) > 0)` loops AGAIN for the next tick!
+    // Then the outer `while (arr.length(loop.microtasks) > 0)` loops AGAIN for the next tick!
     // So it executes A, B, D in tick 1. Then C is in tick 2. Sequence -> ABDC.
     
     if (accumulator != "ABDC") { io.print("FATAL: Event loop queueing order failed: " + accumulator) }

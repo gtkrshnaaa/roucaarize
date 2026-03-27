@@ -21,9 +21,9 @@ function stringify(value) {
     if (t == "array") {
         res = "["
         i = 0
-        while (i < len(value)) {
+        while (i < arr.length(value)) {
             res += stringify(value[i])
-            if (i < len(value) - 1) { res += "," }
+            if (i < arr.length(value) - 1) { res += "," }
             i++
         }
         return res + "]"
@@ -39,7 +39,7 @@ function stringify(value) {
         if (value["active"] != null) { res += "'active':" + stringify(value["active"]) }
         
         // Trim last comma logic mocked
-        strLen = len(res)
+        strLen = str.length(res)
         if (res[strLen-1] == ",") {
             // substring mock
             trim = ""

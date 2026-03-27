@@ -21,7 +21,7 @@ function initLRU(cap) {
 function removeKeyFromQueue(queue, targetKey) {
     newQ = []
     i = 0
-    while (i < len(queue)) {
+    while (i < arr.length(queue)) {
         if (queue[i] != targetKey) {
             arr.push(newQ, queue[i])
         }
@@ -35,7 +35,7 @@ function putCache(lru, key, value) {
     if (lru.cacheMap[key] != null) {
         lru.queue = removeKeyFromQueue(lru.queue, key)
     } else {
-        if (len(lru.queue) >= lru.capacity) {
+        if (arr.length(lru.queue) >= lru.capacity) {
             // Evict oldest (front of queue)
             // No shift() so we pop all to temporary, wait, we can just slice.
             oldestKey = lru.queue[0]

@@ -32,7 +32,7 @@ function run() {
         i = i + 1
     }
     
-    io.print("Memory pressure survived! Array: " + toString(len(targetList)) + ", Map: " + toString(len(m)))
+    io.print("Memory pressure survived! Array: " + toString(arr.length(targetList)) + ", Map: " + toString(arr.length(m)))
 }
 
 try {

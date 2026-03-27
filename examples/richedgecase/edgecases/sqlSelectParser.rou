@@ -12,7 +12,7 @@ function extractSubstring(targetStr, from, lengthConstraint) {
     res = ""
     i = from
     safeLen = from + lengthConstraint
-    if (safeLen > len(targetStr)) { safeLen = len(targetStr) }
+    if (safeLen > str.length(targetStr)) { safeLen = str.length(targetStr) }
     
     while (i < safeLen) {
         res += targetStr[i]
@@ -30,7 +30,7 @@ function parseSQL(query) {
     word = ""
     words = []
     
-    while (i < len(query)) {
+    while (i < str.length(query)) {
         c = query[i]
         if (c == " ") {
             if (word != "") { arr.push(words, word); word = "" }

@@ -22,11 +22,11 @@ function initHashTable(size) {
 function getSimpleHash(targetStr, mapSize) {
     hash = 0
     i = 0
-    while (i < len(targetStr)) {
+    while (i < str.length(targetStr)) {
         // Pseudo string hash using naive char index summation (cannot get char code natively)
         // We will just sum length to simulate deterministic collision.
         // Wait, different strings same length = collision! Exactly what we want to test!
-        hash += len(targetStr)
+        hash += str.length(targetStr)
         i++
     }
     return hash % mapSize
@@ -73,7 +73,7 @@ function testHashTable() {
     io.print("--- Testing Hash Table Collisions ---")
     table = initHashTable(5)
     
-    // "Dog" and "Cat" will both have len(key) == 3, their hash is 3*3 = 9 % 5 = 4
+    // "Dog" and "Cat" will both have str.length(key) == 3, their hash is 3*3 = 9 % 5 = 4
     // They will COLLIDE in bucket 4!
     hashPut(table, "Dog", "Woof")
     hashPut(table, "Cat", "Meow")

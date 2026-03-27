@@ -11,18 +11,18 @@ function justifyText(words, maxWidth) {
     currLine = ""
     
     i = 0
-    while (i < len(words)) {
+    while (i < arr.length(words)) {
         w = words[i]
         
         if (currLine == "") {
             currLine = w
         } else {
             // Check if adding space + word exceeds
-            if (len(currLine) + 1 + len(w) <= maxWidth) {
+            if (arr.length(currLine) + 1 + arr.length(w) <= maxWidth) {
                 currLine += " " + w
             } else {
                 // Must pad spaces to reach maxWidth
-                paddingNeeded = maxWidth - len(currLine)
+                paddingNeeded = maxWidth - arr.length(currLine)
                 pads = ""
                 p = 0
                 while (p < paddingNeeded) { pads += "-"; p++ } // use dash for visual test
@@ -35,7 +35,7 @@ function justifyText(words, maxWidth) {
     
     // push final
     if (currLine != "") {
-        paddingNeeded = maxWidth - len(currLine)
+        paddingNeeded = maxWidth - arr.length(currLine)
         pads = ""
         p = 0
         while (p < paddingNeeded) { pads += "-"; p++ }
@@ -53,12 +53,12 @@ function testJustification() {
     
     io.print("Padding Array:")
     i = 0
-    while (i < len(padded)) {
+    while (i < arr.length(padded)) {
         io.print("[" + padded[i] + "]")
         i++
     }
     
-    if (len(padded) != 3) { io.print("FATAL: Padded block counts mismatch") }
+    if (arr.length(padded) != 3) { io.print("FATAL: Padded block counts mismatch") }
     if (padded[0] != "This is an------") { io.print("FATAL: Justification greedy logic failed text boundaries") }
 }
 

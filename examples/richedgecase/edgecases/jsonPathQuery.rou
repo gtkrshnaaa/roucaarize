@@ -1,0 +1,70 @@
+import stdlib io as io
+import stdlib array as arr
+import stdlib string as str
+
+function evaluatePath(data, pathString) {
+    // A simplified JSON path evaluator.
+    // e.g. "store.book.0.title"
+    
+    parts = str.split(pathString, ".")
+    current = data
+    
+    i = 0
+    while (i < arr.length(parts)) {
+        keyPart = parts[i]
+        
+        t = typeof(current)
+        if (t == "map" or t == "struct") {
+            current = current[keyPart]
+        } else if (t == "array") {
+            // Attempt to parse int
+            index = toInt(keyPart)
+            // if index is 0 but keyPart is not "0", it implies parse failure or 0.
+            if (index >= arr.length(current)) {
+                return null
+            }
+            current = current[index]
+        } else {
+            return null
+        }
+        
+        if (current == null) {
+            return null
+        }
+        i++
+    }
+    
+    return current
+}
+
+function runJsonPathSim() {
+    book1 = {"title": "Sword of Honour", "price": 12.99}
+    book2 = {"title": "Moby Dick", "price": 8.99}
+    book3 = {"title": "The Lord of the Rings", "price": 22.99}
+    
+    store = {
+        "book": [book1, book2, book3],
+        "bicycle": {"color": "red", "price": 19.95}
+    }
+    
+    dataObj = {"store": store}
+    
+    io.print("Querying 'store.book.0.title'...")
+    res1 = evaluatePath(dataObj, "store.book.0.title")
+    io.print("Result: " + toString(res1))
+    
+    io.print("Querying 'store.bicycle.color'...")
+    res2 = evaluatePath(dataObj, "store.bicycle.color")
+    io.print("Result: " + toString(res2))
+    
+    io.print("Querying 'store.book.2.price'...")
+    res3 = evaluatePath(dataObj, "store.book.2.price")
+    io.print("Result: " + toString(res3))
+    
+    io.print("Querying generic missing path 'store.book.5.author'...")
+    res4 = evaluatePath(dataObj, "store.book.5.author")
+    io.print("Result: " + toString(res4))
+}
+
+io.print("=== JSON Path Query Simulation ===")
+runJsonPathSim()

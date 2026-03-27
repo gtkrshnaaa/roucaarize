@@ -1,0 +1,93 @@
+import stdlib io as io
+import stdlib array as arr
+import stdlib string as str
+
+struct NodePoint {
+    hashVal,
+    nodeName
+}
+
+function getSimpleNumericHash(keyString) {
+    hash = 0
+    i = 0
+    while (i < str.length(keyString)) {
+        // Mock char value
+        charVal = 65
+        if (keyString[i] == "A") { charVal = 65 }
+        if (keyString[i] == "B") { charVal = 66 }
+        if (keyString[i] == "C") { charVal = 67 }
+        if (keyString[i] == "1") { charVal = 49 }
+        if (keyString[i] == "2") { charVal = 50 }
+        
+        hash = (hash * 31 + charVal) % 100000
+        i++
+    }
+    return hash
+}
+
+function addNodeToRing(ring, nodeName, virtualNodes) {
+    v = 0
+    while (v < virtualNodes) {
+        vName = nodeName + "_V" + toString(v)
+        h = getSimpleNumericHash(vName)
+        
+        // Insert sorted
+        newPoint = NodePoint(h, nodeName)
+        inserted = false
+        
+        i = 0
+        newRing = []
+        while (i < arr.length(ring)) {
+            if (not inserted and h < ring[i].hashVal) {
+                arr.push(newRing, newPoint)
+                inserted = true
+            }
+            arr.push(newRing, ring[i])
+            i++
+        }
+        
+        if (not inserted) {
+            arr.push(newRing, newPoint)
+        }
+        
+        ring = newRing
+        v++
+    }
+    return ring
+}
+
+function routeKey(ring, keyString) {
+    if (arr.length(ring) == 0) { return null }
+    h = getSimpleNumericHash(keyString)
+    
+    i = 0
+    while (i < arr.length(ring)) {
+        if (ring[i].hashVal >= h) {
+            return ring[i].nodeName
+        }
+        i++
+    }
+    
+    // Wrap around
+    return ring[0].nodeName
+}
+
+function runHashingSim() {
+    ring = []
+    
+    ring = addNodeToRing(ring, "ServerA", 3)
+    ring = addNodeToRing(ring, "ServerB", 3)
+    ring = addNodeToRing(ring, "ServerC", 3)
+    
+    io.print("Ring Topology Size: " + toString(arr.length(ring)))
+    
+    keys = ["Session1A", "Session2B", "Session3C", "DataA", "DataB"]
+    
+    for (k in keys) {
+        nodeTarget = routeKey(ring, k)
+        io.print("  Key '" + k + "' routed to -> " + nodeTarget)
+    }
+}
+
+io.print("=== Consistent Hashing Ring Sim ===")
+runHashingSim()

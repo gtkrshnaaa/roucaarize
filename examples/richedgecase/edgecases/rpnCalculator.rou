@@ -10,7 +10,7 @@ function evalRPN(tokens) {
     stack = []
     
     i = 0
-    while (i < len(tokens)) {
+    while (i < arr.length(tokens)) {
         tok = tokens[i]
         
         if (tok == "+") {

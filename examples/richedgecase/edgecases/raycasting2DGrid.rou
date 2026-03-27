@@ -25,9 +25,9 @@ function castRay(ray, grid, maxDepth) {
         mapX = toInt(currX)
         mapY = toInt(currY)
         
-        if (mapY >= 0 and mapY < len(grid)) {
+        if (mapY >= 0 and mapY < arr.length(grid)) {
             row = grid[mapY]
-            if (mapX >= 0 and mapX < len(row)) {
+            if (mapX >= 0 and mapX < arr.length(row)) {
                 if (row[mapX] == 1) {
                     return Vector2D(mapX, mapY) // Hit a wall
                 }
@@ -46,10 +46,10 @@ function castRay(ray, grid, maxDepth) {
 
 function printGrid(grid, hitPoints) {
     y = 0
-    while (y < len(grid)) {
+    while (y < arr.length(grid)) {
         rowStr = ""
         x = 0
-        while (x < len(grid[y])) {
+        while (x < arr.length(grid[y])) {
             isHit = false
             for (hp in hitPoints) {
                 if (hp.x == x and hp.y == y) {
@@ -90,7 +90,7 @@ function runRaycaster() {
     
     hits = []
     i = 0
-    while (i < len(rays)) {
+    while (i < arr.length(rays)) {
         hit = castRay(rays[i], grid, 10)
         if (hit != null) {
             arr.push(hits, hit)

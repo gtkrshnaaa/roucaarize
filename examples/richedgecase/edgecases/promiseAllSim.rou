@@ -12,7 +12,7 @@ function simulatePromiseAll(futureArray) {
     results = []
     
     i = 0
-    while (i < len(futureArray)) {
+    while (i < arr.length(futureArray)) {
         p = futureArray[i]
         
         // Mocking event resolution polling loops
@@ -41,8 +41,8 @@ function testPromiseAggregation() {
     
     // Valid batch
     aggValid = simulatePromiseAll([f1, f2, f3])
-    io.print("Agg Valid Data items: " + toString(len(aggValid.data)))
-    if (len(aggValid.data) != 3 or aggValid.error != null) { io.print("FATAL: Valid task aggregation structure decoupled") }
+    io.print("Agg Valid Data items: " + toString(arr.length(aggValid.data)))
+    if (arr.length(aggValid.data) != 3 or aggValid.error != null) { io.print("FATAL: Valid task aggregation structure decoupled") }
     
     // Rejected batch
     fErr = Future(true, null, "Node Timeout")

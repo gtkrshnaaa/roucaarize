@@ -55,7 +55,7 @@ function testVirtualMachine() {
     
     if (safety >= 100) { io.print("FATAL: VM Emulator infinite loop") }
     // The print op will consume 90 from stack, stack should be empty if clean
-    if (len(machine.stack) != 0) { io.print("FATAL: VM Memory Leaked or Evaluated improperly") }
+    if (arr.length(machine.stack) != 0) { io.print("FATAL: VM Memory Leaked or Evaluated improperly") }
 }
 
 function main() {

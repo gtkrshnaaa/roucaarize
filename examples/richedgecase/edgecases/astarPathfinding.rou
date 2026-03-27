@@ -44,12 +44,12 @@ function testAStarPathfind() {
     steps = 0
     
     keepSearching = true
-    while (len(queue) > 0 and keepSearching) {
+    while (arr.length(queue) > 0 and keepSearching) {
         // Shift mock
         curr = queue[0]
         shiftQueue = []
         si = 1
-        while (si < len(queue)) { arr.push(shiftQueue, queue[si]); si++ }
+        while (si < arr.length(queue)) { arr.push(shiftQueue, queue[si]); si++ }
         queue = shiftQueue
         
         if (curr.x == goal.x and curr.y == goal.y) {

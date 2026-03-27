@@ -22,7 +22,7 @@ function insertHeap(heap, value) {
     arr.push(heap.array, value)
     
     // Heapify up
-    curr = len(heap.array) - 1
+    curr = arr.length(heap.array) - 1
     while (curr > 0 and heap.array[curr] < heap.array[getParent(curr)]) {
         swap(heap, curr, getParent(curr))
         curr = getParent(curr)
@@ -30,8 +30,8 @@ function insertHeap(heap, value) {
 }
 
 function extractMin(heap) {
-    if (len(heap.array) == 0) { return null }
-    if (len(heap.array) == 1) { return arr.pop(heap.array) }
+    if (arr.length(heap.array) == 0) { return null }
+    if (arr.length(heap.array) == 1) { return arr.pop(heap.array) }
     
     minVal = heap.array[0]
     
@@ -46,12 +46,12 @@ function extractMin(heap) {
         r = getRight(curr)
         smallest = curr
         
-        if (l < len(heap.array)) {
+        if (l < arr.length(heap.array)) {
             if (heap.array[l] < heap.array[smallest]) {
                 smallest = l
             }
         }
-        if (r < len(heap.array)) {
+        if (r < arr.length(heap.array)) {
             if (heap.array[r] < heap.array[smallest]) {
                 smallest = r
             }

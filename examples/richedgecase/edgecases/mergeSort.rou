@@ -9,7 +9,7 @@ import stdlib string as str
 function sliceArray(targetList, start, end) {
     res = []
     i = start
-    while (i < end and i < len(targetList)) {
+    while (i < end and i < arr.length(targetList)) {
         arr.push(res, targetList[i])
         i++
     }
@@ -20,7 +20,7 @@ function mergeArrays(left, right) {
     res = []
     l = 0; r = 0
     
-    while (l < len(left) and r < len(right)) {
+    while (l < arr.length(left) and r < arr.length(right)) {
         if (left[l] < right[r]) {
             arr.push(res, left[l])
             l++
@@ -30,16 +30,16 @@ function mergeArrays(left, right) {
         }
     }
     
-    while (l < len(left)) { arr.push(res, left[l]); l++ }
-    while (r < len(right)) { arr.push(res, right[r]); r++ }
+    while (l < arr.length(left)) { arr.push(res, left[l]); l++ }
+    while (r < arr.length(right)) { arr.push(res, right[r]); r++ }
     
     return res
 }
 
 function mergeSort(targetList) {
-    if (len(targetList) <= 1) { return targetList }
+    if (arr.length(targetList) <= 1) { return targetList }
     
-    mid = len(targetList) / 2 // Integer division automatically truncates in Roucaarize if treated directly, wait, floats? I'll use explicit int casting if needed. 
+    mid = arr.length(targetList) / 2 // Integer division automatically truncates in Roucaarize if treated directly, wait, floats? I'll use explicit int casting if needed. 
     // Actually Roucaarize returns float if divided. Let's use custom integer floor wrapper:
     midStr = toString(mid)
     midInt = 0 // In standard Roucaarize, division of ints might be float. We iterate to get int.
@@ -48,7 +48,7 @@ function mergeSort(targetList) {
     while (m + 0.999 < mid) { m++ }
     
     left = sliceArray(targetList, 0, m)
-    right = sliceArray(targetList, m, len(targetList))
+    right = sliceArray(targetList, m, arr.length(targetList))
     
     sortedLeft = mergeSort(left)
     sortedRight = mergeSort(right)
@@ -64,7 +64,7 @@ function testMergeSort() {
     
     io.print("Sorted Output:")
     i = 0
-    while (i < len(sorted)) {
+    while (i < arr.length(sorted)) {
         io.print("> " + toString(sorted[i]))
         i++
     }

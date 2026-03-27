@@ -49,7 +49,7 @@ function dijkstraSolve(graph, startKey, endKey) {
         edges = graph[curr]
         if (edges != null) {
             e = 0
-            while (e < len(edges)) {
+            while (e < arr.length(edges)) {
                 adj = edges[e].node
                 cost = edges[e].cost
                 

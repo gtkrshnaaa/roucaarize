@@ -11,13 +11,13 @@ function isBracketValid(targetStr) {
     
     // Split pseudo
     i = 0
-    while (i < len(targetStr)) { 
+    while (i < str.length(targetStr)) { 
         c = targetStr[i]
         
         if (c == "(" or c == "{" or c == "[") {
             arr.push(stack, c)
         } else if (c == ")" or c == "}" or c == "]") {
-            if (len(stack) == 0) { return false }
+            if (arr.length(stack) == 0) { return false }
             top = arr.pop(stack)
             
             if (c == ")" and top != "(") { return false }
@@ -27,7 +27,7 @@ function isBracketValid(targetStr) {
         i++
     }
     
-    return len(stack) == 0
+    return arr.length(stack) == 0
 }
 
 function testBracketMatcher() {

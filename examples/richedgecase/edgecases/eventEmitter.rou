@@ -21,7 +21,7 @@ function triggerEvent(emitter, eventName, payload) {
     list = emitter.listeners[eventName]
     if (list != null) {
         i = 0
-        while (i < len(list)) {
+        while (i < arr.length(list)) {
             cb = list[i]
             cb(payload)
             i++

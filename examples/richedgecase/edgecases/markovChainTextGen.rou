@@ -12,7 +12,7 @@ function buildMarkovChain(textInput) {
     chain = {}
     
     i = 0
-    n = len(words)
+    n = arr.length(words)
     while (i < n - 1) {
         currentWord = words[i]
         nextWord = words[i + 1]
@@ -36,14 +36,14 @@ function generateText(chain, startWord, length) {
     i = 0
     while (i < length) {
         state = chain[current]
-        if (state == null or len(state.transitions) == 0) {
+        if (state == null or arr.length(state.transitions) == 0) {
             // Dead end, just break
             break
         }
         
         // Pseudo-random choice based on length modulo
         choices = state.transitions
-        choiceIndex = (i * 7 + len(textResult)) % len(choices)
+        choiceIndex = (i * 7 + str.length(textResult)) % arr.length(choices)
         nextWord = choices[choiceIndex]
         
         textResult = textResult + " " + nextWord

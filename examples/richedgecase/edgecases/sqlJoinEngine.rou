@@ -11,11 +11,11 @@ function innerJoin(tableA, tableB, joinKeyA, joinKeyB) {
     resultRows = []
     
     i = 0
-    while (i < len(tableA)) {
+    while (i < arr.length(tableA)) {
         rowA = tableA[i]
         
         j = 0
-        while (j < len(tableB)) {
+        while (j < arr.length(tableB)) {
             rowB = tableB[j]
             
             valA = rowA.dataMap[joinKeyA]
@@ -29,7 +29,7 @@ function innerJoin(tableA, tableB, joinKeyA, joinKeyB) {
                 mergedMap["leftData"] = rowA.dataMap["name"]
                 mergedMap["rightData"] = rowB.dataMap["deptName"]
                 
-                newRecord = Record(len(resultRows), mergedMap)
+                newRecord = Record(arr.length(resultRows), mergedMap)
                 arr.push(resultRows, newRecord)
             }
             j++

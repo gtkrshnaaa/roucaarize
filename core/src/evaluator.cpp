@@ -19,13 +19,6 @@ Evaluator::Evaluator() {
     globals = std::make_shared<Environment>();
     environment = globals;
 
-    defineNative("len", [](Evaluator&, const std::vector<Value>& args) -> Value {
-        if (args.empty()) return Value::fromInt(0);
-        if (args[0].isString()) return Value::fromInt(static_cast<int64_t>(args[0].getString()->size()));
-        if (args[0].isArray()) return Value::fromInt(static_cast<int64_t>(args[0].getArray()->size()));
-        return Value::fromInt(0);
-    });
-
     defineNative("toString", [](Evaluator&, const std::vector<Value>& args) -> Value {
         if (args.empty()) return Value::fromString("");
         return Value::fromString(args[0].toString());

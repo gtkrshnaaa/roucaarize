@@ -47,7 +47,7 @@ function showBooleans(a, b) {
 function showArrayIteration(items, label) {
     io.print(label + ": " + toString(items))
     io.print("First: " + items[0])
-    io.print("Length: " + toString(len(items)))
+    io.print("Length: " + toString(arr.length(items)))
     for (item in items) {
         io.print("  - " + item)
     }

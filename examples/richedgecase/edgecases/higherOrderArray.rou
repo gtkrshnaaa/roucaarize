@@ -9,7 +9,7 @@ import stdlib string as str
 function arrayMap(targetList, transform) {
     res = []
     i = 0
-    while (i < len(targetList)) {
+    while (i < arr.length(targetList)) {
         arr.push(res, transform(targetList[i]))
         i++
     }
@@ -19,7 +19,7 @@ function arrayMap(targetList, transform) {
 function arrayFilter(targetList, predicate) {
     res = []
     i = 0
-    while (i < len(targetList)) {
+    while (i < arr.length(targetList)) {
         if (predicate(targetList[i])) {
             arr.push(res, targetList[i])
         }
@@ -31,7 +31,7 @@ function arrayFilter(targetList, predicate) {
 function arrayReduce(targetList, reducer, initialAccumulator) {
     acc = initialAccumulator
     i = 0
-    while (i < len(targetList)) {
+    while (i < arr.length(targetList)) {
         acc = reducer(acc, targetList[i])
         i++
     }
@@ -48,7 +48,7 @@ function testHOFArrays() {
     
     evens = arrayFilter(nums, isEven)
     io.print("Evens: " + toString(evens[0]) + ", " + toString(evens[1])) // 2, 4
-    if (len(evens) != 5) { io.print("FATAL: Filter failed") }
+    if (arr.length(evens) != 5) { io.print("FATAL: Filter failed") }
     
     doubles = arrayMap(evens, doubleVal)
     io.print("Doubles: " + toString(doubles[0])) // 4

@@ -1,0 +1,76 @@
+import stdlib io as io
+import stdlib array as arr
+import stdlib string as str
+
+struct TrieNode {
+    childrenMap,
+    isEndOfWord
+}
+
+function insertWord(root, word) {
+    curr = root
+    i = 0
+    while (i < str.length(word)) {
+        charData = word[i]
+        if (curr.childrenMap[charData] == null) {
+            curr.childrenMap[charData] = TrieNode({}, false)
+        }
+        curr = curr.childrenMap[charData]
+        i++
+    }
+    curr.isEndOfWord = true
+}
+
+function collectWords(node, prefix, results) {
+    if (node.isEndOfWord) {
+        arr.push(results, prefix)
+    }
+    
+    // Since we can't natively iterate map keys gracefully here, we mock the alphabet keys
+    alphabet = ["a", "b", "c", "d", "e", "p", "l"]
+    
+    for (charData in alphabet) {
+        if (node.childrenMap[charData] != null) {
+            results = collectWords(node.childrenMap[charData], prefix + charData, results)
+        }
+    }
+    
+    return results
+}
+
+function autocomplete(root, prefix) {
+    curr = root
+    i = 0
+    while (i < str.length(prefix)) {
+        charData = prefix[i]
+        if (curr.childrenMap[charData] == null) {
+            return [] // Not found
+        }
+        curr = curr.childrenMap[charData]
+        i++
+    }
+    
+    return collectWords(curr, prefix, [])
+}
+
+function runTrieSim() {
+    root = TrieNode({}, false)
+    
+    words = ["apple", "app", "application", "append", "bad", "ball", "cat"]
+    for (w in words) {
+        insertWord(root, w)
+    }
+    
+    io.print("Trie built with " + toString(arr.length(words)) + " words.")
+    
+    query = "app"
+    io.print("Autocomplete query: '" + query + "'")
+    suggestions = autocomplete(root, query)
+    
+    for (s in suggestions) {
+        io.print("  - " + s)
+    }
+}
+
+io.print("=== Trie Autocomplete Sim ===")
+runTrieSim()

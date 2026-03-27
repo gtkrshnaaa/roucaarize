@@ -44,7 +44,7 @@ function generateMockKeys() {
 function encryptText(textData, key) {
     cipherArray = []
     i = 0
-    while (i < len(textData)) {
+    while (i < str.length(textData)) {
         // Mock char to integer mapping (ASCII)
         charAscii = i + 65 // Just simulating A(65), B(66), etc since no charCodeAt
         if (textData[i] == "A") { charAscii = 65 }
@@ -61,7 +61,7 @@ function encryptText(textData, key) {
 function decryptText(cipherArray, key) {
     plainText = ""
     i = 0
-    while (i < len(cipherArray)) {
+    while (i < arr.length(cipherArray)) {
         plainInt = modExp(cipherArray[i], key.privateKey, key.modulus)
         
         charStr = "?"

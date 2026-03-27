@@ -75,7 +75,7 @@ function showServerFleet(servers) {
 
 function showArrayOps(numbers) {
     io.print("Numbers: " + toString(numbers))
-    io.print("Length: " + toString(len(numbers)))
+    io.print("Length: " + toString(arr.length(numbers)))
     arr.push(numbers, 42)
     io.print("After push(42): " + toString(numbers))
     last = arr.pop(numbers)
