@@ -66,15 +66,53 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    if (grammarOnly) {
+        if (fs::is_directory(filename)) {
+            size_t totalFiles = 0, totalErrors = 0, totalWarnings = 0, totalPerf = 0;
+            GrammarChecker checker;
+            
+            // Collect and sort files for consistent output
+            std::vector<fs::path> paths;
+            for (const auto& entry : fs::recursive_directory_iterator(filename)) {
+                if (entry.is_regular_file() && entry.path().extension() == ".rou") {
+                    paths.push_back(entry.path());
+                }
+            }
+            std::sort(paths.begin(), paths.end());
+
+            for (const auto& path : paths) {
+                std::string relPath = fs::relative(path, fs::current_path()).string();
+                auto result = checker.analyzeFile(path.string());
+                result.filePath = relPath;
+                int errs = GrammarChecker::printResult(result);
+                
+                totalFiles++;
+                totalErrors += errs;
+                for (const auto& d : result.diagnostics) {
+                    if (d.level == DiagLevel::WARNING) totalWarnings++;
+                    else if (d.level == DiagLevel::PERF) totalPerf++;
+                }
+            }
+            
+            GrammarChecker::printSummary(totalFiles, totalErrors, totalWarnings, totalPerf);
+            return totalErrors > 0 ? 1 : 0;
+        } else {
+            std::string source;
+            try {
+                source = readFile(filename);
+                GrammarChecker checker;
+                auto result = checker.analyzeSource(source, filename);
+                return GrammarChecker::printResult(result);
+            } catch (const std::exception& e) {
+                std::cerr << "Error: " << e.what() << "\n";
+                return 1;
+            }
+        }
+    }
+
     std::string source;
     try {
         source = readFile(filename);
-        
-        if (grammarOnly) {
-            GrammarChecker checker;
-            auto result = checker.analyzeSource(source, filename);
-            return GrammarChecker::printResult(result);
-        }
 
         // Runtime guard only needed for interpreter execution, not static analysis
         runtime_guard::initialize();
