@@ -7,11 +7,11 @@ import stdlib string as str
 
 
 function bubbleSort(targetList) {
-    len = len(targetList)
+    listLen = len(targetList)
     i = 0
-    while (i < len) {
+    while (i < listLen) {
         j = 0
-        while (j < len - i - 1) {
+        while (j < listLen - i - 1) {
             if (targetList[j] > targetList[j + 1]) {
                 // Swap
                 temp = targetList[j]
