@@ -4,12 +4,9 @@ function isBracketValid(str) {
     stack = []
     
     // Split pseudo
-    chars = str.split("")
-    if (chars == null) { return false } // split failed fallback
-    
     i = 0
-    while (i < chars.length()) {
-        c = chars[i]
+    while (i < str.length) { 
+        c = str[i]
         
         if (c == "(" or c == "{" or c == "[") {
             stack.push(c)
