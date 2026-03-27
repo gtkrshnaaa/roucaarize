@@ -1,0 +1,71 @@
+// Syntactic Sugar AST Desugaring Tests - Roucaarize
+
+function testIncrement() {
+    print("--- Testing Increments ---")
+    i = 0
+    i++
+    i++
+    i--
+    
+    print("Final i value: " + toString(i))
+    if (i != 1) { print("FATAL: postfix increment/decrement failed!") }
+}
+
+function testCompoundAssignments() {
+    print("--- Testing Compound Assignments ---")
+    val = 10
+    val += 5
+    val -= 2
+    val *= 3
+    val /= 2
+    val %= 7
+    
+    // (10 + 5 - 2) * 3 / 2 % 7
+    // 13 * 3 = 39
+    // 39 / 2 = 19
+    // 19 % 7 = 5
+    
+    print("Final val value: " + toString(val))
+    if (val != 5) { print("FATAL: compound assignments failed!") }
+}
+
+function testArrayCompound() {
+    print("--- Testing Array Index Compound ---")
+    arr = [100, 200, 300]
+    arr[1] += 50
+    arr[2]--
+    
+    print("Array: " + toString(arr[0]) + ", " + toString(arr[1]) + ", " + toString(arr[2]))
+    if (arr[1] != 250) { print("FATAL: Index += failed!") }
+    if (arr[2] != 299) { print("FATAL: Index -- failed!") }
+}
+
+function testTernary() {
+    print("--- Testing Ternary Operators ---")
+    
+    // Simple
+    x = true ? "YES" : "NO"
+    print("Ternary true: " + x)
+    if (x != "YES") { print("FATAL: ternary true branch failed!") }
+    
+    y = false ? 99 : 0
+    print("Ternary false: " + toString(y))
+    if (y != 0) { print("FATAL: ternary false branch failed!") }
+    
+    // Nested
+    score = 85
+    grade = score > 90 ? "A" : (score > 80 ? "B" : "C")
+    print("Nested Ternary Grade: " + grade)
+    if (grade != "B") { print("FATAL: nested ternary syntax failed!") }
+}
+
+function main() {
+    testIncrement()
+    testCompoundAssignments()
+    testArrayCompound()
+    testTernary()
+    
+    print("All Syntactic Sugar Edge Cases Passed!")
+}
+
+main()

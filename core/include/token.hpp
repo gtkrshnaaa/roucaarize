@@ -24,6 +24,11 @@ enum class TokenType {
     GREATER, GREATEREQUAL,
     LESS, LESSEQUAL,
 
+    // Magic Sugar tokens
+    PLUS_PLUS, MINUS_MINUS,
+    PLUS_EQUAL, MINUS_EQUAL, STAR_EQUAL, SLASH_EQUAL, PERCENT_EQUAL,
+    QUESTION,
+
     // Literals
     IDENTIFIER, STRING, INTEGER, FLOAT,
 

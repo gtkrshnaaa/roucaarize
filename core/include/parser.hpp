@@ -61,6 +61,7 @@ private:
 
     NodeIndex expression();
     NodeIndex assignment();
+    NodeIndex ternary();
     NodeIndex orExpr();
     NodeIndex andExpr();
     NodeIndex equality();

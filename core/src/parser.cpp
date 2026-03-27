@@ -291,10 +291,96 @@ NodeIndex Parser::expressionStatement() {
     return ast.addNode(std::move(node));
 }
 
-NodeIndex Parser::expression() { return assignment(); }
+NodeIndex Parser::expression() {
+    return assignment();
+}
 
 NodeIndex Parser::assignment() {
-    NodeIndex expr = orExpr();
+    NodeIndex expr = ternary();
+    
+    // Postfix ++ / --
+    if (match(TokenType::PLUS_PLUS) || match(TokenType::MINUS_MINUS)) {
+        Token op = previous();
+        const ASTNode& target = ast.get(expr);
+        if (target.type != NodeType::IDENTIFIER && target.type != NodeType::MEMBER_ACCESS && target.type != NodeType::INDEX_ACCESS) {
+            error(op, "Invalid assignment target for increment/decrement");
+            return expr;
+        }
+        ASTNode one(NodeType::LITERAL_INT, op.line, op.column);
+        one.literal = LiteralValue(static_cast<int64_t>(1));
+        NodeIndex oneIdx = ast.addNode(std::move(one));
+        
+        ASTNode binNode(NodeType::BINARY_OP, op.line, op.column);
+        binNode.binaryOp = (op.type == TokenType::PLUS_PLUS) ? BinaryOp::ADD : BinaryOp::SUB;
+        binNode.left = expr;
+        binNode.right = oneIdx;
+        NodeIndex binIdx = ast.addNode(std::move(binNode));
+        
+        if (target.type == NodeType::IDENTIFIER) {
+            ASTNode node(NodeType::VAR_ASSIGN, target.line, target.column);
+            node.nameIdx = target.nameIdx;
+            node.left = binIdx;
+            return ast.addNode(std::move(node));
+        } else if (target.type == NodeType::MEMBER_ACCESS) {
+            ASTNode node(NodeType::MEMBER_ASSIGN, target.line, target.column);
+            node.left = target.left;
+            node.nameIdx = target.nameIdx;
+            node.right = binIdx;
+            return ast.addNode(std::move(node));
+        } else if (target.type == NodeType::INDEX_ACCESS) {
+            ASTNode node(NodeType::INDEX_ASSIGN, target.line, target.column);
+            node.left = target.left;
+            node.right = target.right;
+            node.extra = binIdx;
+            return ast.addNode(std::move(node));
+        }
+    }
+    
+    // Compound Assignment += -= *= /= %=
+    if (match(TokenType::PLUS_EQUAL) || match(TokenType::MINUS_EQUAL) || match(TokenType::STAR_EQUAL) || 
+        match(TokenType::SLASH_EQUAL) || match(TokenType::PERCENT_EQUAL)) {
+        Token op = previous();
+        NodeIndex val = assignment();
+        
+        const ASTNode& target = ast.get(expr);
+        if (target.type != NodeType::IDENTIFIER && target.type != NodeType::MEMBER_ACCESS && target.type != NodeType::INDEX_ACCESS) {
+            error(op, "Invalid assignment target");
+            return expr;
+        }
+        
+        ASTNode binNode(NodeType::BINARY_OP, op.line, op.column);
+        switch (op.type) {
+            case TokenType::PLUS_EQUAL: binNode.binaryOp = BinaryOp::ADD; break;
+            case TokenType::MINUS_EQUAL: binNode.binaryOp = BinaryOp::SUB; break;
+            case TokenType::STAR_EQUAL: binNode.binaryOp = BinaryOp::MUL; break;
+            case TokenType::SLASH_EQUAL: binNode.binaryOp = BinaryOp::DIV; break;
+            case TokenType::PERCENT_EQUAL: binNode.binaryOp = BinaryOp::MOD; break;
+            default: break;
+        }
+        binNode.left = expr;
+        binNode.right = val;
+        NodeIndex binIdx = ast.addNode(std::move(binNode));
+        
+        if (target.type == NodeType::IDENTIFIER) {
+            ASTNode node(NodeType::VAR_ASSIGN, target.line, target.column);
+            node.nameIdx = target.nameIdx;
+            node.left = binIdx;
+            return ast.addNode(std::move(node));
+        } else if (target.type == NodeType::MEMBER_ACCESS) {
+            ASTNode node(NodeType::MEMBER_ASSIGN, target.line, target.column);
+            node.left = target.left;
+            node.nameIdx = target.nameIdx;
+            node.right = binIdx;
+            return ast.addNode(std::move(node));
+        } else if (target.type == NodeType::INDEX_ACCESS) {
+            ASTNode node(NodeType::INDEX_ASSIGN, target.line, target.column);
+            node.left = target.left;
+            node.right = target.right;
+            node.extra = binIdx;
+            return ast.addNode(std::move(node));
+        }
+    }
+
     if (match(TokenType::EQUAL)) {
         NodeIndex val = assignment();
         if (expr == INVALID_NODE) return val;
@@ -318,6 +404,23 @@ NodeIndex Parser::assignment() {
             return ast.addNode(std::move(node));
         }
         error(previous(), "Invalid assignment target");
+    }
+    return expr;
+}
+
+NodeIndex Parser::ternary() {
+    NodeIndex expr = orExpr();
+    if (match(TokenType::QUESTION)) {
+        Token first = previous();
+        NodeIndex thenBranch = expression();
+        consume(TokenType::COLON, "Expected ':' in ternary operator");
+        NodeIndex elseBranch = ternary();
+        
+        ASTNode node(NodeType::IF_STMT, first.line, first.column);
+        node.left = expr;
+        node.right = thenBranch;
+        node.extra = elseBranch;
+        return ast.addNode(std::move(node));
     }
     return expr;
 }
