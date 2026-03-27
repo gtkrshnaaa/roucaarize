@@ -1,17 +1,19 @@
 import stdlib time as t
+import stdlib io as io
+import stdlib array as arrayMod
 
 struct Obj {
     val
 }
 
 function printHeader() {
-    print("  -------------------------------------------------------------")
-    print("  Benchmark       |     Performance | Time")
-    print("  -------------------------------------------------------------")
+    io.print("  -------------------------------------------------------------")
+    io.print("  Benchmark       |     Performance | Time")
+    io.print("  -------------------------------------------------------------")
 }
 
 function printResult(name, ops, sec) {
-    print("  " + name + " | " + toString(ops) + " OPS/sec | " + toString(sec) + "s")
+    io.print("  " + name + " | " + toString(ops) + " OPS/sec | " + toString(sec) + "s")
 }
 
 function benchInt() {
@@ -66,10 +68,10 @@ function benchString() {
 function benchArray() {
     limit = 10000
     start = t.nanos()
-    arr = []
+    myArr = []
     i = 0
     while (i < limit) {
-        push(arr, i)
+        arrayMod.push(myArr, i)
         i = i + 1
     }
     end = t.nanos()
@@ -98,11 +100,11 @@ function benchStruct() {
     printResult("Struct Access  ", ops, sec)
 }
 
-print(">>> Roucaarize Benchmark Suite <<<")
+io.print(">>> Roucaarize Benchmark Suite <<<")
 printHeader()
 benchInt()
 benchDouble()
 benchString()
 benchArray()
 benchStruct()
-print("  -------------------------------------------------------------")
+io.print("  -------------------------------------------------------------")
