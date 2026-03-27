@@ -1,0 +1,33 @@
+import stdlib time as time
+import stdlib io as io
+
+async function workerOne(id) {
+    io.print("Worker " + id + " starting...");
+    i = 0;
+    while (i < 3) {
+        time.sleep(500);
+        i = i + 1;
+        io.print("Worker " + id + " running... iter=" + toString(i));
+    }
+    io.print("Worker " + id + " finished!");
+    return "Result_" + id;
+}
+
+function main() {
+    io.print("Main Thread: Spawning background tasks...");
+    
+    taskOne = workerOne("A");
+    taskTwo = workerOne("B");
+    
+    io.print("Main Thread: Tasks spawned! Now doing other work...");
+    time.sleep(700);
+    io.print("Main Thread: Finished other work. Awaiting tasks...");
+    
+    resOne = await taskOne;
+    resTwo = await taskTwo;
+    
+    io.print("All tasks complete!");
+    io.print("Results: " + resOne + ", " + resTwo);
+}
+
+main();
