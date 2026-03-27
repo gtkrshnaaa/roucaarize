@@ -18,7 +18,7 @@ struct KeywordEntry {
     TokenType type;
 };
 
-constexpr std::array<KeywordEntry, 21> keywords = {{
+constexpr std::array<KeywordEntry, 23> keywords = {{
     {"function", TokenType::FUNCTION},
     {"return", TokenType::RETURN},
     {"if", TokenType::IF},
@@ -39,7 +39,9 @@ constexpr std::array<KeywordEntry, 21> keywords = {{
     {"try", TokenType::TRY},
     {"catch", TokenType::CATCH},
     {"throw", TokenType::THROW},
-    {"finally", TokenType::FINALLY}
+    {"finally", TokenType::FINALLY},
+    {"async", TokenType::ASYNC},
+    {"await", TokenType::AWAIT}
 }};
 }
 

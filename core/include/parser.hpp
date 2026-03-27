@@ -46,7 +46,7 @@ private:
     // Grammar rules
     NodeIndex program();
     NodeIndex declaration();
-    NodeIndex funcDeclaration();
+    NodeIndex funcDeclaration(bool isAsync = false);
     NodeIndex structDeclaration();
     NodeIndex importStatement();
     NodeIndex statement();

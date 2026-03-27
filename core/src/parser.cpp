@@ -49,6 +49,7 @@ void Parser::synchronize() {
             case TokenType::STRUCT:
             case TokenType::IMPORT:
             case TokenType::TRY:
+            case TokenType::ASYNC:
                 return;
             default: break;
         }
@@ -89,16 +90,20 @@ NodeIndex Parser::program() {
 
 NodeIndex Parser::declaration() {
     if (tooManyErrors()) { synchronize(); return INVALID_NODE; }
-    if (match(TokenType::FUNCTION)) return funcDeclaration();
+    if (match(TokenType::FUNCTION)) return funcDeclaration(false);
+    if (match(TokenType::ASYNC)) {
+        consume(TokenType::FUNCTION, "Expected 'function' after 'async'");
+        return funcDeclaration(true);
+    }
     if (match(TokenType::STRUCT)) return structDeclaration();
     if (match(TokenType::IMPORT)) return importStatement();
     return statement();
 }
 
-NodeIndex Parser::funcDeclaration() {
+NodeIndex Parser::funcDeclaration(bool isAsync) {
     Token name = consume(TokenType::IDENTIFIER, "Expected function name");
     consume(TokenType::LPAREN, "Expected '(' after function name");
-    ASTNode node(NodeType::FUNC_DECL, name.line, name.column);
+    ASTNode node(isAsync ? NodeType::ASYNC_FUNC_DECL : NodeType::FUNC_DECL, name.line, name.column);
     node.nameIdx = ast.addString(std::string(name.lexeme));
     std::vector<uint32_t> params;
     if (!check(TokenType::RPAREN) && !isAtEnd()) {
@@ -521,13 +526,19 @@ NodeIndex Parser::factor() {
 }
 
 NodeIndex Parser::unary() {
-    if (match(TokenType::BANG) || match(TokenType::MINUS) || match(TokenType::NOT)) {
+    if (match(TokenType::BANG) || match(TokenType::MINUS) || match(TokenType::NOT) || match(TokenType::AWAIT)) {
         Token op = previous();
         NodeIndex right = unary();
-        ASTNode node(NodeType::UNARY_OP, op.line, op.column);
-        node.unaryOp = (op.type == TokenType::MINUS) ? UnaryOp::NEG : UnaryOp::NOT;
-        node.left = right;
-        return ast.addNode(std::move(node));
+        if (op.type == TokenType::AWAIT) {
+            ASTNode node(NodeType::AWAIT_EXPR, op.line, op.column);
+            node.left = right;
+            return ast.addNode(std::move(node));
+        } else {
+            ASTNode node(NodeType::UNARY_OP, op.line, op.column);
+            node.unaryOp = (op.type == TokenType::MINUS) ? UnaryOp::NEG : UnaryOp::NOT;
+            node.left = right;
+            return ast.addNode(std::move(node));
+        }
     }
     return postfix();
 }

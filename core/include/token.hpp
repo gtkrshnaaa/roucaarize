@@ -39,6 +39,7 @@ enum class TokenType {
     TRY, CATCH, THROW, FINALLY,
     IMPORT, AS, STDLIB,
     TRUE, FALSE, NIL,
+    ASYNC, AWAIT,
 
     // Special
     NEWLINE, ERROR, ENDOFFILE
