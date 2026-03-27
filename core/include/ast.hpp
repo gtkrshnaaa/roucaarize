@@ -51,7 +51,8 @@ enum class NodeType : uint8_t {
     IMPORT_STDLIB,
     IMPORT_FILE,
     ASYNC_FUNC_DECL,
-    AWAIT_EXPR
+    AWAIT_EXPR,
+    BREAK_STMT
 };
 
 enum class BinaryOp : uint8_t {
