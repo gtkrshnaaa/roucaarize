@@ -53,6 +53,7 @@ private:
     NodeIndex ifStatement();
     NodeIndex forStatement();
     NodeIndex whileStatement();
+    NodeIndex breakStatement();
     NodeIndex returnStatement();
     NodeIndex tryStatement();
     NodeIndex throwStatement();

@@ -170,6 +170,7 @@ NodeIndex Parser::statement() {
     if (match(TokenType::IF)) return ifStatement();
     if (match(TokenType::FOR)) return forStatement();
     if (match(TokenType::WHILE)) return whileStatement();
+    if (match(TokenType::BREAK)) return breakStatement();
     if (match(TokenType::RETURN)) return returnStatement();
     if (match(TokenType::TRY)) return tryStatement();
     if (match(TokenType::THROW)) return throwStatement();
@@ -221,6 +222,11 @@ NodeIndex Parser::whileStatement() {
     node.left = cond;
     node.right = body;
     return ast.addNode(std::move(node));
+}
+
+NodeIndex Parser::breakStatement() {
+    Token first = previous();
+    return ast.addNode(ASTNode(NodeType::BREAK_STMT, first.line, first.column));
 }
 
 NodeIndex Parser::returnStatement() {
