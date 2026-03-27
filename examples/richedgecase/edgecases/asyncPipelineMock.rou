@@ -1,0 +1,47 @@
+import stdlib time as time
+import stdlib io as io
+import stdlib string as string
+
+async function downloadData() {
+    io.print("[1] Downloading RAW data...");
+    time.sleep(200);
+    return "raw_data_block";
+}
+
+async function processData(data) {
+    io.print("[2] Processing data: " + toString(data));
+    time.sleep(300);
+    return toString(data) + "_processed";
+}
+
+async function uploadData(data) {
+    io.print("[3] Uploading data: " + toString(data));
+    time.sleep(200);
+    return "Success";
+}
+
+async function runPipeline() {
+    t1 = downloadData();
+    raw = await t1;
+    
+    t2 = processData(raw);
+    processed = await t2;
+    
+    t3 = uploadData(processed);
+    status = await t3;
+    
+    return status;
+}
+
+function main() {
+    io.print("Initiating Pipeline...");
+    pipelineTask = runPipeline();
+    
+    io.print("Main thread is free! Doing UI work...");
+    time.sleep(100);
+    
+    finalStatus = await pipelineTask;
+    io.print("Pipeline finalized with status: " + toString(finalStatus));
+}
+
+main();

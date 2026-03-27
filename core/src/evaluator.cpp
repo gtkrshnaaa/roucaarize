@@ -249,9 +249,9 @@ Value Evaluator::evalCall(const ASTNode& node) {
                     return tEval.evalBlock(bodyIdx, asyncEnv);
                 } catch (const RuntimeException& e) {
                     if (e.isReturn) return e.value;
-                    return Value::nil();
+                    throw;
                 } catch (...) {
-                    return Value::nil();
+                    throw;
                 }
             });
             return Value::fromPromise(futPtr);
@@ -277,6 +277,8 @@ Value Evaluator::evalAwait(const ASTNode& node) {
     try {
         if (!futureVal.getPromise()->valid()) return Value::nil();
         return futureVal.getPromise()->get();
+    } catch (const RuntimeException& e) {
+        throw;
     } catch (const std::exception& e) {
         throw RuntimeError(node, std::string("Promise rejected: ") + e.what());
     } catch (...) {

@@ -1,0 +1,43 @@
+import stdlib time as time
+import stdlib io as io
+import stdlib string as string
+
+async function flakyNetworkCall(attempt) {
+    // Fails on attempt 1 and 2, succeeds on 3
+    if (attempt < 3) {
+        io.print("NetworkCall attempt " + toString(attempt) + " failed.");
+        throw "Connection Reset";
+    }
+    io.print("NetworkCall attempt " + toString(attempt) + " succeeded!");
+    return "DataPayload";
+}
+
+async function fetchWithRetry(maxRetries) {
+    attempt = 1;
+    while (attempt <= maxRetries) {
+        try {
+            task = flakyNetworkCall(attempt);
+            res = await task;
+            return res;
+        } catch (e) {
+            io.print("Caught error: " + toString(e) + ". Retrying in " + toString(attempt * 100) + "ms...");
+            time.sleep(attempt * 100);
+            attempt = attempt + 1;
+        }
+    }
+    throw "Max retries exceeded";
+}
+
+function main() {
+    io.print("Starting auto-retry routine...");
+    runner = fetchWithRetry(5);
+    
+    try {
+        finalRes = await runner;
+        io.print("Routine completed with data: " + toString(finalRes));
+    } catch (e) {
+        io.print("Routine completely failed: " + toString(e));
+    }
+}
+
+main();

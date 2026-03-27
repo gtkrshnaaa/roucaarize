@@ -1,0 +1,32 @@
+import stdlib time as time
+import stdlib io as io
+import stdlib string as string
+
+async function fetchUser(id) {
+    io.print("Fetching user " + toString(id) + "...");
+    time.sleep(100); // simulate network latency
+    return "User_" + toString(id);
+}
+
+function main() {
+    io.print("Starting parallel fetch mock...");
+    
+    // Start 5 tasks concurrently
+    t1 = fetchUser(1);
+    t2 = fetchUser(2);
+    t3 = fetchUser(3);
+    t4 = fetchUser(4);
+    t5 = fetchUser(5);
+    
+    // Await them sequentially (they run in parallel because they were spawned above)
+    u1 = await t1;
+    u2 = await t2;
+    u3 = await t3;
+    u4 = await t4;
+    u5 = await t5;
+    
+    io.print("All users fetched:");
+    io.print(u1 + ", " + u2 + ", " + u3 + ", " + u4 + ", " + u5);
+}
+
+main();
