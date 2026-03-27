@@ -1,0 +1,76 @@
+// Merge Sort Recursive - Testing Array subdividing and deep recursive stack merging
+
+function sliceArray(arr, start, end) {
+    res = []
+    i = start
+    while (i < end and i < arr.length) {
+        res.push(arr[i])
+        i++
+    }
+    return res
+}
+
+function mergeArrays(left, right) {
+    res = []
+    l = 0; r = 0
+    
+    while (l < left.length and r < right.length) {
+        if (left[l] < right[r]) {
+            res.push(left[l])
+            l++
+        } else {
+            res.push(right[r])
+            r++
+        }
+    }
+    
+    while (l < left.length) { res.push(left[l]); l++ }
+    while (r < right.length) { res.push(right[r]); r++ }
+    
+    return res
+}
+
+function mergeSort(arr) {
+    if (arr.length <= 1) { return arr }
+    
+    mid = arr.length / 2 // Integer division automatically truncates in Roucaarize if treated directly, wait, floats? I'll use explicit int casting if needed. 
+    // Actually Roucaarize returns float if divided. Let's use custom integer floor wrapper:
+    midStr = toString(mid)
+    midInt = 0 // In standard Roucaarize, division of ints might be float. We iterate to get int.
+    // Hacky floor logic:
+    m = 0
+    while (m + 0.999 < mid) { m++ }
+    
+    left = sliceArray(arr, 0, m)
+    right = sliceArray(arr, m, arr.length)
+    
+    sortedLeft = mergeSort(left)
+    sortedRight = mergeSort(right)
+    
+    return mergeArrays(sortedLeft, sortedRight)
+}
+
+function testMergeSort() {
+    print("--- Testing Merge Sort Array ---")
+    data = [38, 27, 43, 3, 9, 82, 10]
+    
+    sorted = mergeSort(data)
+    
+    print("Sorted Output:")
+    i = 0
+    while (i < sorted.length) {
+        print("> " + toString(sorted[i]))
+        i++
+    }
+    
+    // Verify order
+    if (sorted[0] != 3 or sorted[6] != 82) {
+        print("FATAL: Merge Sort array ordering failed")
+    }
+}
+
+function main() {
+    testMergeSort()
+}
+
+main()

@@ -1,0 +1,87 @@
+// Conway's Game Of Life - Matrix state mutation based on logical immediate neighborhood rules
+
+function simulateTick(grid, w, h) {
+    // Generate new blank state
+    nextState = []
+    r = 0
+    while (r < h) {
+        row = []
+        c = 0
+        while (c < w) { row.push(0); c++ }
+        nextState.push(row)
+        r++
+    }
+    
+    // Calculate rules
+    i = 0
+    while (i < h) {
+        j = 0
+        while (j < w) {
+            // Count neighbors
+            aliveNeighbors = 0
+            
+            // 8 directions (bound checking mapped)
+            dirs = [ [-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1] ]
+            d = 0
+            while (d < 8) {
+                nx = j + dirs[d][1]
+                ny = i + dirs[d][0]
+                
+                if (nx >= 0 and nx < w and ny >= 0 and ny < h) {
+                    if (grid[ny][nx] == 1) { aliveNeighbors++ }
+                }
+                d++
+            }
+            
+            // Rules
+            alive = grid[i][j] == 1
+            if (alive) {
+                if (aliveNeighbors < 2 or aliveNeighbors > 3) {
+                    nextState[i][j] = 0 // Dies
+                } else {
+                    nextState[i][j] = 1 // Lives
+                }
+            } else {
+                if (aliveNeighbors == 3) {
+                    nextState[i][j] = 1 // Reproduces
+                }
+            }
+            
+            j++
+        }
+        i++
+    }
+    return nextState
+}
+
+function testGameOfLife() {
+    print("--- Testing Conway Game Of Life Rules ---")
+    // Creates a "Blinker" pattern
+    grid = [
+        [0, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0],
+        [0, 0, 1, 0, 0],
+        [0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 0]
+    ]
+    
+    step1 = simulateTick(grid, 5, 5)
+    step2 = simulateTick(step1, 5, 5)
+    
+    print("Blinker Matrix Step 1 Center Val: " + toString(step1[2][2]) + " -> expects 1")
+    print("Blinker Matrix Step 1 Pivot Val: " + toString(step1[2][1]) + " -> expects 1")
+    
+    // Step 1 should oscillate horizontal:
+    // [0, 0, 0, 0, 0]
+    // [0, 1, 1, 1, 0]
+    if (step1[2][1] != 1 or step1[1][2] != 0) { print("FATAL: Game of life cellular replication rules broken") }
+    
+    // Step 2 should match grid entirely
+    if (step2[2][2] != grid[2][2] or step2[1][2] != grid[1][2]) { print("FATAL: Game of life cellular oscillation cycle failed") }
+}
+
+function main() {
+    testGameOfLife()
+}
+
+main()

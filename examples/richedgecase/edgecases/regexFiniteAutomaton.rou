@@ -1,0 +1,60 @@
+// Regex Finite Automaton State Machine - Testing logical branching string evaluation without native Regex
+
+struct NFAState { accept, transitionChar, nextState }
+
+// Matches simple generic literal pattern string format: "a-z" loop
+function simulateNFA(stateMachineHead, testStr) {
+    curr = stateMachineHead
+    
+    i = 0
+    while (i < testStr.length) {
+        c = testStr[i]
+        if (c == null) { break }
+        
+        // Transitions map checks
+        nextPointer = curr.transitionChar[c]
+        if (nextPointer == null) {
+            // Check wildcards
+            if (curr.transitionChar["*"] != null) {
+                nextPointer = curr.transitionChar["*"]
+            } else {
+                return false
+            }
+        }
+        
+        curr = nextPointer
+        i++
+    }
+    
+    return curr.accept
+}
+
+function testNFALogic() {
+    print("--- Testing NFA Regex Automaton Logic ---")
+    
+    // Build a state machine for regex: `^ab*c$`
+    // S0 -'a'-> S1
+    // S1 -'b'-> S1 (loop)
+    // S1 -'c'-> S2 (accept)
+    
+    s2 = NFAState(true, {}, null)
+    s1 = NFAState(false, {"b": null, "c": s2}, null)
+    s1.transitionChar["b"] = s1 // loop reference
+    s0 = NFAState(false, {"a": s1}, null)
+    
+    valid1 = simulateNFA(s0, "abc")
+    valid2 = simulateNFA(s0, "abbbbbc")
+    invalid1 = simulateNFA(s0, "abbbbcX")
+    invalid2 = simulateNFA(s0, "Xbc")
+    
+    print("NFA valid1: " + toString(valid1))
+    print("NFA valid2: " + toString(valid2))
+    if (!valid1 or !valid2) { print("FATAL: NFA state rejected valid linear combinations") }
+    if (invalid1 or invalid2) { print("FATAL: NFA state breached regex containment logic") }
+}
+
+function main() {
+    testNFALogic()
+}
+
+main()

@@ -1,0 +1,47 @@
+// Depth First Search Directory Mock - Testing deep recursive structures and string concatenation
+
+struct Node { name, size, children }
+
+function File(n, s) { return Node(n, s, []) }
+function Directory(n, childs) { return Node(n, 0, childs) }
+
+function calculateDFSSize(node) {
+    if (node.children.length == 0) {
+        return node.size
+    }
+    
+    totalSize = node.size
+    i = 0
+    while (i < node.children.length) {
+        child = node.children[i]
+        totalSize += calculateDFSSize(child)
+        i++
+    }
+    
+    return totalSize
+}
+
+function testDFSFileSystem() {
+    print("--- Testing DFS Virtual File System ---")
+    
+    img1 = File("img1.png", 2000)
+    img2 = File("img2.png", 3500)
+    doc1 = File("readme.txt", 150)
+    
+    photosDir = Directory("Photos", [img1, img2])
+    textsDir = Directory("Text", [doc1])
+    
+    rootDir = Directory("Root", [photosDir, textsDir, File("sys.bin", 50000)])
+    
+    totalSpace = calculateDFSSize(rootDir)
+    print("Total virtual drive size: " + toString(totalSpace) + " bytes")
+    
+    expected = 2000 + 3500 + 150 + 50000 // 55650
+    if (totalSpace != expected) { print("FATAL: DFS tree size sum is incorrect: " + toString(totalSpace)) }
+}
+
+function main() {
+    testDFSFileSystem()
+}
+
+main()

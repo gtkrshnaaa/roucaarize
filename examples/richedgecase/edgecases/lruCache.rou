@@ -1,0 +1,82 @@
+// Least Recently Used (LRU) Cache - Testing Map mutability and array element shifting logical ordering
+
+struct CacheNode {
+    key, value
+}
+
+struct LRU {
+    capacity, cacheMap, queue
+}
+
+function initLRU(cap) {
+    return LRU(cap, {}, [])
+}
+
+function removeKeyFromQueue(queue, targetKey) {
+    newQ = []
+    i = 0
+    while (i < queue.length) {
+        if (queue[i] != targetKey) {
+            newQ.push(queue[i])
+        }
+        i++
+    }
+    return newQ
+}
+
+function putCache(lru, key, value) {
+    // If exists, remove old position
+    if (lru.cacheMap[key] != null) {
+        lru.queue = removeKeyFromQueue(lru.queue, key)
+    } else {
+        if (lru.queue.length >= lru.capacity) {
+            // Evict oldest (front of queue)
+            // No shift() so we pop all to temporary, wait, we can just slice.
+            oldestKey = lru.queue[0]
+            lru.queue = removeKeyFromQueue(lru.queue, oldestKey)
+            lru.cacheMap[oldestKey] = null
+        }
+    }
+    
+    lru.cacheMap[key] = value
+    lru.queue.push(key)
+}
+
+function getCache(lru, key) {
+    if (lru.cacheMap[key] == null) { return -1 }
+    
+    // Move to most recently used
+    val = lru.cacheMap[key]
+    lru.queue = removeKeyFromQueue(lru.queue, key)
+    lru.queue.push(key)
+    
+    return val
+}
+
+function testLRUCache() {
+    print("--- Testing LRU Cache ---")
+    cache = initLRU(2)
+    
+    putCache(cache, "A", 1)
+    putCache(cache, "B", 2)
+    
+    valA = getCache(cache, "A") // Access A, making B oldest
+    putCache(cache, "C", 3) // This evicts B, since capacity=2
+    
+    valB = getCache(cache, "B") // Should be -1
+    valC = getCache(cache, "C") // Should be 3
+    
+    print("valA: " + toString(valA))
+    print("valB: " + toString(valB))
+    print("valC: " + toString(valC))
+    
+    if (valA != 1) { print("FATAL: LRU accessed value A failed") }
+    if (valB != -1) { print("FATAL: LRU eviction failed to clear B") }
+    if (valC != 3) { print("FATAL: LRU new insertion failed") }
+}
+
+function main() {
+    testLRUCache()
+}
+
+main()

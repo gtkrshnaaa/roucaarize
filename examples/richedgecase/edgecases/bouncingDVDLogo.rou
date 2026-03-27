@@ -1,0 +1,55 @@
+// Vector Bouncing Simulation - Testing state mutation and math edge constraints
+
+struct BoundingBox { w, h }
+struct Entity { x, y, dx, dy }
+
+function tickSimulation(entity, box) {
+    entity.x += entity.dx
+    entity.y += entity.dy
+    
+    hitCornerX = false
+    hitCornerY = false
+
+    if (entity.x <= 0 or entity.x >= box.w) {
+        entity.dx = -entity.dx
+        hitCornerX = true
+    }
+    if (entity.y <= 0 or entity.y >= box.h) {
+        entity.dy = -entity.dy
+        hitCornerY = true
+    }
+    
+    return hitCornerX and hitCornerY
+}
+
+function testBouncingDVD() {
+    print("--- Testing Vector Bouncing Simulation ---")
+    
+    screen = BoundingBox(800, 600)
+    logo = Entity(795, 595, 2, 2)
+    
+    ticks = 0
+    hitPerfectCorner = false
+    
+    keepSimulating = true
+    // Simulate up to 500 ticks
+    while (ticks < 500 and keepSimulating) {
+        if (tickSimulation(logo, screen)) {
+            hitPerfectCorner = true
+            keepSimulating = false
+        } else {
+            ticks++
+        }
+    }
+    
+    print("Ticks performed: " + toString(ticks))
+    print("Logo Position at break: X=" + toString(logo.x) + " Y=" + toString(logo.y))
+    
+    if (!hitPerfectCorner) { print("FATAL: DVD logo vector simulation missed mathematical corner trajectory!") }
+}
+
+function main() {
+    testBouncingDVD()
+}
+
+main()

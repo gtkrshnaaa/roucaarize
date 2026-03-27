@@ -1,0 +1,65 @@
+// Tic Tac Toe Win Validator - Testing Multi-Axis Matrix verification
+
+function checkWin(grid, player) {
+    // Check rows
+    i = 0
+    while (i < 3) {
+        if (grid[i][0] == player and grid[i][1] == player and grid[i][2] == player) { return true }
+        i++
+    }
+    
+    // Check cols
+    j = 0
+    while (j < 3) {
+        if (grid[0][j] == player and grid[1][j] == player and grid[2][j] == player) { return true }
+        j++
+    }
+    
+    // Diagonals
+    if (grid[0][0] == player and grid[1][1] == player and grid[2][2] == player) { return true }
+    if (grid[0][2] == player and grid[1][1] == player and grid[2][0] == player) { return true }
+    
+    return false
+}
+
+function checkDraw(grid) {
+    i = 0
+    while (i < 3) {
+        j = 0
+        while (j < 3) {
+            if (grid[i][j] == "-") { return false }
+            j++
+        }
+        i++
+    }
+    return true
+}
+
+function testTicTacToe() {
+    print("--- Testing Tic Tac Toe Engine ---")
+    
+    xWins = [
+        ["X", "O", "X"],
+        ["-", "X", "O"],
+        ["O", "-", "X"]
+    ]
+    
+    drawBoard = [
+        ["O", "X", "O"],
+        ["X", "X", "O"],
+        ["X", "O", "X"]
+    ]
+    
+    if (!checkWin(xWins, "X")) { print("FATAL: Tic Tac Toe failed to catch diagonal win") }
+    if (checkWin(xWins, "O")) { print("FATAL: Tic Tac Toe falsely flagged O as winner") }
+    if (checkWin(drawBoard, "X") or checkWin(drawBoard, "O")) { print("FATAL: Tic Tac Toe falsely won a draw") }
+    if (!checkDraw(drawBoard)) { print("FATAL: Tic Tac Toe engine failed to evaluate DRAW state") }
+    
+    print("Tic Tac Toe Grid validations clear!")
+}
+
+function main() {
+    testTicTacToe()
+}
+
+main()

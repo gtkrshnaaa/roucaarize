@@ -1,0 +1,52 @@
+// Promise.all Aggregation Simulator - Array Closures mock simulating parallel resolving structures
+
+struct Future { resolved, data, error }
+
+function simulatePromiseAll(futureArray) {
+    results = []
+    
+    i = 0
+    while (i < futureArray.length) {
+        p = futureArray[i]
+        
+        // Mocking event resolution polling loops
+        pollCount = 0
+        while (!p.resolved and pollCount < 10) {
+            pollCount++
+        }
+        
+        if (p.error != null) {
+            return Future(true, null, "Aggregation Rejection: " + p.error)
+        }
+        
+        results.push(p.data)
+        i++
+    }
+    
+    return Future(true, results, null)
+}
+
+function testPromiseAggregation() {
+    print("--- Testing Promise Aggregation States ---")
+    
+    f1 = Future(true, "Data 1 API", null)
+    f2 = Future(true, "Data 2 API", null)
+    f3 = Future(true, "Data 3 API", null)
+    
+    // Valid batch
+    aggValid = simulatePromiseAll([f1, f2, f3])
+    print("Agg Valid Data items: " + toString(aggValid.data.length))
+    if (aggValid.data.length != 3 or aggValid.error != null) { print("FATAL: Valid task aggregation structure decoupled") }
+    
+    // Rejected batch
+    fErr = Future(true, null, "Node Timeout")
+    aggFailed = simulatePromiseAll([f1, fErr, f3])
+    print("Agg Error Trace: " + aggFailed.error)
+    if (aggFailed.data != null or aggFailed.error == null) { print("FATAL: Faulty aggregation leaked data payload over rejection sequence") }
+}
+
+function main() {
+    testPromiseAggregation()
+}
+
+main()

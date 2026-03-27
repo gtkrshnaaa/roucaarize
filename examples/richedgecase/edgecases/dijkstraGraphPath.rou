@@ -1,0 +1,89 @@
+// Dijkstra Shortest Path - Testing Map traversal and Greedy tracking over Strings
+
+// Using map to store graph { "A": [["B", 5], ["C", 2]] }
+struct Edge { node, cost }
+
+function dijkstraSolve(graph, startKey, endKey) {
+    distances = {}
+    visited = {}
+    
+    // Pre-populate worst case (infinity simulation)
+    // We assume 9999 is infinity
+    distances["A"] = 9999
+    distances["B"] = 9999
+    distances["C"] = 9999
+    distances["D"] = 9999
+    distances["E"] = 9999
+    
+    distances[startKey] = 0
+    
+    // Process queue
+    completed = 0
+    while (completed < 5) {
+        // Find lowest unvisited logic
+        minDist = 9999
+        curr = null
+        
+        // Manual lookup over nodes
+        // We lack map iterators, so we hardcode lookup list for the test scope
+        nodes = ["A", "B", "C", "D", "E"]
+        i = 0
+        while (i < 5) {
+            n = nodes[i]
+            if (visited[n] == null and distances[n] < minDist) {
+                minDist = distances[n]
+                curr = n
+            }
+            i++
+        }
+        
+        if (curr == null) { break }
+        
+        visited[curr] = true
+        edges = graph[curr]
+        if (edges != null) {
+            e = 0
+            while (e < edges.length) {
+                adj = edges[e].node
+                cost = edges[e].cost
+                
+                alt = distances[curr] + cost
+                if (alt < distances[adj]) {
+                    distances[adj] = alt
+                }
+                e++
+            }
+        }
+        completed++
+    }
+    
+    return distances[endKey]
+}
+
+function testDijkstra() {
+    print("--- Testing Dijkstra Graph Solver ---")
+    
+    g = {}
+    g["A"] = [Edge("B", 10), Edge("C", 3)]
+    g["C"] = [Edge("B", 4), Edge("D", 2)]
+    g["B"] = [Edge("E", 5), Edge("D", 1)]
+    g["D"] = [Edge("E", 10)]
+    g["E"] = []
+    
+    res = dijkstraSolve(g, "A", "E")
+    
+    print("Shortest path cost from A -> E is: " + toString(res))
+    // A -> C (3)
+    // C -> B (4) -> B is 7
+    // B -> D (1) -> D is 8 (wait, C -> D is 2 -> D is 5!)
+    // D -> E (10) -> E is 15.
+    // B -> E (5) -> E is 12 (7 + 5). So shortest is 12!
+    
+    if (res != 12) { print("FATAL: Dijkstra path algorithm evaluated incorrect minimum distance: " + toString(res)) }
+}
+
+function main() {
+    testDijkstra()
+}
+
+main()

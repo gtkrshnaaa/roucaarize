@@ -1,0 +1,63 @@
+// Text Justification algorithm - Testing heavy String aggregations
+
+function justifyText(words, maxWidth) {
+    resArr = []
+    currLine = ""
+    
+    i = 0
+    while (i < words.length) {
+        w = words[i]
+        
+        if (currLine == "") {
+            currLine = w
+        } else {
+            // Check if adding space + word exceeds
+            if (currLine.length + 1 + w.length <= maxWidth) {
+                currLine += " " + w
+            } else {
+                // Must pad spaces to reach maxWidth
+                paddingNeeded = maxWidth - currLine.length
+                pads = ""
+                p = 0
+                while (p < paddingNeeded) { pads += "-"; p++ } // use dash for visual test
+                resArr.push(currLine + pads)
+                currLine = w
+            }
+        }
+        i++
+    }
+    
+    // push final
+    if (currLine != "") {
+        paddingNeeded = maxWidth - currLine.length
+        pads = ""
+        p = 0
+        while (p < paddingNeeded) { pads += "-"; p++ }
+        resArr.push(currLine + pads)
+    }
+    
+    return resArr
+}
+
+function testJustification() {
+    print("--- Testing Text Justification Array Combinations ---")
+    words = ["This", "is", "an", "example", "of", "text", "justification."]
+    
+    padded = justifyText(words, 16)
+    
+    print("Padding Array:")
+    i = 0
+    while (i < padded.length) {
+        print("[" + padded[i] + "]")
+        i++
+    }
+    
+    if (padded.length != 3) { print("FATAL: Padded block counts mismatch") }
+    if (padded[0] != "This is an------") { print("FATAL: Justification greedy logic failed text boundaries") }
+}
+
+function main() {
+    testJustification()
+}
+
+main()
