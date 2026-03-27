@@ -1,7 +1,6 @@
 // Iterative Factorial - Roucaarize
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -19,7 +18,7 @@ function factorial(n) {
 
 function testFactorial() {
     result = factorial(10)
-    io.print("Factorial(10) = " + core.toString(result))
+    io.print("Factorial(10) = " + toString(result))
     if (result != 3628800) { io.print("FATAL: factorial() failed!") }
 }
 

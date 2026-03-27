@@ -1,0 +1,70 @@
+import stdlib io as io
+import stdlib array as arr
+import stdlib string as str
+
+struct Record {
+    id,
+    dataMap
+}
+
+function innerJoin(tableA, tableB, joinKeyA, joinKeyB) {
+    resultRows = []
+    
+    i = 0
+    while (i < len(tableA)) {
+        rowA = tableA[i]
+        
+        j = 0
+        while (j < len(tableB)) {
+            rowB = tableB[j]
+            
+            valA = rowA.dataMap[joinKeyA]
+            valB = rowB.dataMap[joinKeyB]
+            
+            if (valA != null and valB != null and valA == valB) {
+                // Merge Data Maps
+                mergedMap = {}
+                // Add left columns
+                mergedMap[joinKeyA] = valA
+                mergedMap["leftData"] = rowA.dataMap["name"]
+                mergedMap["rightData"] = rowB.dataMap["deptName"]
+                
+                newRecord = Record(len(resultRows), mergedMap)
+                arr.push(resultRows, newRecord)
+            }
+            j++
+        }
+        i++
+    }
+    
+    return resultRows
+}
+
+function runSqlSimulation() {
+    users = [
+        Record(1, {"userId": 101, "name": "Alice"}),
+        Record(2, {"userId": 102, "name": "Bob"}),
+        Record(3, {"userId": 103, "name": "Charlie"})
+    ]
+    
+    departments = [
+        Record(1, {"deptId": "D1", "deptName": "Engineering", "managerId": 102}),
+        Record(2, {"deptId": "D2", "deptName": "HR", "managerId": 101}),
+        Record(3, {"deptId": "D3", "deptName": "Finance", "managerId": 999}) // No match
+    ]
+    
+    io.print("Executing INNER JOIN ON users.userId = departments.managerId")
+    joinedTable = innerJoin(users, departments, "userId", "managerId")
+    
+    io.print("Joined Results:")
+    for (row in joinedTable) {
+        valId = row.dataMap["userId"]
+        valLeft = row.dataMap["leftData"]
+        valRight = row.dataMap["rightData"]
+        
+        io.print("  Match ID: " + toString(valId) + " | User: " + valLeft + " | Dept: " + valRight)
+    }
+}
+
+io.print("=== Relational SQL Join Simulation ===")
+runSqlSimulation()

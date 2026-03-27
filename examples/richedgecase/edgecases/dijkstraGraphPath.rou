@@ -1,7 +1,6 @@
 // Dijkstra Shortest Path - Testing Map traversal and Greedy tracking over Strings
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -50,7 +49,7 @@ function dijkstraSolve(graph, startKey, endKey) {
         edges = graph[curr]
         if (edges != null) {
             e = 0
-            while (e < core.len(edges)) {
+            while (e < len(edges)) {
                 adj = edges[e].node
                 cost = edges[e].cost
                 
@@ -79,14 +78,14 @@ function testDijkstra() {
     
     res = dijkstraSolve(g, "A", "E")
     
-    io.print("Shortest path cost from A -> E is: " + core.toString(res))
+    io.print("Shortest path cost from A -> E is: " + toString(res))
     // A -> C (3)
     // C -> B (4) -> B is 7
     // B -> D (1) -> D is 8 (wait, C -> D is 2 -> D is 5!)
     // D -> E (10) -> E is 15.
     // B -> E (5) -> E is 12 (7 + 5). So shortest is 12!
     
-    if (res != 12) { io.print("FATAL: Dijkstra path algorithm evaluated incorrect minimum distance: " + core.toString(res)) }
+    if (res != 12) { io.print("FATAL: Dijkstra path algorithm evaluated incorrect minimum distance: " + toString(res)) }
 }
 
 function main() {

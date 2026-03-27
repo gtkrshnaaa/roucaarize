@@ -1,7 +1,6 @@
 // Tic Tac Toe Win Validator - Testing Multi-Axis Matrix verification
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 

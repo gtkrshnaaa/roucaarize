@@ -1,7 +1,6 @@
 // Struct-based Binary Search Tree - Testing dynamic allocation and recursive methods
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -46,8 +45,8 @@ function testBST() {
     found2 = searchNode(tree, 2)
     found99 = searchNode(tree, 99)
     
-    io.print("Found 2: " + core.toString(found2))
-    io.print("Found 99: " + core.toString(found99))
+    io.print("Found 2: " + toString(found2))
+    io.print("Found 99: " + toString(found99))
     
     if (!found2) { io.print("FATAL: BST could not find existing node") }
     if (found99) { io.print("FATAL: BST found ghost node") }

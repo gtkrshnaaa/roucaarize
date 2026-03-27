@@ -1,7 +1,6 @@
 // Recursive JSON Stringifier Mock - Testing deep Map/Array traversal to String output
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -10,21 +9,21 @@ import stdlib string as str
 function stringify(value) {
     if (value == null) { return "null" }
     
-    t = core.typeof(value)
+    t = typeof(value)
     
     if (t == "string") {
         return "'" + value + "'"
     }
     if (t == "int" or t == "float" or t == "bool") {
-        return core.toString(value)
+        return toString(value)
     }
     
     if (t == "array") {
         res = "["
         i = 0
-        while (i < core.len(value)) {
+        while (i < len(value)) {
             res += stringify(value[i])
-            if (i < core.len(value) - 1) { res += "," }
+            if (i < len(value) - 1) { res += "," }
             i++
         }
         return res + "]"
@@ -40,7 +39,7 @@ function stringify(value) {
         if (value["active"] != null) { res += "'active':" + stringify(value["active"]) }
         
         // Trim last comma logic mocked
-        len = core.len(res)
+        len = len(res)
         if (res[len-1] == ",") {
             // substring mock
             trim = ""

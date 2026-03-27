@@ -1,7 +1,6 @@
 // Regex Finite Automaton State Machine - Testing logical branching string evaluation without native Regex
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -14,7 +13,7 @@ function simulateNFA(stateMachineHead, testStr) {
     curr = stateMachineHead
     
     i = 0
-    while (i < core.len(testStr)) {
+    while (i < len(testStr)) {
         c = testStr[i]
         if (c == null) { break }
         
@@ -54,8 +53,8 @@ function testNFALogic() {
     invalid1 = simulateNFA(s0, "abbbbcX")
     invalid2 = simulateNFA(s0, "Xbc")
     
-    io.print("NFA valid1: " + core.toString(valid1))
-    io.print("NFA valid2: " + core.toString(valid2))
+    io.print("NFA valid1: " + toString(valid1))
+    io.print("NFA valid2: " + toString(valid2))
     if (!valid1 or !valid2) { io.print("FATAL: NFA state rejected valid linear combinations") }
     if (invalid1 or invalid2) { io.print("FATAL: NFA state breached regex containment logic") }
 }

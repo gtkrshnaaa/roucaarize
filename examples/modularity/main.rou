@@ -2,7 +2,6 @@
 // Entry point for the calculator simulation
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -22,7 +21,7 @@ try {
     io.print("Testing error handling:")
     io.print(calc.calculateAndFormat("div", 10, 0))
 } catch (err) {
-    io.print("Calculator Error: " + core.toString(err))
+    io.print("Calculator Error: " + toString(err))
 }
 
 io.print("== Calculator Session Ended ==")

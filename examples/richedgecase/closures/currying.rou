@@ -1,7 +1,6 @@
 // Advanced Currying (Nested Returns) - Roucaarize
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -19,7 +18,7 @@ function addArguments(a) {
 
 function testCurrying() {
     sumResult = addArguments(10)(20)(30)
-    io.print("currying addArguments(10)(20)(30) = " + core.toString(sumResult))
+    io.print("currying addArguments(10)(20)(30) = " + toString(sumResult))
     if (sumResult != 60) { io.print("FATAL: Currying logic failed!") }
 }
 

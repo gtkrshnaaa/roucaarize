@@ -1,7 +1,6 @@
 // Matrix Determinant Calculator - Testing 2D Arrays and Math
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -26,7 +25,7 @@ function testMatrixDeterminant() {
     ]
     
     det = calculateDeterminant(mat)
-    io.print("Determinant is: " + core.toString(det))
+    io.print("Determinant is: " + toString(det))
     
     if (det != -306) { io.print("FATAL: Determinant calculation failed!") }
 }

@@ -3,7 +3,6 @@
 // Demonstrates structs, maps, error handling, closures, and higher-order functions.
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -26,7 +25,7 @@ struct Server {
 
 function validatePort(p) {
     if (p < 1 or p > 65535) {
-        throw "Invalid port: " + core.toString(p)
+        throw "Invalid port: " + toString(p)
     }
     return p
 }
@@ -59,12 +58,12 @@ function makeMultiplier(factor) {
 // ============================================================================
 
 function showServer(srv) {
-    io.print("Server: " + srv.name + " at " + srv.ip + ":" + core.toString(srv.port))
+    io.print("Server: " + srv.name + " at " + srv.ip + ":" + toString(srv.port))
     io.print("Status: " + srv.status)
 }
 
 function showConfig(cfg, key) {
-    io.print("Config " + key + ": " + core.toString(cfg[key]))
+    io.print("Config " + key + ": " + toString(cfg[key]))
 }
 
 function showServerFleet(servers) {
@@ -75,13 +74,13 @@ function showServerFleet(servers) {
 }
 
 function showArrayOps(numbers) {
-    io.print("Numbers: " + core.toString(numbers))
-    io.print("Length: " + core.toString(core.len(numbers)))
+    io.print("Numbers: " + toString(numbers))
+    io.print("Length: " + toString(len(numbers)))
     arr.push(numbers, 42)
-    io.print("After push(42): " + core.toString(numbers))
+    io.print("After push(42): " + toString(numbers))
     last = arr.pop(numbers)
-    io.print("Popped: " + core.toString(last))
-    io.print("After pop: " + core.toString(numbers))
+    io.print("Popped: " + toString(last))
+    io.print("After pop: " + toString(numbers))
 }
 
 function demonstrateErrorHandling() {
@@ -111,12 +110,12 @@ function demonstrateErrorHandling() {
 }
 
 function demonstrateHigherOrder() {
-    io.print("double(5) = " + core.toString(apply(double, 5)))
-    io.print("square(5) = " + core.toString(apply(square, 5)))
+    io.print("double(5) = " + toString(apply(double, 5)))
+    io.print("square(5) = " + toString(apply(square, 5)))
 
     triple = makeMultiplier(3)
-    io.print("triple(4) = " + core.toString(triple(4)))
-    io.print("triple(10) = " + core.toString(triple(10)))
+    io.print("triple(4) = " + toString(triple(4)))
+    io.print("triple(10) = " + toString(triple(10)))
 }
 
 // ============================================================================

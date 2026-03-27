@@ -1,0 +1,83 @@
+import stdlib io as io
+import stdlib array as arr
+import stdlib string as str
+
+struct MarkovState {
+    word,
+    transitions
+}
+
+function buildMarkovChain(textInput) {
+    words = str.split(textInput, " ")
+    chain = {}
+    
+    i = 0
+    n = len(words)
+    while (i < n - 1) {
+        currentWord = words[i]
+        nextWord = words[i + 1]
+        
+        if (chain[currentWord] == null) {
+            chain[currentWord] = MarkovState(currentWord, [])
+        }
+        
+        state = chain[currentWord]
+        arr.push(state.transitions, nextWord)
+        i++
+    }
+    
+    return chain
+}
+
+function generateText(chain, startWord, length) {
+    textResult = startWord
+    current = startWord
+    
+    i = 0
+    while (i < length) {
+        state = chain[current]
+        if (state == null or len(state.transitions) == 0) {
+            // Dead end, just break
+            break
+        }
+        
+        // Pseudo-random choice based on length modulo
+        choices = state.transitions
+        choiceIndex = (i * 7 + len(textResult)) % len(choices)
+        nextWord = choices[choiceIndex]
+        
+        textResult = textResult + " " + nextWord
+        current = nextWord
+        i++
+    }
+    
+    return textResult
+}
+
+function runMarkovSimulation() {
+    trainingText = "the cat is green the cat is blue the dog is heavy the dog is running fast"
+    io.print("Training Text: " + trainingText)
+    
+    chain = buildMarkovChain(trainingText)
+    
+    io.print("Markov State 'the':")
+    for (t in chain["the"].transitions) {
+        io.print("  -> " + t)
+    }
+    
+    io.print("Markov State 'is':")
+    for (t in chain["is"].transitions) {
+        io.print("  -> " + t)
+    }
+    
+    generated = generateText(chain, "the", 5)
+    io.print("Generated 5 words starting from 'the':")
+    io.print(generated)
+    
+    generatedLong = generateText(chain, "the", 10)
+    io.print("Generated 10 words starting from 'the':")
+    io.print(generatedLong)
+}
+
+io.print("=== Markov Chain Text Generator ===")
+runMarkovSimulation()

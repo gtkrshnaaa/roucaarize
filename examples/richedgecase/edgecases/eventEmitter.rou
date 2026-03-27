@@ -1,7 +1,6 @@
 // Event Emitter - Testing Structs holding functions (Methods) and Array manipulation
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -22,7 +21,7 @@ function triggerEvent(emitter, eventName, payload) {
     list = emitter.listeners[eventName]
     if (list != null) {
         i = 0
-        while (i < core.len(list)) {
+        while (i < len(list)) {
             cb = list[i]
             cb(payload)
             i++
@@ -51,7 +50,7 @@ function testEventEmitter() {
     triggerEvent(system, "data", 5) // +10
     triggerEvent(system, "end", 3)  // *3 -> 30
     
-    io.print("Final State: " + core.toString(globalState))
+    io.print("Final State: " + toString(globalState))
     if (globalState != 30) { io.print("FATAL: Event emitter flow failed") }
 }
 

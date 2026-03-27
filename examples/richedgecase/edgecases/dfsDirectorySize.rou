@@ -1,7 +1,6 @@
 // Depth First Search Directory Mock - Testing deep recursive structures and string concatenation
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -13,13 +12,13 @@ function File(n, s) { return Node(n, s, []) }
 function Directory(n, childs) { return Node(n, 0, childs) }
 
 function calculateDFSSize(node) {
-    if (core.len(node.children) == 0) {
+    if (len(node.children) == 0) {
         return node.size
     }
     
     totalSize = node.size
     i = 0
-    while (i < core.len(node.children)) {
+    while (i < len(node.children)) {
         child = node.children[i]
         totalSize += calculateDFSSize(child)
         i++
@@ -41,10 +40,10 @@ function testDFSFileSystem() {
     rootDir = Directory("Root", [photosDir, textsDir, File("sys.bin", 50000)])
     
     totalSpace = calculateDFSSize(rootDir)
-    io.print("Total virtual drive size: " + core.toString(totalSpace) + " bytes")
+    io.print("Total virtual drive size: " + toString(totalSpace) + " bytes")
     
     expected = 2000 + 3500 + 150 + 50000 // 55650
-    if (totalSpace != expected) { io.print("FATAL: DFS tree size sum is incorrect: " + core.toString(totalSpace)) }
+    if (totalSpace != expected) { io.print("FATAL: DFS tree size sum is incorrect: " + toString(totalSpace)) }
 }
 
 function main() {

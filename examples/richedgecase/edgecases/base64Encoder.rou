@@ -1,7 +1,6 @@
 // Base64 Dictionary Encoder Mock - Using Array lookup matching values
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -20,21 +19,21 @@ function encodeMockBase64(stringData) {
     
     encoded = ""
     i = 0
-    while (i < core.len(stringData)) {
+    while (i < len(stringData)) {
         // Since we cannot extract bytes and do true bit shifting natively in this version without overhead,
         // We will mock it by converting string length parity.
         // Wait, just sum length and map it!
         c = stringData[i]
         
         // Faking it by using index lookup mod 64
-        pseudoHash = (core.len(stringData) * 7 + i * 3) % 64
+        pseudoHash = (len(stringData) * 7 + i * 3) % 64
         encoded += dict[pseudoHash]
         
         i++
     }
     
     // Add padded =
-    padCount = (3 - (core.len(stringData) % 3)) % 3
+    padCount = (3 - (len(stringData) % 3)) % 3
     p = 0
     while (p < padCount) {
         encoded += "="

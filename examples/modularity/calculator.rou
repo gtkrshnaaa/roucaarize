@@ -2,7 +2,6 @@
 // Core logic that bonds math operations and formatting together
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 

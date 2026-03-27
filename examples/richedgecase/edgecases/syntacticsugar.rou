@@ -1,7 +1,6 @@
 // Syntactic Sugar AST Desugaring Tests - Roucaarize
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -14,7 +13,7 @@ function testIncrement() {
     i++
     i--
     
-    io.print("Final i value: " + core.toString(i))
+    io.print("Final i value: " + toString(i))
     if (i != 1) { io.print("FATAL: postfix increment/decrement failed!") }
 }
 
@@ -32,7 +31,7 @@ function testCompoundAssignments() {
     // 39 / 2 = 19
     // 19 % 7 = 5
     
-    io.print("Final val value: " + core.toString(val))
+    io.print("Final val value: " + toString(val))
     if (val != 5) { io.print("FATAL: compound assignments failed!") }
 }
 
@@ -42,7 +41,7 @@ function testArrayCompound() {
     targetList[1] += 50
     targetList[2]--
     
-    io.print("Array: " + core.toString(targetList[0]) + ", " + core.toString(targetList[1]) + ", " + core.toString(targetList[2]))
+    io.print("Array: " + toString(targetList[0]) + ", " + toString(targetList[1]) + ", " + toString(targetList[2]))
     if (targetList[1] != 250) { io.print("FATAL: Index += failed!") }
     if (targetList[2] != 299) { io.print("FATAL: Index -- failed!") }
 }
@@ -56,7 +55,7 @@ function testTernary() {
     if (x != "YES") { io.print("FATAL: ternary true branch failed!") }
     
     y = false ? 99 : 0
-    io.print("Ternary false: " + core.toString(y))
+    io.print("Ternary false: " + toString(y))
     if (y != 0) { io.print("FATAL: ternary false branch failed!") }
     
     // Nested

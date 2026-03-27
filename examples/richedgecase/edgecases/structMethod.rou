@@ -1,7 +1,6 @@
 // Function Execution Passed Inside Structs - Roucaarize
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -20,7 +19,7 @@ function testStructCall() {
     runner.execute = tempFunction
 
     result = runner.execute(5)
-    io.print("Struct Action Evaluation: " + core.toString(result))
+    io.print("Struct Action Evaluation: " + toString(result))
     if (result != 50) { io.print("FATAL: Struct Function evaluation failed!") }
 }
 

@@ -2,7 +2,6 @@
 // Tests classic computer science problems (Fibonacci)
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -17,7 +16,7 @@ function fibonacci(n) {
 
 function testFibonacci() {
     result = fibonacci(15)
-    io.print("Fibonacci(15) = " + core.toString(result))
+    io.print("Fibonacci(15) = " + toString(result))
     if (result != 610) { io.print("FATAL: fibonacci() failed!") }
 }
 

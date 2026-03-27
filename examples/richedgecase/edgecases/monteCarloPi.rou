@@ -1,7 +1,6 @@
 // Linear Congruential Generator + Monte Carlo Pi - Testing pseudo-random float estimations
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -16,7 +15,7 @@ function randomNext(lcg) {
 
 // Float between 0 and 1
 function randomFloat(lcg) {
-    return randomNext(lcg) / core.toString(lcg.m - 1) // Force float division by converting or implicit, wait, we need implicit float division.
+    return randomNext(lcg) / toString(lcg.m - 1) // Force float division by converting or implicit, wait, we need implicit float division.
 }
 
 function simulateMonteCarlo(iterations, divisor) {
@@ -54,7 +53,7 @@ function testMonteCarlo() {
     // Needs enough iterations for reasonable estimate but keeping it fast for tests
     approxPi = simulateMonteCarlo(10000, 10000.0) 
     
-    io.print("Estimated Pi (10k iterations): " + core.toString(approxPi))
+    io.print("Estimated Pi (10k iterations): " + toString(approxPi))
     
     // Check if within bounds (3.0 to 3.25 is expected for 10k weak LCG)
     if (approxPi < 3.00 or approxPi > 3.25) { 

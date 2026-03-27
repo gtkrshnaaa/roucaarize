@@ -1,5 +1,4 @@
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -17,7 +16,7 @@ io.print("")
 try {
     rec.run()
 } catch (e) {
-    io.print("[SAFE CATCH] Recursion handled cleanly: " + core.toString(e))
+    io.print("[SAFE CATCH] Recursion handled cleanly: " + toString(e))
 }
 
 io.print("---------------------------------------------------")
@@ -25,7 +24,7 @@ io.print("---------------------------------------------------")
 try {
     mem.run()
 } catch (e) {
-    io.print("[SAFE CATCH] Memory handled cleanly: " + core.toString(e))
+    io.print("[SAFE CATCH] Memory handled cleanly: " + toString(e))
 }
 
 io.print("---------------------------------------------------")
@@ -33,7 +32,7 @@ io.print("---------------------------------------------------")
 try {
     orch.run()
 } catch (e) {
-    io.print("[SAFE CATCH] Orchestration handled cleanly: " + core.toString(e))
+    io.print("[SAFE CATCH] Orchestration handled cleanly: " + toString(e))
 }
 
 io.print("---------------------------------------------------")
@@ -41,7 +40,7 @@ io.print("---------------------------------------------------")
 try {
     inf.run()
 } catch (e) {
-    io.print("[SAFE CATCH] Infinite loop handled cleanly: " + core.toString(e))
+    io.print("[SAFE CATCH] Infinite loop handled cleanly: " + toString(e))
 }
 
 io.print("===================================================")

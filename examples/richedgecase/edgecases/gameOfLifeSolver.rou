@@ -1,7 +1,6 @@
 // Conway's Game Of Life - Matrix state mutation based on logical immediate neighborhood rules
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -75,8 +74,8 @@ function testGameOfLife() {
     step1 = simulateTick(grid, 5, 5)
     step2 = simulateTick(step1, 5, 5)
     
-    io.print("Blinker Matrix Step 1 Center Val: " + core.toString(step1[2][2]) + " -> expects 1")
-    io.print("Blinker Matrix Step 1 Pivot Val: " + core.toString(step1[2][1]) + " -> expects 1")
+    io.print("Blinker Matrix Step 1 Center Val: " + toString(step1[2][2]) + " -> expects 1")
+    io.print("Blinker Matrix Step 1 Pivot Val: " + toString(step1[2][1]) + " -> expects 1")
     
     // Step 1 should oscillate horizontal:
     // [0, 0, 0, 0, 0]

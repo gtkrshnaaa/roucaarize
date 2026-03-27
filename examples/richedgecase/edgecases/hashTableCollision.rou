@@ -1,7 +1,6 @@
 // Hash Table Collision resolution - Testing Linked List inside Arrays
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -23,11 +22,11 @@ function initHashTable(size) {
 function getSimpleHash(targetStr, mapSize) {
     hash = 0
     i = 0
-    while (i < core.len(targetStr)) {
+    while (i < len(targetStr)) {
         // Pseudo string hash using naive char index summation (cannot get char code natively)
         // We will just sum length to simulate deterministic collision.
         // Wait, different strings same length = collision! Exactly what we want to test!
-        hash += core.len(targetStr)
+        hash += len(targetStr)
         i++
     }
     return hash % mapSize
@@ -74,7 +73,7 @@ function testHashTable() {
     io.print("--- Testing Hash Table Collisions ---")
     table = initHashTable(5)
     
-    // "Dog" and "Cat" will both have core.len(key) == 3, their hash is 3*3 = 9 % 5 = 4
+    // "Dog" and "Cat" will both have len(key) == 3, their hash is 3*3 = 9 % 5 = 4
     // They will COLLIDE in bucket 4!
     hashPut(table, "Dog", "Woof")
     hashPut(table, "Cat", "Meow")
@@ -83,8 +82,8 @@ function testHashTable() {
     val1 = hashGet(table, "Dog")
     val2 = hashGet(table, "Cat")
     
-    io.print("Dog says: " + core.toString(val1))
-    io.print("Cat says: " + core.toString(val2))
+    io.print("Dog says: " + toString(val1))
+    io.print("Cat says: " + toString(val2))
     
     if (val1 != "Woof" or val2 != "Meow") { io.print("FATAL: Hash layout or LL chaining dropped collided properties") }
 }

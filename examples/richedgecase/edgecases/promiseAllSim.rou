@@ -1,7 +1,6 @@
 // Promise.all Aggregation Simulator - Array Closures mock simulating parallel resolving structures
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -13,7 +12,7 @@ function simulatePromiseAll(futureArray) {
     results = []
     
     i = 0
-    while (i < core.len(futureArray)) {
+    while (i < len(futureArray)) {
         p = futureArray[i]
         
         // Mocking event resolution polling loops
@@ -42,8 +41,8 @@ function testPromiseAggregation() {
     
     // Valid batch
     aggValid = simulatePromiseAll([f1, f2, f3])
-    io.print("Agg Valid Data items: " + core.toString(core.len(aggValid.data)))
-    if (core.len(aggValid.data) != 3 or aggValid.error != null) { io.print("FATAL: Valid task aggregation structure decoupled") }
+    io.print("Agg Valid Data items: " + toString(len(aggValid.data)))
+    if (len(aggValid.data) != 3 or aggValid.error != null) { io.print("FATAL: Valid task aggregation structure decoupled") }
     
     // Rejected batch
     fErr = Future(true, null, "Node Timeout")

@@ -3,7 +3,6 @@
 // Demonstrates variables, functions, control flow, arrays, and loops.
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -33,22 +32,22 @@ function factorial(n) {
 // ============================================================================
 
 function showArithmetic(a, b) {
-    io.print("Add: " + core.toString(a + b))
-    io.print("Sub: " + core.toString(a - b))
-    io.print("Mul: " + core.toString(a * b))
-    io.print("Div: " + core.toString(a / b))
-    io.print("Mod: " + core.toString(a % b))
+    io.print("Add: " + toString(a + b))
+    io.print("Sub: " + toString(a - b))
+    io.print("Mul: " + toString(a * b))
+    io.print("Div: " + toString(a / b))
+    io.print("Mod: " + toString(a % b))
 }
 
 function showBooleans(a, b) {
-    io.print(core.toString(a) + " > " + core.toString(b) + ": " + core.toString(a > b))
-    io.print(core.toString(a) + " == " + core.toString(b) + ": " + core.toString(a == b))
+    io.print(toString(a) + " > " + toString(b) + ": " + toString(a > b))
+    io.print(toString(a) + " == " + toString(b) + ": " + toString(a == b))
 }
 
 function showArrayIteration(items, label) {
-    io.print(label + ": " + core.toString(items))
+    io.print(label + ": " + toString(items))
     io.print("First: " + items[0])
-    io.print("Length: " + core.toString(core.len(items)))
+    io.print("Length: " + toString(len(items)))
     for (item in items) {
         io.print("  - " + item)
     }
@@ -57,7 +56,7 @@ function showArrayIteration(items, label) {
 function showCountdown(limit) {
     counter = 0
     while (counter < limit) {
-        io.print("Counter: " + core.toString(counter))
+        io.print("Counter: " + toString(counter))
         counter = counter + 1
     }
 }
@@ -84,7 +83,7 @@ function makeCounter() {
 }
 
 function showTypeInfo(label, value) {
-    io.print("typeof " + label + ": " + core.typeof(value))
+    io.print("typeof " + label + ": " + typeof(value))
 }
 
 // ============================================================================
@@ -99,8 +98,8 @@ name = "Roucaarize"
 version = 1
 pi = 3.14159
 io.print("Language: " + name)
-io.print("Version: " + core.toString(version))
-io.print("Pi: " + core.toString(pi))
+io.print("Version: " + toString(version))
+io.print("Pi: " + toString(pi))
 io.print("")
 
 // Arithmetic
@@ -121,8 +120,8 @@ io.print("")
 // Functions
 io.print("== Functions ==")
 io.print(greet("Roucaarize"))
-io.print("add(5, 7) = " + core.toString(add(5, 7)))
-io.print("5! = " + core.toString(factorial(5)))
+io.print("add(5, 7) = " + toString(add(5, 7)))
+io.print("5! = " + toString(factorial(5)))
 io.print("")
 
 // Arrays and iteration
@@ -140,7 +139,7 @@ io.print("")
 io.print("== Grades ==")
 score = 85
 grade = evaluateGrade(score)
-io.print("Score " + core.toString(score) + " = Grade: " + grade)
+io.print("Score " + toString(score) + " = Grade: " + grade)
 io.print("")
 
 // Type checking

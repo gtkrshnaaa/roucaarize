@@ -1,7 +1,6 @@
 // A* Pathfinding Algorithm Mock - Testing 2D grids, heuristics, and graph searching
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -45,12 +44,12 @@ function testAStarPathfind() {
     steps = 0
     
     keepSearching = true
-    while (core.len(queue) > 0 and keepSearching) {
+    while (len(queue) > 0 and keepSearching) {
         // Shift mock
         curr = queue[0]
         shiftQueue = []
         si = 1
-        while (si < core.len(queue)) { arr.push(shiftQueue, queue[si]); si++ }
+        while (si < len(queue)) { arr.push(shiftQueue, queue[si]); si++ }
         queue = shiftQueue
         
         if (curr.x == goal.x and curr.y == goal.y) {
@@ -64,7 +63,7 @@ function testAStarPathfind() {
         while (di < 4) {
             nx = curr.x + dirs[di][0]
             ny = curr.y + dirs[di][1]
-            key = core.toString(nx) + "," + core.toString(ny)
+            key = toString(nx) + "," + toString(ny)
             
             if (nx >= 0 and nx < 5 and ny >= 0 and ny < 5) {
                 if (grid[ny][nx] == 0 and visited[key] == null) {
@@ -78,8 +77,8 @@ function testAStarPathfind() {
         }
     }
     
-    io.print("A* Target Found: " + core.toString(found))
-    io.print("Nodes Explored: " + core.toString(steps))
+    io.print("A* Target Found: " + toString(found))
+    io.print("Nodes Explored: " + toString(steps))
     
     if (!found) { io.print("FATAL: Pathfinding algorithm failed to navigate maze") }
 }

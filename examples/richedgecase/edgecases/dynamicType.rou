@@ -1,7 +1,6 @@
 // Extreme Dynamic Type Mutation - Roucaarize
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -17,7 +16,7 @@ function testDynamicTyping() {
     varX = [1, 2, 3]
     varX = getNumber
 
-    io.print("Dynamic function assignment evaluated: " + core.toString(varX()))
+    io.print("Dynamic function assignment evaluated: " + toString(varX()))
     if (varX() != 99) { io.print("FATAL: Dynamic typing corruption!") }
 }
 

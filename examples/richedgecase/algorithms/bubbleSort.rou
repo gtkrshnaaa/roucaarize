@@ -1,14 +1,13 @@
 // Array Bubble Sort - Roucaarize
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
 
 
 function bubbleSort(targetList) {
-    len = core.len(targetList)
+    len = len(targetList)
     i = 0
     while (i < len) {
         j = 0
@@ -29,7 +28,7 @@ function bubbleSort(targetList) {
 function testSorting() {
     unsorted = [64, 34, 25, 12, 22, 11, 90]
     sorted = bubbleSort(unsorted)
-    io.print("Sorted Output: " + core.toString(sorted[0]) + " ... " + core.toString(sorted[6]))
+    io.print("Sorted Output: " + toString(sorted[0]) + " ... " + toString(sorted[6]))
     if (sorted[0] != 11) { io.print("FATAL: bubbleSort() min bound failed!") }
     if (sorted[6] != 90) { io.print("FATAL: bubbleSort() max bound failed!") }
 }

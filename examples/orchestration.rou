@@ -3,7 +3,6 @@
 // Demonstrates real-world orchestration using stdlib modules.
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -34,8 +33,8 @@ function printField(label, value) {
 function showSystemInfo() {
     printHeader("System Information")
     printField("Hostname", s.hostname())
-    printField("Uptime", core.toString(s.uptime()) + " seconds")
-    printField("User ID", core.toString(s.getUid()))
+    printField("Uptime", toString(s.uptime()) + " seconds")
+    printField("User ID", toString(s.getUid()))
     printField("Home", s.getEnv("HOME"))
     printField("Date", t.format("%Y-%m-%d %H:%M:%S"))
     io.print("")
@@ -43,13 +42,13 @@ function showSystemInfo() {
 
 function showTimeInfo() {
     printHeader("Time Operations")
-    printField("Year", core.toString(t.year()))
-    printField("Month", core.toString(t.month()))
-    printField("Day", core.toString(t.day()))
-    printField("Hour", core.toString(t.hour()))
-    printField("Minute", core.toString(t.minute()))
-    printField("Second", core.toString(t.second()))
-    printField("Timestamp", core.toString(t.timestamp()))
+    printField("Year", toString(t.year()))
+    printField("Month", toString(t.month()))
+    printField("Day", toString(t.day()))
+    printField("Hour", toString(t.hour()))
+    printField("Minute", toString(t.minute()))
+    printField("Second", toString(t.second()))
+    printField("Timestamp", toString(t.timestamp()))
     io.print("")
 }
 
@@ -105,7 +104,7 @@ function demonstrateFileOps() {
     readBack = f.read(tempFile)
     io.print("Read back: " + readBack)
 
-    printField("File exists", core.toString(f.exists(tempFile)))
+    printField("File exists", toString(f.exists(tempFile)))
 
     f.append(tempFile, "\nAppended line")
     io.print("Content after append:")
@@ -127,7 +126,7 @@ function demonstrateStringOps() {
     io.print("Trimmed: '" + str.trim(message) + "'")
     io.print("Upper: " + str.toUpperCase("roucaarize"))
     io.print("Lower: " + str.toLowerCase("ROUCAARIZE"))
-    printField("Contains 'Linux'", core.toString(str.contains(message, "Linux")))
+    printField("Contains 'Linux'", toString(str.contains(message, "Linux")))
 
     parts = str.split("one:two:three", ":")
     io.print("Split 'one:two:three':")
@@ -155,8 +154,8 @@ function runPerformanceTest(limit) {
     }
     endTime = t.millis()
     elapsed = endTime - startTime
-    printField("Sum of 0.." + core.toString(limit - 1), core.toString(sum))
-    printField("Time elapsed", core.toString(elapsed) + "ms")
+    printField("Sum of 0.." + toString(limit - 1), toString(sum))
+    printField("Time elapsed", toString(elapsed) + "ms")
     io.print("")
 }
 

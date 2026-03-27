@@ -1,5 +1,4 @@
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -14,5 +13,5 @@ function run() {
 try {
     run()
 } catch (err) {
-    io.print("Intercepted: " + core.toString(err))
+    io.print("Intercepted: " + toString(err))
 }

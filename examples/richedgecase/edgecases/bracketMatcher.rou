@@ -1,7 +1,6 @@
 // Bracket Matcher - Testing Strings and Stack logical consistency
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -12,13 +11,13 @@ function isBracketValid(targetStr) {
     
     // Split pseudo
     i = 0
-    while (i < core.len(targetStr)) { 
+    while (i < len(targetStr)) { 
         c = targetStr[i]
         
         if (c == "(" or c == "{" or c == "[") {
             arr.push(stack, c)
         } else if (c == ")" or c == "}" or c == "]") {
-            if (core.len(stack) == 0) { return false }
+            if (len(stack) == 0) { return false }
             top = arr.pop(stack)
             
             if (c == ")" and top != "(") { return false }
@@ -28,7 +27,7 @@ function isBracketValid(targetStr) {
         i++
     }
     
-    return core.len(stack) == 0
+    return len(stack) == 0
 }
 
 function testBracketMatcher() {
@@ -46,10 +45,10 @@ function testBracketMatcher() {
     i2 = isBracketValid(invalid2)
     i3 = isBracketValid(invalid3)
     
-    io.print("valid1 is " + core.toString(v1))
-    io.print("valid2 is " + core.toString(v2))
-    io.print("invalid1 is " + core.toString(i1))
-    io.print("invalid2 is " + core.toString(i2))
+    io.print("valid1 is " + toString(v1))
+    io.print("valid2 is " + toString(v2))
+    io.print("invalid1 is " + toString(i1))
+    io.print("invalid2 is " + toString(i2))
     
     if (!v1 or !v2) { io.print("FATAL: Failed on valid bracket string") }
     if (i1 or i2 or i3) { io.print("FATAL: Failed on invalid bracket string") }

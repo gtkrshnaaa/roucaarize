@@ -1,7 +1,6 @@
 // K-Means Clustering Mock - Testing mathematical approximations across nested structs
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -26,7 +25,7 @@ function computeClustering(points, k) {
         c2p = []
         
         i = 0
-        while (i < core.len(points)) {
+        while (i < len(points)) {
             d1 = getDistanceSq(points[i], cent1)
             d2 = getDistanceSq(points[i], cent2)
             
@@ -40,16 +39,16 @@ function computeClustering(points, k) {
         }
         
         // Update centroids to averages (sum / len)
-        if (core.len(c1p) > 0) {
+        if (len(c1p) > 0) {
             sumX = 0.0; sumY = 0.0
             j = 0
-            while (j < core.len(c1p)) { sumX += c1p[j].x; sumY += c1p[j].y; j++ }
-            lenFl = core.toString(core.len(c1p)) // Wait, to cast float just multiply by 1.0! Wait, in Roucaarize integer is auto-promoted optionally or implicitly
+            while (j < len(c1p)) { sumX += c1p[j].x; sumY += c1p[j].y; j++ }
+            lenFl = toString(len(c1p)) // Wait, to cast float just multiply by 1.0! Wait, in Roucaarize integer is auto-promoted optionally or implicitly
             // We'll trust native C++ integer division behavior or auto-cast
             cent1.x = sumX / 1.0; // avoiding strictly 0 divisors wait, `sumX / len`
             }
             // For safety we skip computing exact averages since we lack direct float division certainty in simple logic...
-            // Wait, actually `sumX / core.len(c1p)` works. 
+            // Wait, actually `sumX / len(c1p)` works. 
         
         iters++
     }

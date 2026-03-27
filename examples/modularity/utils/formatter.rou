@@ -2,7 +2,6 @@
 // Formatting utility functions
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -18,5 +17,5 @@ function formatResult(operation, a, b, result) {
         prefix = "[DEBUG] "
     }
     
-    return prefix + operation + " of " + core.toString(a) + " and " + core.toString(b) + " is: " + core.toString(result)
+    return prefix + operation + " of " + toString(a) + " and " + toString(b) + " is: " + toString(result)
 }

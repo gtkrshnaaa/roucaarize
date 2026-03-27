@@ -1,7 +1,6 @@
 // SQL Parser Mock - String Slicer evaluating linear string into AST objects
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -13,7 +12,7 @@ function extractSubstring(targetStr, from, lengthConstraint) {
     res = ""
     i = from
     safeLen = from + lengthConstraint
-    if (safeLen > core.len(targetStr)) { safeLen = core.len(targetStr) }
+    if (safeLen > len(targetStr)) { safeLen = len(targetStr) }
     
     while (i < safeLen) {
         res += targetStr[i]
@@ -31,7 +30,7 @@ function parseSQL(query) {
     word = ""
     words = []
     
-    while (i < core.len(query)) {
+    while (i < len(query)) {
         c = query[i]
         if (c == " ") {
             if (word != "") { arr.push(words, word); word = "" }
@@ -64,9 +63,9 @@ function testSQLParser() {
     
     res = parseSQL(sql)
     
-    io.print("Parsed Table: " + core.toString(res.table))
-    io.print("Parsed Column: " + core.toString(res.columns[0]))
-    io.print("Parsed Condition: " + core.toString(res.condition))
+    io.print("Parsed Table: " + toString(res.table))
+    io.print("Parsed Column: " + toString(res.columns[0]))
+    io.print("Parsed Condition: " + toString(res.condition))
     
     valid = (res.table == "players" and res.columns[0] == "uuid" and res.condition == "active=1")
     if (!valid) { io.print("FATAL: SQL parser string logic decoupled!") }

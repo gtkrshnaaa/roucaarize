@@ -24,7 +24,6 @@
 #include "string.hpp"
 #include "time.hpp"
 #include "io.hpp"
-#include "core.hpp"
 #include "array.hpp"
 #include "runtimeGuard.hpp"
 #include "error.hpp"
@@ -97,7 +96,6 @@ int main(int argc, char* argv[]) {
         Evaluator evaluator;
         // Register all stdlib modules
         evaluator.registerStdlib("io", stdlib::getIoLibrary());
-        evaluator.registerStdlib("core", stdlib::getCoreLibrary());
         evaluator.registerStdlib("array", stdlib::getArrayLibrary());
         evaluator.registerStdlib("sys", stdlib::getSysLibrary());
         evaluator.registerStdlib("fs", stdlib::getFsLibrary());

@@ -1,0 +1,135 @@
+import stdlib io as io
+import stdlib array as arr
+import stdlib string as str
+
+struct Node {
+    character,
+    frequency,
+    left,
+    right
+}
+
+function buildFrequencyMap(text) {
+    freq = {}
+    i = 0
+    textLen = len(text)
+    while (i < textLen) {
+        c = text[i]
+        if (freq[c] == null) {
+            freq[c] = 1
+        } else {
+            freq[c] = freq[c] + 1
+        }
+        i++
+    }
+    return freq
+}
+
+function createLeafNodes(freqMap, allChars) {
+    nodes = []
+    i = 0
+    while (i < len(allChars)) {
+        c = allChars[i]
+        if (freqMap[c] != null) {
+            arr.push(nodes, Node(c, freqMap[c], null, null))
+        }
+        i++
+    }
+    return nodes
+}
+
+function sortNodesByFrequency(nodes) {
+    // Bubble sort ascending
+    n = len(nodes)
+    i = 0
+    while (i < n - 1) {
+        j = 0
+        while (j < n - i - 1) {
+            if (nodes[j].frequency > nodes[j + 1].frequency) {
+                temp = nodes[j]
+                nodes[j] = nodes[j + 1]
+                nodes[j + 1] = temp
+            }
+            j++
+        }
+        i++
+    }
+    return nodes
+}
+
+function buildHuffmanTree(nodes) {
+    while (len(nodes) > 1) {
+        nodes = sortNodesByFrequency(nodes)
+        
+        left = nodes[0]
+        right = nodes[1]
+        
+        // Remove first two
+        newNodes = []
+        i = 2
+        while (i < len(nodes)) {
+            arr.push(newNodes, nodes[i])
+            i++
+        }
+        
+        parent = Node("", left.frequency + right.frequency, left, right)
+        arr.push(newNodes, parent)
+        nodes = newNodes
+    }
+    
+    if (len(nodes) == 0) {
+        return null
+    }
+    return nodes[0]
+}
+
+function generateCodes(root, currentCode, codesMap) {
+    if (root == null) { return codesMap }
+    
+    if (root.left == null and root.right == null) {
+        codesMap[root.character] = currentCode
+    }
+    
+    codesMap = generateCodes(root.left, currentCode + "0", codesMap)
+    codesMap = generateCodes(root.right, currentCode + "1", codesMap)
+    
+    return codesMap
+}
+
+function runHuffmanSimulation() {
+    text = "RROUUUCARRRIZE"
+    io.print("Input Text: " + text)
+    
+    freq = buildFrequencyMap(text)
+    io.print("Frequencies:")
+    allChars = ["R", "O", "U", "C", "A", "I", "Z", "E"]
+    i = 0
+    while (i < len(allChars)) {
+        c = allChars[i]
+        if (freq[c] != null) {
+            io.print("  " + c + ": " + toString(freq[c]))
+        }
+        i++
+    }
+    
+    nodes = createLeafNodes(freq, allChars)
+    root = buildHuffmanTree(nodes)
+    
+    io.print("Tree Root Frequency: " + toString(root.frequency))
+    
+    codes = {}
+    codes = generateCodes(root, "", codes)
+    
+    io.print("Huffman Codes:")
+    j = 0
+    while (j < len(allChars)) {
+        c = allChars[j]
+        if (codes[c] != null) {
+            io.print("  " + c + " -> " + codes[c])
+        }
+        j++
+    }
+}
+
+io.print("=== Huffman Tree Coding Simulation ===")
+runHuffmanSimulation()

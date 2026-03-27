@@ -2,7 +2,6 @@
 // Provides basic mathematical operations
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 

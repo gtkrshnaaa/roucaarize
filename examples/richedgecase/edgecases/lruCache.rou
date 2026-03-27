@@ -1,7 +1,6 @@
 // Least Recently Used (LRU) Cache - Testing Map mutability and array element shifting logical ordering
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -22,7 +21,7 @@ function initLRU(cap) {
 function removeKeyFromQueue(queue, targetKey) {
     newQ = []
     i = 0
-    while (i < core.len(queue)) {
+    while (i < len(queue)) {
         if (queue[i] != targetKey) {
             arr.push(newQ, queue[i])
         }
@@ -36,7 +35,7 @@ function putCache(lru, key, value) {
     if (lru.cacheMap[key] != null) {
         lru.queue = removeKeyFromQueue(lru.queue, key)
     } else {
-        if (core.len(lru.queue) >= lru.capacity) {
+        if (len(lru.queue) >= lru.capacity) {
             // Evict oldest (front of queue)
             // No shift() so we pop all to temporary, wait, we can just slice.
             oldestKey = lru.queue[0]
@@ -73,9 +72,9 @@ function testLRUCache() {
     valB = getCache(cache, "B") // Should be -1
     valC = getCache(cache, "C") // Should be 3
     
-    io.print("valA: " + core.toString(valA))
-    io.print("valB: " + core.toString(valB))
-    io.print("valC: " + core.toString(valC))
+    io.print("valA: " + toString(valA))
+    io.print("valB: " + toString(valB))
+    io.print("valC: " + toString(valC))
     
     if (valA != 1) { io.print("FATAL: LRU accessed value A failed") }
     if (valB != -1) { io.print("FATAL: LRU eviction failed to clear B") }

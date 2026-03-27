@@ -1,0 +1,106 @@
+import stdlib io as io
+import stdlib array as arr
+import stdlib string as str
+
+struct Vector2D {
+    x,
+    y
+}
+
+struct Ray {
+    origin,
+    directionX,
+    directionY
+}
+
+function castRay(ray, grid, maxDepth) {
+    currX = ray.origin.x
+    currY = ray.origin.y
+    
+    step = 0
+    while (step < maxDepth) {
+        currX += ray.directionX
+        currY += ray.directionY
+        
+        mapX = toInt(currX)
+        mapY = toInt(currY)
+        
+        if (mapY >= 0 and mapY < len(grid)) {
+            row = grid[mapY]
+            if (mapX >= 0 and mapX < len(row)) {
+                if (row[mapX] == 1) {
+                    return Vector2D(mapX, mapY) // Hit a wall
+                }
+            } else {
+                return null // Out of bounds X
+            }
+        } else {
+            return null // Out of bounds Y
+        }
+        
+        step++
+    }
+    
+    return null // Traveled max depth without hitting
+}
+
+function printGrid(grid, hitPoints) {
+    y = 0
+    while (y < len(grid)) {
+        rowStr = ""
+        x = 0
+        while (x < len(grid[y])) {
+            isHit = false
+            for (hp in hitPoints) {
+                if (hp.x == x and hp.y == y) {
+                    isHit = true
+                }
+            }
+            
+            if (isHit) {
+                rowStr += "X "
+            } else if (grid[y][x] == 1) {
+                rowStr += "# "
+            } else {
+                rowStr += ". "
+            }
+            x++
+        }
+        io.print(rowStr)
+        y++
+    }
+}
+
+function runRaycaster() {
+    grid = [
+        [1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 1],
+        [1, 0, 1, 0, 0, 1],
+        [1, 0, 0, 0, 1, 1],
+        [1, 1, 1, 1, 1, 1]
+    ]
+    
+    originPoint = Vector2D(1, 1)
+    rays = [
+        Ray(originPoint, 1, 0),    // Right
+        Ray(originPoint, 0, 1),    // Down
+        Ray(originPoint, 1, 1),    // Diagonal Down-Right
+        Ray(originPoint, 0.5, 1)   // Steep Down-Right
+    ]
+    
+    hits = []
+    i = 0
+    while (i < len(rays)) {
+        hit = castRay(rays[i], grid, 10)
+        if (hit != null) {
+            arr.push(hits, hit)
+        }
+        i++
+    }
+    
+    io.print("Grid Map with Ray Hits (X):")
+    printGrid(grid, hits)
+}
+
+io.print("=== 2D Grid Raycaster Engine ===")
+runRaycaster()

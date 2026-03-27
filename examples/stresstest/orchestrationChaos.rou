@@ -1,5 +1,4 @@
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -14,12 +13,12 @@ function run() {
     // Spawning a massive amount of external processes quickly
     // If system runs out of PIDs or hangs, this tests the process lifecycle wrapper.
     while (i < 300) {
-        s.exec("echo 'Spawned process " + core.toString(i) + "' > /dev/null")
+        s.exec("echo 'Spawned process " + toString(i) + "' > /dev/null")
         success = success + 1
         i = i + 1
     }
     
-    io.print("Successfully spawned and terminated " + core.toString(success) + " external processes.")
+    io.print("Successfully spawned and terminated " + toString(success) + " external processes.")
 }
 
 run()

@@ -1,7 +1,6 @@
 // Heavy allocations to trigger GC or Memory Limits
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -21,7 +20,7 @@ function run() {
     s = ""
     i = 0
     while (i < 10000) {
-        s = s + "stress_leak_" + core.toString(i)
+        s = s + "stress_leak_" + toString(i)
         i = i + 1
     }
     
@@ -29,15 +28,15 @@ function run() {
     m = {}
     i = 0
     while (i < 50000) {
-        m["key" + core.toString(i)] = i
+        m["key" + toString(i)] = i
         i = i + 1
     }
     
-    io.print("Memory pressure survived! Array: " + core.toString(len(targetList)) + ", Map: " + core.toString(len(m)))
+    io.print("Memory pressure survived! Array: " + toString(len(targetList)) + ", Map: " + toString(len(m)))
 }
 
 try {
     run()
 } catch (err) {
-    io.print("Intercepted: " + core.toString(err))
+    io.print("Intercepted: " + toString(err))
 }

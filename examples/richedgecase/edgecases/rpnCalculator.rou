@@ -1,7 +1,6 @@
 // Reverse Polish Notation Evaluator - Testing Stacks and Native Number parsing
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -11,7 +10,7 @@ function evalRPN(tokens) {
     stack = []
     
     i = 0
-    while (i < core.len(tokens)) {
+    while (i < len(tokens)) {
         tok = tokens[i]
         
         if (tok == "+") {
@@ -47,14 +46,14 @@ function testRPN() {
     tokens = [2, 1, "+", 3, "*"]
     res = evalRPN(tokens)
     
-    io.print("RPN Result: " + core.toString(res))
+    io.print("RPN Result: " + toString(res))
     if (res != 9) { io.print("FATAL: RPN calculation failed") }
     
     // Advanced: 4 13 5 / +
     // (4 + (13 / 5)) -> 4 + 2.6
     tokens2 = [4.0, 13.0, 5.0, "/", "+"]
     res2 = evalRPN(tokens2)
-    io.print("RPN 2 Result: " + core.toString(res2))
+    io.print("RPN 2 Result: " + toString(res2))
     if (res2 != 6.6) { io.print("FATAL: RPN advanced calculation failed") }
 }
 

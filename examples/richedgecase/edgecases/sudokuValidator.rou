@@ -1,7 +1,6 @@
 // Sudoku Board Validator - Testing 2D arrays, Maps (Sets), and triple nested loops
 
 import stdlib io as io
-import stdlib core as core
 import stdlib array as arr
 import stdlib string as str
 
@@ -77,8 +76,8 @@ function testSudoku() {
     valid = isValidSudoku(validBoard)
     invalid = isValidSudoku(invalidBoard)
     
-    io.print("Valid Sudoku evaluation: " + core.toString(valid))
-    io.print("Invalid Sudoku evaluation: " + core.toString(invalid))
+    io.print("Valid Sudoku evaluation: " + toString(valid))
+    io.print("Invalid Sudoku evaluation: " + toString(invalid))
     
     if (!valid) { io.print("FATAL: Validator falsely rejected passing board") }
     if (invalid) { io.print("FATAL: Validator falsely allowed invalid board") }
